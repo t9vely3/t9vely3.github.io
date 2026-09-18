@@ -251,6 +251,17 @@ input[type=color].f{padding:2px;height:34px;cursor:pointer}
 .m-f{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--line)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;z-index:60;animation:enter .25s var(--ease)}
 
+/* ================= 인쇄: 메뉴·로그인 창은 빼고 업무 화면만 ================= */
+@media print{
+  .top,.subtabs,.dd,.sso,#modalRoot,#userRoot,.toast{display:none!important}
+  [data-skin] .shell{display:block;height:auto}
+  .stage{display:block}
+  .view{position:static}
+  .view iframe{position:static;height:100vh}
+  .view iframe.off{display:none}
+  .home{position:static}
+}
+
 /* ================= 좁은 화면: 두 테마 모두 상단 바 + 하위 탭 ================= */
 @media (max-width:760px){
   [data-skin] .shell{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
@@ -291,6 +302,7 @@ input[type=color].f{padding:2px;height:34px;cursor:pointer}
         <button data-skin="navy">네이비</button><button data-skin="mono">모노</button>
       </div>
       <button class="tb opt" id="reloadBtn" title="지금 화면만 다시 불러오기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg><span>새로고침</span></button>
+      <button class="tb opt" id="printBtn" title="지금 화면만 인쇄 (Ctrl+P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg><span>인쇄</span></button>
       <button class="tb opt" id="popBtn" title="지금 화면을 새 창으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg><span>새 창</span></button>
       <button class="tb opt" id="editBtn" title="메뉴 이름·분류 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg><span>메뉴 편집</span></button>
       <div class="uchip" id="userChip"></div>
@@ -885,7 +897,20 @@ $("#popBtn").addEventListener("click", function(){
   if(!S.app) return;
   window.open(source(S.app), "_blank");
 });
+/* 인쇄: 인트라넷 메뉴가 아니라 지금 보고 있는 업무 화면만 인쇄한다 */
+function printCurrent(){
+  var f = S.app && frames[S.app];
+  if(f && f._ready){
+    try{ f.contentWindow.focus(); f.contentWindow.print(); return; }catch(e){}
+  }
+  window.print();
+}
+$("#printBtn").addEventListener("click", printCurrent);
+
 function hotkey(e){
+  if((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "p" || e.key === "P")){
+    e.preventDefault(); printCurrent(); return;
+  }
   if(e.key === "Escape"){ closeDD(); if(E) closeEditor(); if($("#userRoot").innerHTML) closeUsers(); }
   if(!e.altKey || e.ctrlKey || e.metaKey) return;
   if(e.key === "0"){ e.preventDefault(); go(null, null); return; }
