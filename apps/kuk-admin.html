@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>사전접수 관리 — SBS ACADEMY AIX</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap">
+<style>
+:root {
+  --black: #000000;
+  --ink: #0B0B0B;
+  --paper: #FFFFFF;
+  --g700: #2F2F2F;
+  --g500: #5C5C5C;
+  --g300: #949494;
+  --g200: #D9D9D9;
+  --g100: #ECECEC;
+  --g50: #F7F7F7;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  background: var(--paper); color: var(--ink);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  font-size: 15px; font-weight: 400; line-height: 1.6;
+}
+button, input, select { font-family: inherit; }
+button { cursor: pointer; border: none; background: none; color: inherit; }
+:focus-visible { outline: 1px solid var(--black); outline-offset: 3px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- 잠금 ---------- */
+.gate { position: fixed; inset: 0; background: var(--black); color: var(--paper); display: flex; align-items: center; justify-content: center; z-index: 900; }
+.gate .box { width: 100%; max-width: 340px; padding: 0 24px; }
+.gate .kick { font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; color: #8A8A8A; }
+.gate h1 { margin-top: 14px; font-size: 25px; font-weight: 700; letter-spacing: -0.035em; }
+.gate .sub { margin-top: 10px; font-size: 13.5px; color: #9A9A9A; line-height: 1.8; }
+.gate .f { margin-top: 22px; }
+.gate label { display: block; font-size: 12.5px; font-weight: 500; color: #9A9A9A; margin-bottom: 8px; }
+.gate input { width: 100%; padding: 11px 0; background: transparent; border: none; border-bottom: 1px solid #333; font-size: 16px; color: var(--paper); outline: none; }
+.gate input:focus { border-bottom-color: var(--paper); }
+.gate button { width: 100%; margin-top: 26px; padding: 15px; background: var(--paper); color: var(--black); font-size: 15px; font-weight: 700; }
+.gate button:hover { background: #DDD; }
+.gate .err { margin-top: 14px; font-size: 13px; color: #E8A9A2; min-height: 18px; }
+
+/* ---------- 뼈대 ---------- */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 30px 26px 70px; }
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--black); }
+.head .t .kick { font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; color: var(--g500); }
+.head .t h1 { margin-top: 8px; font-size: 25px; font-weight: 700; letter-spacing: -0.035em; }
+.head .who { font-size: 12.5px; color: var(--g500); text-align: right; }
+.head .who button { display: block; margin-top: 6px; margin-left: auto; font-size: 12.5px; font-weight: 500; color: var(--g300); }
+/* 신청 완료 여부를 목록에서 바로 누른다 */
+.stbtn { padding: 5px 10px; border: 1px solid var(--g200); font-size: 12.5px; font-weight: 500; color: var(--g500); white-space: nowrap; }
+.stbtn:hover { border-color: var(--black); color: var(--black); }
+.stbtn.done { background: var(--black); border-color: var(--black); color: var(--paper); }
+.head .who button:hover { color: var(--black); }
+
+/* 요약 */
+.sums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--g100); border-bottom: 1px solid var(--g100); }
+.sum { background: var(--paper); padding: 20px 4px 22px; }
+.sum dt { font-size: 12px; font-weight: 500; color: var(--g500); }
+.sum dd { margin-top: 6px; font-size: 30px; font-weight: 700; letter-spacing: -0.04em; }
+.sum dd span { font-size: 14px; font-weight: 500; margin-left: 3px; color: var(--g500); }
+
+/* 도구 줄 */
+.tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 18px 0; }
+.tabs { display: flex; gap: 0; border: 1px solid var(--g200); }
+.tabs button { padding: 9px 15px; font-size: 13.5px; font-weight: 500; color: var(--g500); border-right: 1px solid var(--g200); }
+.tabs button:last-child { border-right: none; }
+.tabs button.on { background: var(--black); color: var(--paper); }
+.search { flex: 1; min-width: 180px; }
+.search input { width: 100%; padding: 10px 12px; border: 1px solid var(--g200); font-size: 14px; outline: none; }
+.search input:focus { border-color: var(--black); }
+.tools .btn { padding: 10px 15px; border: 1px solid var(--g200); font-size: 13.5px; font-weight: 500; }
+.tools .btn:hover { border-color: var(--black); }
+
+/* 표 */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; color: var(--g500);
+  text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--black); white-space: nowrap;
+}
+.tbl td { padding: 15px 8px; border-bottom: 1px solid var(--g100); font-size: 14px; vertical-align: middle; }
+.tbl tr.row { cursor: pointer; }
+.tbl tr.row:hover td { background: var(--g50); }
+.tbl td.r, .tbl th.r { text-align: right; }
+.tbl .nm { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.tbl .ct { font-variant-numeric: tabular-nums; }
+.tbl .sc { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tag { display: inline-block; padding: 3px 8px; font-size: 12px; font-weight: 700; border: 1px solid currentColor; white-space: nowrap; }
+.tag.pass { color: var(--black); background: var(--black); color: var(--paper); border-color: var(--black); }
+.tag.fail { color: var(--g500); }
+.st { display: inline-block; padding: 3px 8px; font-size: 12px; font-weight: 500; border: 1px solid var(--g200); color: var(--g500); white-space: nowrap; }
+.st.contacted { border-color: var(--g700); color: var(--g700); }
+.st.done { background: var(--g700); border-color: var(--g700); color: var(--paper); }
+.muted { color: var(--g300); }
+.blank { padding: 70px 0; text-align: center; color: var(--g300); font-size: 14px; }
+.more { display: block; width: 100%; padding: 16px; margin-top: 10px; border: 1px solid var(--g200); font-size: 13.5px; font-weight: 500; }
+.more:hover { border-color: var(--black); }
+
+/* 상세 */
+.veil { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
+.veil.on { display: flex; }
+.sheet { background: var(--paper); width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; }
+.sheet > header { padding: 26px 28px 16px; border-bottom: 1px solid var(--black); display: flex; justify-content: space-between; align-items: baseline; }
+.sheet > header h3 { font-size: 21px; font-weight: 700; letter-spacing: -0.035em; }
+.sheet > header button { font-size: 13px; font-weight: 500; color: var(--g500); }
+.sheet .in { padding: 6px 28px 20px; overflow-y: auto; }
+.dl { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--g100); }
+.dl dt { font-size: 13px; font-weight: 500; color: var(--g500); white-space: nowrap; }
+.dl dd { font-size: 14.5px; font-weight: 500; text-align: right; letter-spacing: -0.02em; }
+.dl.big dd { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.grp { margin-top: 22px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; color: var(--g500); padding-bottom: 10px; border-bottom: 1px solid var(--black); }
+.stbtns { display: flex; gap: 8px; margin-top: 16px; }
+.stbtns button { flex: 1; padding: 12px; border: 1px solid var(--g200); font-size: 13.5px; font-weight: 500; }
+.stbtns button.on { background: var(--black); color: var(--paper); border-color: var(--black); }
+.sheet .out { display: flex; border-top: 1px solid var(--black); }
+.sheet .out button { flex: 1; padding: 17px; font-size: 14.5px; font-weight: 700; }
+.sheet .out button + button { border-left: 1px solid var(--g100); }
+.sheet .out .danger { color: var(--g500); font-weight: 500; }
+.sheet .out .danger:hover { background: var(--g50); color: var(--black); }
+
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: var(--black); color: var(--paper); padding: 15px 26px; font-size: 14px; font-weight: 500; z-index: 950; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.toast.on { opacity: 1; }
+
+@media (max-width: 760px) {
+  .wrap { padding: 22px 16px 60px; }
+  .sums { grid-template-columns: repeat(2, 1fr); }
+  .tbl .hide { display: none; }
+  .tbl td { padding: 13px 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="box">
+    <div class="kick">STAFF ONLY</div>
+    <h1>사전접수 관리</h1>
+    <p class="sub">직원 계정으로만 열 수 있습니다.<br>학생에게는 이 주소를 공유하지 마세요.</p>
+    <div class="f">
+      <label for="em">이메일</label>
+      <input type="email" id="em" autocomplete="username" placeholder="name@sbs-hongdae.local">
+    </div>
+    <div class="f">
+      <label for="pw">비밀번호</label>
+      <input type="password" id="pw" autocomplete="current-password">
+    </div>
+    <div class="err" id="err"></div>
+    <button id="loginBtn">로그인</button>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="head">
+    <div class="t">
+      <div class="kick">SBS ACADEMY AIX · HONGDAE</div>
+      <h1>국민취업지원제도 사전접수</h1>
+    </div>
+    <div class="who">
+      <span id="me"></span>
+      <button onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+
+  <dl class="sums" id="sums"></dl>
+
+  <div class="tools">
+    <div class="tabs" id="tabs">
+      <button data-f="all" class="on">전체</button>
+      <button data-f="pending">미완료</button>
+      <button data-f="done">신청완료</button>
+      <button data-f="pass">가능</button>
+      <button data-f="fail">미달</button>
+    </div>
+    <div class="search"><input type="text" id="q" placeholder="이름 또는 연락처 검색"></div>
+    <button class="btn" onclick="downloadCsv()">CSV 내려받기</button>
+    <button class="btn" onclick="loadAll(true)">새로고침</button>
+  </div>
+
+  <div id="listWrap"></div>
+</div>
+
+<div class="veil" id="detailVeil">
+  <div class="sheet">
+    <header><h3 id="dTitle"></h3><button onclick="closeDetail()">닫기</button></header>
+    <div class="in" id="dBody"></div>
+    <div class="out">
+      <button class="danger" onclick="removeRec()">삭제</button>
+      <button onclick="closeDetail()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ▼▼▼ 자가진단 사이트와 같은 Firebase 설정을 붙여 넣으세요 ▼▼▼
+   index.html 의 FIREBASE_CONFIG 와 똑같은 값이어야 합니다. */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBUCd3OW9wx8uRQrQ9jBMIVjzuZ47sjNv8",
+  authDomain: "govermentscore.firebaseapp.com",
+  projectId: "govermentscore",
+  storageBucket: "govermentscore.firebasestorage.app",
+  messagingSenderId: "808577453289",
+  appId: "1:808577453289:web:8e6385fb947196ccc8f478"
+};
+/* ▲▲▲ 여기까지 ▲▲▲ */
+
+function configReady() {
+  return Object.values(FIREBASE_CONFIG).every(v => v && !String(v).startsWith('여기에-'));
+}
+
+let db = null, auth = null, STAFF = null;
+if (configReady()) {
+  try {
+    const app = firebase.initializeApp(FIREBASE_CONFIG, 'admin');
+    db = app.firestore();
+    auth = app.auth();
+  } catch (e) { console.warn('Firebase 연결 실패', e); }
+}
+
+const PAGE = 100;
+let ROWS = [];          // 불러온 접수 건
+let filter = 'all';
+let keyword = '';
+let cursor = null;      // 다음 페이지 시작점
+let noMore = false;
+let current = null;     // 상세를 열어 둔 건
+
+/* ---------- 도구 ---------- */
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('on');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600);
+}
+// 2026-08-20T01:23:45.000Z → 08.20 10:23 (한국 시각)
+function when(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const p = n => String(n).padStart(2, '0');
+  return `${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function dayKey(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? '' : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+// 실제 신청을 마쳤는지만 본다
+const isDone = r => r.status === 'done';
+const statusLabel = r => (isDone(r) ? '신청완료' : '미완료');
+
+/* ---------- 불러오기 ---------- */
+async function loadAll(reset) {
+  if (!db) { render(); return; }
+  if (reset) { ROWS = []; cursor = null; noMore = false; }
+  try {
+    let q = db.collection('sbs_score_checks').orderBy('savedAt', 'desc').limit(PAGE);
+    if (cursor) q = q.startAfter(cursor);
+    const snap = await q.get();
+    snap.docs.forEach(d => ROWS.push(Object.assign({ id: d.id }, d.data())));
+    cursor = snap.docs.length ? snap.docs[snap.docs.length - 1] : cursor;
+    if (snap.docs.length < PAGE) noMore = true;
+  } catch (e) {
+    console.warn(e);
+    toast('불러오지 못했습니다. 로그인 상태와 보안 규칙을 확인해 주세요');
+    noMore = true;
+  }
+  render();
+}
+
+/* ---------- 화면 ---------- */
+function visible() {
+  const k = keyword.trim().replace(/[^0-9가-힣a-zA-Z]/g, '');
+  return ROWS.filter(r => {
+    if (filter === 'pass' && !r.pass) return false;
+    if (filter === 'fail' && r.pass) return false;
+    if (filter === 'pending' && isDone(r)) return false;
+    if (filter === 'done' && !isDone(r)) return false;
+    if (k) {
+      const hay = (String(r.name || '') + String(r.contact || '')).replace(/[^0-9가-힣a-zA-Z]/g, '');
+      if (!hay.includes(k)) return false;
+    }
+    return true;
+  });
+}
+
+function renderSums() {
+  const today = dayKey(new Date().toISOString());
+  const total = ROWS.length;
+  const pass = ROWS.filter(r => r.pass).length;
+  const done = ROWS.filter(isDone).length;
+  const todayN = ROWS.filter(r => dayKey(r.savedAt) === today).length;
+  const cells = [
+    ['전체 접수', total], ['오늘', todayN], ['가능 판정', pass], ['신청완료', done],
+  ];
+  document.getElementById('sums').innerHTML = cells.map(([k, v]) =>
+    `<div class="sum"><dt>${k}</dt><dd class="num">${v}<span>건</span></dd></div>`).join('');
+}
+
+function render() {
+  renderSums();
+  const list = visible();
+  const wrap = document.getElementById('listWrap');
+  if (!list.length) {
+    wrap.innerHTML = `<div class="blank">${ROWS.length ? '조건에 맞는 접수가 없습니다.' : '아직 접수된 건이 없습니다.'}</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="tbl">
+      <thead><tr>
+        <th style="width:88px;">접수</th>
+        <th>이름</th>
+        <th class="hide">연락처</th>
+        <th class="hide" style="width:92px;">상담 멘토</th>
+        <th class="hide" style="width:80px;">기준</th>
+        <th class="r" style="width:70px;">점수</th>
+        <th style="width:96px;">판정</th>
+        <th style="width:96px;">신청</th>
+      </tr></thead>
+      <tbody>${list.map(r => `
+        <tr class="row" data-id="${esc(r.id)}">
+          <td class="num muted">${when(r.savedAt)}</td>
+          <td><span class="nm">${esc(r.name)}</span></td>
+          <td class="hide ct">${esc(r.contact) || '—'}</td>
+          <td class="hide">${esc(r.mentorName) || '<span class="muted">—</span>'}</td>
+          <td class="hide muted">${esc(r.track)}</td>
+          <td class="r sc">${esc(r.total)}</td>
+          <td><span class="tag ${r.pass ? 'pass' : 'fail'}">${r.pass ? '가능' : '미달'}</span></td>
+          <td><button class="stbtn ${isDone(r) ? 'done' : ''}" data-toggle="${esc(r.id)}">${statusLabel(r)}</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    ${noMore ? '' : '<button class="more" onclick="loadAll(false)">더 불러오기</button>'}`;
+  wrap.querySelectorAll('tr.row').forEach(tr => {
+    tr.onclick = () => openDetail(tr.dataset.id);
+  });
+  // 목록에서 바로 신청 여부를 바꾼다
+  wrap.querySelectorAll('.stbtn').forEach(b => {
+    b.onclick = e => { e.stopPropagation(); toggleDone(b.dataset.toggle); };
+  });
+}
+
+/* ---------- 상세 ---------- */
+function openDetail(id) {
+  const r = ROWS.find(x => x.id === id);
+  if (!r) return;
+  current = r;
+  document.getElementById('dTitle').textContent = r.name || '이름 없음';
+  const row = (k, v) => `<div class="dl"><dt>${k}</dt><dd>${esc(v)}</dd></div>`;
+  document.getElementById('dBody').innerHTML = `
+    ${row('연락처', r.contact || '—')}
+    ${row('접수 시각', when(r.savedAt))}
+    ${row('상담 멘토', r.mentorName || '—')}
+    ${row('작성 경로', r.by || '—')}
+    <div class="grp">진단 결과</div>
+    ${row('적용 기준', r.track || '—')}
+    <div class="dl big"><dt>합계 점수</dt><dd class="num">${esc(r.total)}점</dd></div>
+    ${row('기준 점수', r.cutoff == null ? '미설정' : r.cutoff + '점')}
+    ${row('판정', r.verdict || '—')}
+    <div class="grp">항목별</div>
+    ${row('가구원 수', r.household ? r.household + '인' : '—')}
+    ${row('소득 구간', (r.incomeBand || '—') + (r.incomePt != null ? ` · ${r.incomePt}점` : ''))}
+    ${row('재산 구간', (r.assetBand || '—') + (r.assetPt != null ? ` · ${r.assetPt}점` : ''))}
+    ${row('취업 기간', (r.workBand || '—') + (r.workPt != null ? ` · ${r.workPt}점` : ''))}
+    ${row('가감점', (r.extraPt || 0) + '점')}
+    <div class="grp">신청 여부</div>
+    <div class="stbtns">
+      <button data-st="pending" class="${isDone(r) ? '' : 'on'}">미완료</button>
+      <button data-st="done" class="${isDone(r) ? 'on' : ''}">신청완료</button>
+    </div>`;
+  document.querySelectorAll('.stbtns button').forEach(b => {
+    b.onclick = () => setStatus(b.dataset.st, r.id);
+  });
+  document.getElementById('detailVeil').classList.add('on');
+}
+function closeDetail() {
+  document.getElementById('detailVeil').classList.remove('on');
+  current = null;
+}
+
+function toggleDone(id) {
+  const r = ROWS.find(x => x.id === id);
+  if (r) setStatus(isDone(r) ? 'pending' : 'done', id);
+}
+
+async function setStatus(st, id) {
+  const r = ROWS.find(x => x.id === id) || current;
+  if (!r) return;
+  if (!db) { toast('설정을 넣어야 저장됩니다'); return; }
+  const before = r.status;
+  r.status = st;
+  document.querySelectorAll('.stbtns button').forEach(b => b.classList.toggle('on', b.dataset.st === st));
+  render();
+  try {
+    await db.collection('sbs_score_checks').doc(r.id).update({
+      status: st, statusAt: new Date().toISOString(), statusBy: STAFF ? STAFF.email : '',
+    });
+    toast(st === 'done' ? '신청완료로 바꿨습니다' : '미완료로 되돌렸습니다');
+  } catch (e) {
+    r.status = before;
+    render();
+    toast('바꾸지 못했습니다');
+  }
+}
+
+async function removeRec() {
+  if (!current) return;
+  const r = current;
+  if (!confirm(`${r.name} 님의 접수 건을 지울까요?\n지운 뒤에는 되돌릴 수 없습니다.`)) return;
+  if (!db) { toast('설정을 넣어야 삭제됩니다'); return; }
+  try {
+    await db.collection('sbs_score_checks').doc(r.id).delete();
+    ROWS = ROWS.filter(x => x.id !== r.id);
+    closeDetail();
+    render();
+    toast('삭제했습니다');
+  } catch (e) {
+    toast('삭제하지 못했습니다');
+  }
+}
+
+/* ---------- 내려받기 ---------- */
+function downloadCsv() {
+  const list = visible();
+  if (!list.length) { toast('내려받을 내용이 없습니다'); return; }
+  const head = ['접수시각', '이름', '연락처', '상담멘토', '적용기준', '가구원수', '소득구간', '소득점수',
+    '재산구간', '재산점수', '취업기간', '취업점수', '가감점', '합계', '기준점수', '판정', '신청여부', '작성경로'];
+  const cell = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const lines = [head.map(cell).join(',')];
+  list.forEach(r => lines.push([
+    when(r.savedAt), r.name, r.contact, r.mentorName, r.track, r.household, r.incomeBand, r.incomePt,
+    r.assetBand, r.assetPt, r.workBand, r.workPt, r.extraPt, r.total, r.cutoff,
+    r.verdict, statusLabel(r), r.by,
+  ].map(cell).join(',')));
+  // 엑셀이 한글을 깨뜨리지 않도록 BOM 을 붙인다
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  a.href = URL.createObjectURL(blob);
+  a.download = `사전접수_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast(`${list.length}건을 내려받았습니다`);
+}
+
+/* ---------- 로그인 ---------- */
+function loginError(e) {
+  switch (e && e.code) {
+    case 'auth/invalid-email': return '이메일 형식이 올바르지 않습니다';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential': return '이메일 또는 비밀번호가 올바르지 않습니다';
+    case 'auth/too-many-requests': return '시도가 너무 많습니다. 잠시 후 다시 시도해 주세요';
+    case 'auth/network-request-failed': return '네트워크에 연결할 수 없습니다';
+    default: return '로그인 실패: ' + ((e && (e.message || e.code)) || '알 수 없는 오류');
+  }
+}
+async function doLogin() {
+  const err = document.getElementById('err');
+  if (!auth) { err.textContent = 'Firebase 설정을 먼저 넣어 주세요'; return; }
+  const email = document.getElementById('em').value.trim();
+  const pw = document.getElementById('pw').value;
+  if (!email || !pw) { err.textContent = '이메일과 비밀번호를 모두 넣어 주세요'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '확인 중...';
+  err.textContent = '';
+  try {
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    await auth.signInWithEmailAndPassword(email, pw);
+    document.getElementById('pw').value = '';
+  } catch (e) {
+    err.textContent = loginError(e);
+  }
+  btn.disabled = false; btn.textContent = '로그인';
+}
+async function logout() {
+  if (!confirm('로그아웃할까요?')) return;
+  try { if (auth) await auth.signOut(); } catch (e) {}
+  location.reload();
+}
+function openApp() {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('me').textContent = STAFF ? STAFF.email : '';
+  loadAll(true);
+}
+
+if (auth) {
+  auth.onAuthStateChanged(user => {
+    // 익명 사용자는 직원이 아니다
+    if (user && !user.isAnonymous) { STAFF = { email: user.email || '' }; openApp(); }
+  });
+}
+
+document.getElementById('loginBtn').onclick = doLogin;
+['em', 'pw'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+document.getElementById('q').oninput = e => { keyword = e.target.value; render(); };
+document.querySelectorAll('#tabs button').forEach(b => {
+  b.onclick = () => {
+    filter = b.dataset.f;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+    render();
+  };
+});
+document.getElementById('detailVeil').addEventListener('click', e => {
+  if (e.target.id === 'detailVeil') closeDetail();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+</script>
+</body>
+</html>

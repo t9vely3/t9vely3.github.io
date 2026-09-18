@@ -1,0 +1,4745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 - SBS 아카데미</title>
+<style>
+:root {
+  --bg: #f7f7f4;
+  --bg-elevated: #ffffff;
+  --bg-soft: #f0efea;
+  --bg-section: #ebebe5;
+  
+  --text: #111111;
+  --text-mid: #2d2d2d;
+  --text-soft: #4a4a4a;
+  --text-faint: #777777;
+  
+  --border: rgba(0, 0, 0, 0.08);
+  --border-mid: rgba(0, 0, 0, 0.12);
+  
+  --accent: #1e3a5f;
+  --accent-soft: #e8eef5;
+  --accent-deep: #14283f;
+  
+  --danger: #c8323a;
+  --danger-bg: #fce8e9;
+  --warning: #b45309;
+  --warning-bg: #fef3e0;
+  --success: #047857;
+  --success-bg: #d1fae5;
+  
+  --m-1: #5b21b6; --m-1-bg: #ede9fe;
+  --m-2: #047857; --m-2-bg: #d1fae5;
+  --m-3: #b45309; --m-3-bg: #fef3c7;
+  --m-4: #1d4ed8; --m-4-bg: #dbeafe;
+  --m-5: #be185d; --m-5-bg: #fce7f3;
+  --m-6: #475569; --m-6-bg: #e2e8f0;
+  
+  --shadow-xs: 0 1px 1px rgba(0,0,0,0.03);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.011em;
+}
+
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; }
+
+/* ===== 로그인 ===== */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--border);
+}
+.login-logo {
+  width: 56px; height: 56px;
+  background: var(--accent);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+  margin: 0 auto 18px;
+}
+.login-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.login-subtitle {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-soft);
+  margin-bottom: 28px;
+}
+.login-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.login-input:focus { border-color: var(--accent); }
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.login-btn:hover { background: var(--accent-deep); }
+.login-error {
+  font-size: 12px;
+  color: var(--danger);
+  text-align: center;
+  margin-top: 12px;
+  display: none;
+}
+
+/* ===== 메인 ===== */
+.app { display: none; min-height: 100vh; }
+.app.active { display: flex; }
+
+.sidebar {
+  width: 240px;
+  background: var(--bg-elevated);
+  border-right: 0.5px solid var(--border);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 22px;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 14px;
+}
+.sidebar-logo {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+.sidebar-text { line-height: 1.25; }
+.sidebar-name { font-size: 11px; color: var(--text-soft); font-weight: 500; }
+.sidebar-title { font-size: 14px; font-weight: 700; }
+
+.nav-section {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 10px 8px 6px;
+  text-transform: uppercase;
+}
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--text-mid);
+  font-weight: 500;
+  text-align: left;
+  margin-bottom: 1px;
+  transition: background 0.12s;
+}
+.nav-item:hover { background: var(--bg-soft); }
+.nav-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.nav-icon {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--border);
+}
+.sidebar-footer-link {
+  display: block;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--text-faint);
+  text-decoration: none;
+  border-radius: 6px;
+}
+.sidebar-footer-link:hover { background: var(--bg-soft); color: var(--text); }
+
+/* ===== 메인 영역 ===== */
+.main {
+  flex: 1;
+  padding: 24px 28px;
+  min-width: 0;
+}
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.main-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.main-subtitle {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  margin-top: 3px;
+}
+
+.action-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-mid);
+  background: var(--bg-elevated);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.12s;
+}
+.btn:hover { background: var(--bg-soft); }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-deep); }
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger-bg);
+}
+.btn-danger:hover { background: var(--danger-bg); }
+.btn-icon { width: 14px; height: 14px; stroke-width: 2.2; }
+
+/* ===== 테이블/리스트 ===== */
+.data-table {
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+.table-row {
+  display: grid;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border);
+  transition: background 0.12s;
+  gap: 12px;
+}
+.table-row:last-child { border-bottom: none; }
+.table-row:hover { background: var(--bg); }
+.table-row.header {
+  background: var(--bg);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+}
+.table-row.header:hover { background: var(--bg); }
+
+.posts-table .table-row { grid-template-columns: 80px 1fr 100px 80px; }
+.schedule-table .table-row { grid-template-columns: 100px 110px 1fr 80px; }
+.curriculum-table .table-row { grid-template-columns: 1fr 130px 110px 100px 80px; }
+.courses-table .table-row { grid-template-columns: 1fr 130px 130px 90px 80px; }
+.classrooms-table .table-row { grid-template-columns: 130px 1fr 80px; }
+.rules-table .table-row { grid-template-columns: 50px 1fr 80px; }
+.colors-table .table-row { grid-template-columns: 50px 1fr 110px 130px 80px; }
+
+/* ===== 관리자 캘린더 (수업일정) ===== */
+.admin-cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.admin-cal-month {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.admin-cal-nav {
+  display: flex;
+  gap: 6px;
+}
+
+/* 색상 팔레트 */
+.color-palette {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-section);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.palette-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+.palette-options {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.palette-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  background: var(--bg-elevated);
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.palette-chip:hover { background: #fff; box-shadow: var(--shadow-xs); }
+.palette-chip.selected {
+  border-color: var(--accent);
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+}
+.palette-chip-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.palette-chip-name { color: var(--text); }
+
+/* 캘린더 그리드 */
+.admin-cal-grid {
+  border: 0.5px solid var(--border-mid);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-xs);
+}
+.admin-cal-week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--bg-section);
+}
+.admin-cal-week-day {
+  padding: 9px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-soft);
+  letter-spacing: 0.02em;
+}
+.admin-cal-week-day.sun { color: var(--danger); }
+.admin-cal-week-day.sat { color: #1d4ed8; }
+
+.admin-cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--border-mid);
+  gap: 0.5px;
+}
+.admin-cal-day {
+  background: var(--bg-elevated);
+  min-height: 88px;
+  padding: 7px 8px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font-size: 11.5px;
+  transition: background 0.12s;
+  overflow: hidden;
+}
+.admin-cal-day:hover { background: #f9f8f3; }
+.admin-cal-day.other-month { color: #aaa; background: #fafaf7; cursor: default; }
+.admin-cal-day.other-month:hover { background: #fafaf7; }
+.admin-cal-day-num {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+}
+.admin-cal-day.sun .admin-cal-day-num { color: var(--danger); }
+.admin-cal-day.sat .admin-cal-day-num { color: #1d4ed8; }
+.admin-cal-day.today {
+  background: #fef9e6;
+}
+.admin-cal-day.today .admin-cal-day-num {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* 기간 띠 (수업일정 시작~종강) */
+.admin-cal-day.start-day,
+.admin-cal-day.end-day {
+  position: relative;
+}
+.admin-cal-day.start-day::before,
+.admin-cal-day.end-day::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  height: 4px;
+  z-index: 1;
+}
+.admin-cal-day.start-day::before {
+  left: 30%;
+  right: 0;
+  background: #047857;
+}
+.admin-cal-day.end-day::before {
+  left: 0;
+  right: 30%;
+  background: #be185d;
+}
+.admin-cal-day.start-day.end-day::before {
+  left: 30%;
+  right: 30%;
+  background: linear-gradient(90deg, #047857 0%, #be185d 100%);
+}
+.admin-cal-day.start-day::after,
+.admin-cal-day.end-day::after {
+  position: absolute;
+  font-size: 9px;
+  font-weight: 700;
+  bottom: 6px;
+  z-index: 2;
+  letter-spacing: 0.02em;
+}
+.admin-cal-day.start-day::after {
+  content: '개강';
+  left: 6px;
+  color: #047857;
+}
+.admin-cal-day.end-day::after {
+  content: '종강';
+  right: 6px;
+  color: #be185d;
+}
+
+.admin-cal-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.admin-cal-event {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.admin-cal-event:hover { opacity: 0.85; }
+
+/* 빈 날짜 호버 시 + 표시 */
+.admin-cal-day:not(.has-event):not(.other-month):hover::after {
+  content: '+';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--accent);
+  opacity: 0.35;
+  pointer-events: none;
+  font-weight: 300;
+}
+
+.schedule-help {
+  margin-top: 14px;
+  padding: 11px 14px;
+  background: #ebe9fc;
+  border-radius: 8px;
+  border-left: 3px solid var(--m-1);
+  font-size: 11.5px;
+  color: #3a2e8a;
+  line-height: 1.55;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.schedule-help strong {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 드래그 정렬 카드 리스트 */
+.sortable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sortable-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--border);
+  border-radius: 11px;
+  padding: 13px 14px;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.15s, transform 0.1s, opacity 0.15s;
+}
+.sortable-card.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+.sortable-card.drag-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+  transform: scale(1.005);
+}
+.sortable-handle {
+  cursor: grab;
+  color: #aaa;
+  padding: 4px 2px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: -2px;
+  transition: color 0.12s;
+}
+.sortable-handle:hover { color: var(--text-mid); }
+.sortable-handle:active { cursor: grabbing; }
+.sortable-card-content { flex: 1; min-width: 0; }
+.sortable-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.018em;
+}
+.sortable-card-meta {
+  font-size: 11.5px;
+  color: var(--text-soft);
+  margin-top: 4px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+.sortable-card-meta strong {
+  color: var(--text);
+  font-weight: 700;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+.sortable-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.sortable-card-chip {
+  font-size: 10.5px;
+  padding: 3px 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 5px;
+  font-weight: 600;
+}
+.sortable-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cell-tag { display: flex; }
+.cell-color {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.color-preview {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.tag {
+  font-size: 10.5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.tag::before {
+  content: '';
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+.tag-학사 { background: #fce8e9; color: #8a1c23; }
+.tag-세미나 { background: #ebe9fc; color: #3a2e8a; }
+.tag-특강 { background: #ebe9fc; color: #3a2e8a; }
+.tag-시설 { background: #ddf3eb; color: #084d3a; }
+.tag-평가 { background: #fbecd5; color: #683800; }
+.tag-이벤트 { background: #fce8e9; color: #8a1c23; }
+.tag-취업 { background: #dfeefa; color: #154d92; }
+.tag-기타 { background: #ebe9e3; color: #3d3d38; }
+
+.cell-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell-date {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.cell-num {
+  font-size: 12px;
+  color: var(--text-faint);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.icon-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-soft);
+  transition: all 0.12s;
+}
+.icon-btn:hover {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+.icon-btn.danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+.empty-state-icon {
+  width: 44px; height: 44px;
+  background: var(--bg-soft);
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 모달 ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-backdrop.active { display: flex; }
+.modal {
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+.modal.large { max-width: 720px; }
+.modal.xlarge { max-width: 860px; max-height: 95vh; }
+.modal-header {
+  padding: 18px 22px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.modal-close {
+  background: none;
+  border: none;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover { background: var(--bg-soft); }
+.modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+.modal-footer {
+  padding: 14px 22px;
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--bg);
+}
+
+/* ===== 폼 ===== */
+.form-row { margin-bottom: 16px; }
+.form-row.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-row.split-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
+  font-size: 13.5px;
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--text);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+  font-family: inherit;
+}
+.form-help {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ===== 토글 ===== */
+.form-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-mid);
+  cursor: pointer;
+}
+.form-toggle input { width: 18px; height: 18px; }
+.form-toggle-text { flex: 1; }
+.form-toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.form-toggle-help {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+/* ===== 색상 선택기 ===== */
+.color-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.color-input-row input[type="color"] {
+  width: 50px; height: 44px;
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+  padding: 4px;
+}
+.color-input-row .form-input { flex: 1; }
+
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.color-preset {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.color-preset:hover { transform: scale(1.1); }
+
+/* ===== 토글 탭 (단일/반복) ===== */
+.tab-switch {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border-mid);
+  border-radius: 9px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.tab-switch button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.tab-switch button.active {
+  background: var(--bg-elevated);
+  color: var(--accent);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ===== 요일 선택 ===== */
+.weekday-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.weekday-pick {
+  padding: 10px 0;
+  border: 1px solid var(--border-mid);
+  border-radius: 7px;
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.weekday-pick:hover { background: var(--bg-soft); }
+.weekday-pick.selected {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.weekday-pick.sun.selected { background: var(--danger); border-color: var(--danger); }
+.weekday-pick.sat.selected { background: #1d4ed8; border-color: #1d4ed8; }
+
+.batch-preview {
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-mid);
+  font-size: 12px;
+  color: var(--text-soft);
+}
+.batch-preview-count {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+/* ===== 토스트 ===== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: var(--bg-elevated);
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+  z-index: 200;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.confirm-modal { max-width: 400px; }
+.confirm-text {
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.6;
+  padding: 4px 0 8px;
+}
+
+/* ===== 수업자료 ===== */
+.mat-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 18px;
+  align-items: flex-start;
+}
+.mat-tree {
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+}
+.mat-tree-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px 10px;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 8px;
+}
+.mat-tree-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+.mat-tree-add {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mat-tree-add:hover { background: var(--accent-deep); }
+
+.mat-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 500;
+}
+.mat-tree-item:hover { background: var(--bg-soft); }
+.mat-tree-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.mat-tree-item.hidden-cat { opacity: 0.55; }
+.mat-tree-item-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.mat-tree-item-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mat-tree-item-badge {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-weight: 500;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  background: var(--bg-soft);
+  border-radius: 4px;
+}
+.mat-tree-item.active .mat-tree-item-badge {
+  background: rgba(30, 58, 95, 0.1);
+}
+.mat-tree-item-actions {
+  display: none;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.mat-tree-item:hover .mat-tree-item-actions { display: flex; }
+.mat-tree-item-act {
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mat-tree-item-act:hover { background: var(--bg-elevated); color: var(--text); }
+.mat-tree-item-act.danger:hover { background: var(--danger-bg); color: var(--danger); }
+
+.mat-tree-children {
+  margin-left: 22px;
+  padding-left: 4px;
+  border-left: 1.5px solid var(--border-mid);
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+.mat-tree-empty {
+  text-align: center;
+  padding: 24px 12px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.mat-content { min-height: 400px; }
+.mat-content-empty {
+  background: var(--bg-elevated);
+  border: 0.5px dashed var(--border-mid);
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13.5px;
+}
+.mat-content-empty-icon {
+  width: 48px; height: 48px;
+  background: var(--bg-soft);
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mat-content-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.mat-content-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.mat-content-meta {
+  font-size: 12px;
+  color: var(--text-soft);
+  margin-top: 4px;
+}
+.mat-content-meta-hidden {
+  display: inline-block;
+  font-size: 10.5px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.mat-item-card {
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 15px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-xs);
+}
+.mat-item-card.hidden-mat { opacity: 0.55; }
+.mat-item-num {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.mat-item-content { flex: 1; min-width: 0; }
+.mat-item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.mat-item-meta {
+  font-size: 11.5px;
+  color: var(--text-soft);
+  margin-top: 2px;
+}
+.mat-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+.steps-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 0.5px solid var(--border);
+}
+.steps-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.steps-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.step-card {
+  background: var(--bg);
+  border: 0.5px solid var(--border-mid);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.step-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+.step-card-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.step-card-actions { display: flex; gap: 4px; }
+.step-image-uploader {
+  margin-top: 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg-elevated);
+  color: var(--text-soft);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.step-image-uploader:hover { background: var(--bg-soft); }
+.step-image-preview {
+  margin-top: 10px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.step-image-preview img {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+}
+.step-image-remove {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-uploading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-soft);
+  padding: 12px;
+}
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--bg-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 카테고리 픽커 (수업자료) */
+/* 카테고리 유형 선택 (가이드 / 교재) */
+.cat-type-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.cat-type-option {
+  cursor: pointer;
+}
+.cat-type-option input { display: none; }
+.cat-type-card {
+  border: 1px solid var(--border-mid);
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+  transition: all 0.12s;
+}
+.cat-type-option:hover .cat-type-card {
+  border-color: var(--accent);
+}
+.cat-type-option input:checked + .cat-type-card {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.08);
+}
+.cat-type-icon-wrap {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 6px;
+  border-radius: 9px;
+  background: var(--bg-section);
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cat-type-option input:checked + .cat-type-card .cat-type-icon-wrap {
+  background: var(--accent);
+  color: #fff;
+}
+.cat-type-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  color: var(--text);
+}
+.cat-type-sub {
+  font-size: 10.5px;
+  color: var(--text-soft);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.color-picker {
+  display: flex;
+  gap: 8px;
+}
+.color-swatch {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+.color-swatch.selected { border-color: var(--text); }
+.color-swatch[data-color="1"] { background: var(--m-1-bg); }
+.color-swatch[data-color="2"] { background: var(--m-2-bg); }
+.color-swatch[data-color="3"] { background: var(--m-3-bg); }
+.color-swatch[data-color="4"] { background: var(--m-4-bg); }
+.color-swatch[data-color="5"] { background: var(--m-5-bg); }
+.color-swatch[data-color="6"] { background: var(--m-6-bg); }
+
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.icon-swatch {
+  aspect-ratio: 1;
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-mid);
+  transition: all 0.15s;
+}
+.icon-swatch:hover { background: var(--bg-soft); }
+.icon-swatch.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 모바일 */
+@media (max-width: 900px) {
+  .mat-layout { grid-template-columns: 1fr; }
+  .mat-tree { position: static; max-height: none; }
+}
+@media (max-width: 768px) {
+  .app.active { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 12px;
+    gap: 8px;
+  }
+  .sidebar-brand {
+    flex-shrink: 0;
+    border-right: 0.5px solid var(--border);
+    border-bottom: none;
+    padding: 0 14px 0 4px;
+    margin: 0;
+  }
+  .sidebar-footer { display: none; }
+  .nav-section { display: none; }
+  .nav-item { flex-shrink: 0; margin-bottom: 0; padding: 8px 12px; }
+  .main { padding: 18px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">SBS</div>
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-subtitle">SBS 아카데미 컴퓨터아트학원</div>
+    <input type="email" class="login-input" id="login-email" placeholder="직원 이메일" autocomplete="username" style="margin-bottom:8px">
+    <input type="password" class="login-input" id="login-password" placeholder="비밀번호" autocomplete="current-password">
+    <button class="login-btn" onclick="login()">로그인</button>
+    <div class="login-error" id="login-error">이메일 또는 비밀번호가 맞지 않습니다</div>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">SBS</div>
+      <div class="sidebar-text">
+        <div class="sidebar-name">컴퓨터아트학원</div>
+        <div class="sidebar-title">관리자</div>
+      </div>
+    </div>
+
+    <div class="nav-section">콘텐츠</div>
+    <button class="nav-item active" data-view="posts" onclick="switchView('posts')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      공지사항
+    </button>
+    <button class="nav-item" data-view="schedule" onclick="switchView('schedule')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      수업일정
+    </button>
+    <button class="nav-item" data-view="materials" onclick="switchView('materials')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      수업안내
+    </button>
+    <button class="nav-item" data-view="seminars" onclick="switchView('seminars')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      특강·세미나
+    </button>
+
+    <div class="nav-section">학원 정보</div>
+    <button class="nav-item" data-view="classrooms" onclick="switchView('classrooms')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      비대면 안내
+    </button>
+    <button class="nav-item" data-view="rules" onclick="switchView('rules')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      이용안내
+    </button>
+
+    <div class="nav-section">설정</div>
+    <button class="nav-item" data-view="colors" onclick="switchView('colors')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+      일정 색상
+    </button>
+    <button class="nav-item" data-view="settings" onclick="switchView('settings')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      학원 정보
+    </button>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="sidebar-footer-link">← 수강생 페이지</a>
+      <button class="sidebar-footer-link" style="width: 100%; text-align: left; background: none; border: none;" onclick="logout()">로그아웃</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- 공지사항 -->
+    <section id="view-posts" class="view">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">공지사항</h1>
+          <div class="main-subtitle" id="posts-count">전체 0건</div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="openPostModal()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            새 공지 작성
+          </button>
+        </div>
+      </div>
+      <div class="data-table posts-table">
+        <div class="table-row header">
+          <div>카테고리</div>
+          <div>제목</div>
+          <div>작성일</div>
+          <div></div>
+        </div>
+        <div id="posts-list"></div>
+      </div>
+    </section>
+
+    <!-- 수업일정 (수업일정 묶음 관리 + 캘린더 편집) -->
+    <section id="view-schedule" class="view" style="display: none;">
+      
+      <!-- 모드 1: 수업일정 목록 -->
+      <div id="schedule-mode-list">
+        <div class="main-header">
+          <div>
+            <h1 class="main-title">수업일정</h1>
+            <div class="main-subtitle">기수별 수업일정을 등록하고 캘린더에 색칠하세요</div>
+          </div>
+          <div class="action-bar">
+            <button class="btn btn-primary" onclick="openCourseModal()">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              수업일정 추가
+            </button>
+          </div>
+        </div>
+        <div class="data-table courses-table">
+          <div class="table-row header">
+            <div>이름</div>
+            <div>시작일</div>
+            <div>종강일</div>
+            <div>표시</div>
+            <div></div>
+          </div>
+          <div id="courses-list"></div>
+        </div>
+      </div>
+      
+      <!-- 모드 2: 개별 수업일정 편집 (캘린더) -->
+      <div id="schedule-mode-edit" style="display: none;">
+        <div class="main-header">
+          <div>
+            <button class="btn" onclick="closeCourseEditor()" style="margin-bottom: 10px; padding: 5px 10px; font-size: 12px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px;"><polyline points="15 18 9 12 15 6"/></svg>
+              수업일정 목록으로
+            </button>
+            <h1 class="main-title" id="editor-course-name">수업일정</h1>
+            <div class="main-subtitle" id="editor-course-meta"></div>
+          </div>
+          <div class="action-bar">
+            <button class="btn" onclick="confirmResetCourseSchedule()" title="이 수업일정의 모든 색칠 제거">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              초기화
+            </button>
+            <button class="btn btn-primary" onclick="saveCourseSchedule()" id="save-changes-btn">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              저장 <span id="save-changes-count" style="display: none; font-size: 11px; opacity: 0.85; margin-left: 4px;"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 진행률 미리보기 -->
+        <div id="editor-progress" style="margin-bottom: 14px;"></div>
+        
+        <!-- 캘린더 헤더 (월 이동) -->
+        <div class="admin-cal-header">
+          <div class="admin-cal-month" id="admin-cal-month-label"></div>
+          <div class="admin-cal-nav">
+            <button class="btn" onclick="adminCalPrev()" style="padding: 6px 10px;">←</button>
+            <button class="btn" onclick="adminCalNext()" style="padding: 6px 10px;">→</button>
+          </div>
+        </div>
+        
+        <!-- 색상 팔레트 -->
+        <div class="color-palette" id="admin-color-palette"></div>
+        
+        <!-- 캘린더 그리드 -->
+        <div class="admin-cal-grid">
+          <div class="admin-cal-week-header">
+            <div class="admin-cal-week-day sun">일</div>
+            <div class="admin-cal-week-day">월</div>
+            <div class="admin-cal-week-day">화</div>
+            <div class="admin-cal-week-day">수</div>
+            <div class="admin-cal-week-day">목</div>
+            <div class="admin-cal-week-day">금</div>
+            <div class="admin-cal-week-day sat">토</div>
+          </div>
+          <div class="admin-cal-days" id="admin-cal-days"></div>
+        </div>
+        
+        <div class="schedule-help">
+          <strong>사용법</strong>
+          <span>① 위에서 색상 클릭으로 선택  ② 빈 날짜 클릭 → 그 색으로 칠해짐  ③ 칠해진 날짜 다시 클릭 → 색 해제  ④ 다른 색 선택 후 클릭 → 색 변경  ⑤ "저장" 버튼 클릭으로 변경사항 반영</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 수업자료 -->
+    <section id="view-materials" class="view" style="display: none;">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">수업안내</h1>
+          <div class="main-subtitle">카테고리와 단계별 가이드 관리</div>
+        </div>
+      </div>
+      <div class="mat-layout">
+        <div class="mat-tree">
+          <div class="mat-tree-head">
+            <div class="mat-tree-title">카테고리</div>
+            <button class="mat-tree-add" onclick="openCatModal()" title="카테고리 추가">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div id="mat-tree-list"></div>
+        </div>
+        <div class="mat-content" id="mat-content"></div>
+      </div>
+    </section>
+
+    <!-- 강의장 -->
+    <section id="view-classrooms" class="view" style="display: none;">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">비대면 안내</h1>
+          <div class="main-subtitle" id="classrooms-count">드래그로 순서를 변경할 수 있습니다</div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="openClassModal()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            강의장 추가
+          </button>
+        </div>
+      </div>
+      <div id="classrooms-list" class="sortable-list"></div>
+    </section>
+
+    <!-- 특강·세미나 -->
+    <section id="view-seminars" class="view" style="display: none;">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">특강·세미나</h1>
+          <div class="main-subtitle" id="seminars-count">드래그로 순서를 변경할 수 있습니다</div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="openSeminarModal()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            세미나 추가
+          </button>
+        </div>
+      </div>
+      <div id="seminars-list" class="sortable-list"></div>
+    </section>
+
+    <!-- 학칙 -->
+    <section id="view-rules" class="view" style="display: none;">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">이용안내</h1>
+          <div class="main-subtitle" id="rules-count">드래그로 순서를 변경할 수 있습니다</div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="openRuleModal()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            이용안내 항목 추가
+          </button>
+        </div>
+      </div>
+      <div id="rules-list" class="sortable-list"></div>
+    </section>
+
+    <!-- 일정 색상 -->
+    <section id="view-colors" class="view" style="display: none;">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">일정 색상</h1>
+          <div class="main-subtitle">학사일정에서 사용할 색상을 정의합니다 (예: 정상/휴강/월수금/화목금)</div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="openColorModal()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            색상 추가
+          </button>
+        </div>
+      </div>
+      <div class="data-table colors-table">
+        <div class="table-row header">
+          <div>순서</div>
+          <div>이름</div>
+          <div>분류</div>
+          <div>색상</div>
+          <div></div>
+        </div>
+        <div id="colors-list"></div>
+      </div>
+    </section>
+
+    <!-- 학원 정보 -->
+    <section id="view-settings" class="view" style="display: none;">
+      <div class="main-header">
+        <div>
+          <h1 class="main-title">학원 정보</h1>
+          <div class="main-subtitle">홈 화면 안내사항 + 학원 연락처 정보</div>
+        </div>
+      </div>
+      <div style="background: var(--bg-elevated); border: 0.5px solid var(--border); border-radius: 12px; padding: 24px; max-width: 600px; box-shadow: var(--shadow-xs);">
+        <div class="form-row">
+          <label class="form-label" style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f0b35a;"></span>
+            홈 화면 안내사항
+          </label>
+          <textarea class="form-textarea" id="set-notice" placeholder="멘토 카톡 상담은 평일 10:00 ~ 19:00&#10;주말·야간엔 이메일로 부탁드려요" style="min-height: 100px;"></textarea>
+          <div class="form-help">홈 화면 상단 노란색 안내 영역에 표시됩니다. 줄바꿈 그대로 반영됩니다. 비워두면 안내 영역이 표시되지 않습니다.</div>
+        </div>
+        <hr style="border: none; border-top: 0.5px solid var(--border); margin: 22px 0;">
+        <div class="form-row">
+          <label class="form-label">학원명</label>
+          <input type="text" class="form-input" id="set-academyName" placeholder="SBS 아카데미 컴퓨터아트학원">
+        </div>
+        <div class="form-row">
+          <label class="form-label">전화번호</label>
+          <input type="text" class="form-input" id="set-phone" placeholder="02-XXX-XXXX">
+        </div>
+        <div class="form-row">
+          <label class="form-label">이메일</label>
+          <input type="email" class="form-input" id="set-contact" placeholder="contact@example.com">
+        </div>
+        <div class="form-row">
+          <label class="form-label">주소</label>
+          <input type="text" class="form-input" id="set-address" placeholder="서울특별시 ...">
+        </div>
+        <div class="form-row">
+          <label class="form-label">운영시간</label>
+          <input type="text" class="form-input" id="set-hours" placeholder="평일 09:00-22:00 / 토 09:00-18:00">
+        </div>
+        <hr style="border: none; border-top: 0.5px solid var(--border); margin: 22px 0;">
+        <div class="form-row">
+          <label class="form-label" style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #1e3a5f;"></span>
+            비대면 줌 접속 가이드 이미지
+          </label>
+          <div>
+            <input type="file" id="set-zoomGuide-input" accept="image/*" style="display: none;" onchange="onZoomGuideSelected(event)">
+            <div id="set-zoomGuide-preview" style="display: none; position: relative; margin-bottom: 8px;">
+              <img id="set-zoomGuide-preview-img" src="" style="max-width: 100%; max-height: 240px; border-radius: 8px; border: 0.5px solid var(--border); display: block;">
+              <button type="button" onclick="removeZoomGuide()" style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #fff; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px;">×</button>
+            </div>
+            <button type="button" class="btn" onclick="document.getElementById('set-zoomGuide-input').click()" id="set-zoomGuide-btn">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span id="set-zoomGuide-label">가이드 이미지 선택</span>
+            </button>
+          </div>
+          <div class="form-help">비대면 안내 페이지 상단에 이미지 그대로 표시됩니다. 등록 안 하면 표시되지 않습니다.</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">가이드 이미지 클릭 시 이동할 링크 (선택)</label>
+          <input type="url" class="form-input" id="set-zoomGuideLink" placeholder="https://zoom.us/...">
+          <div class="form-help">수강생이 가이드 이미지를 <strong>2번 클릭(더블탭)</strong>하면 이 링크가 새 창으로 열립니다.</div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">저장</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ 모달들 ============ -->
+
+<!-- 공지 모달 -->
+<div class="modal-backdrop" id="post-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="post-modal-title">새 공지 작성</div>
+      <button class="modal-close" onclick="closeModal('post-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="post-id">
+      <div class="form-row split">
+        <div>
+          <label class="form-label">카테고리</label>
+          <select class="form-select" id="post-category">
+            <option value="학사">학사</option>
+            <option value="세미나">세미나</option>
+            <option value="특강">특강</option>
+            <option value="시설">시설</option>
+            <option value="평가">평가</option>
+            <option value="이벤트">이벤트</option>
+            <option value="취업">취업</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">날짜</label>
+          <input type="date" class="form-input" id="post-date">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">제목</label>
+        <input type="text" class="form-input" id="post-title" placeholder="공지 제목">
+      </div>
+      <div class="form-row">
+        <label class="form-label">본문</label>
+        <textarea class="form-textarea" id="post-content" placeholder="본문 (줄바꿈 그대로 표시됩니다)"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">참여/관련 링크 (선택)</label>
+        <input type="url" class="form-input" id="post-linkUrl" placeholder="https://zoom.us/j/...">
+        <div class="form-help">줌 링크나 관련 사이트 URL을 입력하면 상세 페이지에 큰 버튼으로 표시됩니다.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">대표 이미지 (선택)</label>
+        <div id="post-image-area">
+          <input type="file" id="post-image-input" accept="image/*" style="display: none;" onchange="onPostImageSelected(event)">
+          <div id="post-image-preview" style="display: none; position: relative; margin-bottom: 8px;">
+            <img id="post-image-preview-img" src="" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 0.5px solid var(--border); display: block;">
+            <button type="button" onclick="removePostImage()" style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #fff; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px;">×</button>
+          </div>
+          <button type="button" class="btn" onclick="document.getElementById('post-image-input').click()" id="post-image-upload-btn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span id="post-image-upload-label">이미지 선택</span>
+          </button>
+        </div>
+        <div class="form-help">메인 화면 공지 목록에 작은 썸네일로 표시됩니다.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('post-modal')">취소</button>
+      <button class="btn btn-primary" onclick="savePost()">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 색상 모달 -->
+<div class="modal-backdrop" id="color-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="color-modal-title">색상 추가</div>
+      <button class="modal-close" onclick="closeModal('color-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="color-id">
+      <div class="form-row">
+        <label class="form-label">이름</label>
+        <input type="text" class="form-input" id="color-name" placeholder="예: 정상 수업, 휴강, 월수금 수업">
+      </div>
+      <div class="form-row">
+        <label class="form-label">분류</label>
+        <select class="form-select" id="color-type">
+          <option value="class">수업일 (회차 카운트에 포함)</option>
+          <option value="cancel">휴강/공강 (회차에서 제외)</option>
+          <option value="other">기타 (특강·이벤트 등)</option>
+        </select>
+        <div class="form-help">홈 화면 진행률 게이지가 이 분류에 따라 자동 계산됩니다.<br>"수업일"로 분류된 일정만 회차로 카운트되고, "휴강/공강"은 휴강일수에 잡힙니다.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">색상</label>
+        <div class="color-input-row">
+          <input type="color" id="color-value" value="#10b981" oninput="document.getElementById('color-hex').value = this.value">
+          <input type="text" class="form-input" id="color-hex" value="#10b981" oninput="document.getElementById('color-value').value = this.value" maxlength="7">
+        </div>
+        <div class="color-presets">
+          <div class="color-preset" style="background: #10b981" onclick="setColor('#10b981')"></div>
+          <div class="color-preset" style="background: #dc2626" onclick="setColor('#dc2626')"></div>
+          <div class="color-preset" style="background: #2563eb" onclick="setColor('#2563eb')"></div>
+          <div class="color-preset" style="background: #ca8a04" onclick="setColor('#ca8a04')"></div>
+          <div class="color-preset" style="background: #7c3aed" onclick="setColor('#7c3aed')"></div>
+          <div class="color-preset" style="background: #db2777" onclick="setColor('#db2777')"></div>
+          <div class="color-preset" style="background: #0891b2" onclick="setColor('#0891b2')"></div>
+          <div class="color-preset" style="background: #ea580c" onclick="setColor('#ea580c')"></div>
+          <div class="color-preset" style="background: #475569" onclick="setColor('#475569')"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('color-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveColor()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 진행 중인 과정 모달 -->
+<div class="modal-backdrop" id="course-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="course-modal-title">과정 추가</div>
+      <button class="modal-close" onclick="closeModal('course-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="course-id">
+      <div class="form-row">
+        <label class="form-label">과정 이름</label>
+        <input type="text" class="form-input" id="course-name" placeholder="예: AI 프롬프트 5월 개강반">
+      </div>
+      <div class="form-row split">
+        <div>
+          <label class="form-label">시작일</label>
+          <input type="date" class="form-input" id="course-startDate">
+        </div>
+        <div>
+          <label class="form-label">종강일</label>
+          <input type="date" class="form-input" id="course-endDate">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-toggle">
+          <input type="checkbox" id="course-active">
+          <div class="form-toggle-text">
+            <div class="form-toggle-label">현재 진행 중 (홈 화면 게이지에 표시)</div>
+            <div class="form-toggle-help">체크된 과정 중 시작일이 가장 가까운 과정 1개가 홈에 표시됩니다.</div>
+          </div>
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="form-label">설명 (선택)</label>
+        <input type="text" class="form-input" id="course-description" placeholder="간단한 한 줄 설명">
+      </div>
+      <div style="background: var(--bg-section); border-radius: 8px; padding: 11px 13px; font-size: 11.5px; color: var(--text-soft); line-height: 1.55;">
+        <strong style="color: var(--text);">진행률 계산 방식</strong><br>
+        시작일 ~ 종강일 사이의 캘린더 일정을 자동 분석합니다.<br>
+        ・"수업일" 분류 색상으로 등록된 날 = 회차로 카운트<br>
+        ・"휴강/공강" 분류 색상으로 등록된 날 = 회차에서 제외
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('course-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveCourse()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 강의장 모달 -->
+<div class="modal-backdrop" id="class-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="class-modal-title">강의장 추가</div>
+      <button class="modal-close" onclick="closeModal('class-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="class-id">
+      <div class="form-row">
+        <label class="form-label">강의장 이름</label>
+        <input type="text" class="form-input" id="class-name" placeholder="예: A강의장">
+      </div>
+      <div class="form-row split">
+        <div>
+          <label class="form-label">접속 ID</label>
+          <input type="text" class="form-input" id="class-loginId" placeholder="예: 212 312 9660">
+        </div>
+        <div>
+          <label class="form-label">비밀번호</label>
+          <input type="text" class="form-input" id="class-password" placeholder="예: 123412">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">설치 프로그램</label>
+        <input type="text" class="form-input" id="class-programs" placeholder="예: Adobe2024, OFFICE2021, 캐드2022">
+        <div class="form-help">콤마(,)로 구분하면 칩 형태로 표시됩니다.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">메모 (선택)</label>
+        <input type="text" class="form-input" id="class-description" placeholder="예: 웹툰 / 컨셉드로잉 전용 / 30석">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('class-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveClassroom()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 세미나 모달 -->
+<div class="modal-backdrop" id="seminar-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="seminar-modal-title">세미나 추가</div>
+      <button class="modal-close" onclick="closeModal('seminar-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="seminar-id">
+      <div class="form-row">
+        <label class="form-label">특강 이름 *</label>
+        <input type="text" class="form-input" id="seminar-title" placeholder="예: ACP자격증 일러스트, 포토샵 풀이 특강">
+      </div>
+      <div class="form-row split">
+        <div>
+          <label class="form-label">날짜</label>
+          <input type="date" class="form-input" id="seminar-date">
+        </div>
+        <div>
+          <label class="form-label">시간 (선택)</label>
+          <input type="text" class="form-input" id="seminar-time" placeholder="예: 14:00 ~ 18:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">강사 / 진행자 (선택)</label>
+        <input type="text" class="form-input" id="seminar-host" placeholder="예: 문소하 강사">
+      </div>
+      <div class="form-row">
+        <label class="form-label">특강 대상 (선택)</label>
+        <input type="text" class="form-input" id="seminar-target" placeholder="예: ACP에 관심있는 모든 수강생">
+      </div>
+      <div class="form-row split">
+        <div>
+          <label class="form-label">신청 인원 (선택)</label>
+          <input type="text" class="form-input" id="seminar-capacity" placeholder="예: 50명 (대면 선착순 8명)">
+        </div>
+        <div>
+          <label class="form-label">비용 (선택)</label>
+          <input type="text" class="form-input" id="seminar-fee" placeholder="예: 무료 / 50,000원">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">참여 링크 (줌 등) (선택)</label>
+        <input type="url" class="form-input" id="seminar-linkUrl" placeholder="https://zoom.us/j/...">
+        <div class="form-help">상세 페이지에 큰 버튼으로 표시됩니다.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">내용 (선택)</label>
+        <textarea class="form-textarea" id="seminar-content" placeholder="추가 설명 (줄바꿈 그대로 표시됩니다)" style="min-height: 80px;"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">대표 이미지 (선택)</label>
+        <div>
+          <input type="file" id="seminar-image-input" accept="image/*" style="display: none;" onchange="onSeminarImageSelected(event)">
+          <div id="seminar-image-preview" style="display: none; position: relative; margin-bottom: 8px;">
+            <img id="seminar-image-preview-img" src="" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 0.5px solid var(--border); display: block;">
+            <button type="button" onclick="removeSeminarImage()" style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #fff; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px;">×</button>
+          </div>
+          <button type="button" class="btn" onclick="document.getElementById('seminar-image-input').click()" id="seminar-image-upload-btn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span id="seminar-image-upload-label">이미지 선택</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('seminar-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveSeminar()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 학칙 모달 -->
+<div class="modal-backdrop" id="rule-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="rule-modal-title">학칙 항목 추가</div>
+      <button class="modal-close" onclick="closeModal('rule-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rule-id">
+      <div class="form-row split">
+        <div>
+          <label class="form-label">제목</label>
+          <input type="text" class="form-input" id="rule-section" placeholder="예: 출결 관리, 수강료 환불">
+        </div>
+        <div>
+          <label class="form-label">순서</label>
+          <input type="number" class="form-input" id="rule-order" placeholder="1" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">내용</label>
+        <textarea class="form-textarea" id="rule-content" placeholder="학칙 내용 (줄바꿈 그대로 표시됩니다)" style="min-height: 200px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('rule-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveRule()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 카테고리 모달 (수업자료) -->
+<div class="modal-backdrop" id="cat-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="cat-modal-title">카테고리 추가</div>
+      <button class="modal-close" onclick="closeModal('cat-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cat-id">
+      <div class="form-row">
+        <label class="form-label">카테고리 이름</label>
+        <input type="text" class="form-input" id="cat-name" placeholder="예: 준비물, 자격증, 교재">
+      </div>
+      <div class="form-row">
+        <label class="form-label">카테고리 유형</label>
+        <div class="cat-type-picker">
+          <label class="cat-type-option">
+            <input type="radio" name="cat-type" value="guide" checked onchange="updateCatTypeUI()">
+            <div class="cat-type-card">
+              <div class="cat-type-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div class="cat-type-title">가이드</div>
+              <div class="cat-type-sub">단계별 안내 자료</div>
+            </div>
+          </label>
+          <label class="cat-type-option">
+            <input type="radio" name="cat-type" value="book" onchange="updateCatTypeUI()">
+            <div class="cat-type-card">
+              <div class="cat-type-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              <div class="cat-type-title">교재</div>
+              <div class="cat-type-sub">썸네일 + 외부 링크</div>
+            </div>
+          </label>
+        </div>
+        <div class="form-help" id="cat-type-help">"가이드"는 단계별 자료, "교재"는 사진/가격/구매 링크 목록입니다.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">상위 카테고리 (선택)</label>
+        <select class="form-select" id="cat-parent">
+          <option value="">없음 (최상위)</option>
+        </select>
+      </div>
+      <div class="form-row split">
+        <div>
+          <label class="form-label">색상</label>
+          <div class="color-picker" id="cat-color-picker">
+            <div class="color-swatch" data-color="1" onclick="selectCatColor('1')"></div>
+            <div class="color-swatch" data-color="2" onclick="selectCatColor('2')"></div>
+            <div class="color-swatch" data-color="3" onclick="selectCatColor('3')"></div>
+            <div class="color-swatch" data-color="4" onclick="selectCatColor('4')"></div>
+            <div class="color-swatch" data-color="5" onclick="selectCatColor('5')"></div>
+            <div class="color-swatch" data-color="6" onclick="selectCatColor('6')"></div>
+          </div>
+          <input type="hidden" id="cat-color" value="6">
+        </div>
+        <div>
+          <label class="form-label">아이콘</label>
+          <div class="icon-picker" id="cat-icon-picker">
+            <div class="icon-swatch" data-icon="package" onclick="selectCatIcon('package')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></div>
+            <div class="icon-swatch" data-icon="monitor" onclick="selectCatIcon('monitor')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <div class="icon-swatch" data-icon="award" onclick="selectCatIcon('award')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div>
+            <div class="icon-swatch" data-icon="video" onclick="selectCatIcon('video')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+            <div class="icon-swatch" data-icon="tag" onclick="selectCatIcon('tag')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+            <div class="icon-swatch" data-icon="book" onclick="selectCatIcon('book')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+            <div class="icon-swatch" data-icon="help" onclick="selectCatIcon('help')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div class="icon-swatch" data-icon="lightbulb" onclick="selectCatIcon('lightbulb')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></div>
+            <div class="icon-swatch" data-icon="file" onclick="selectCatIcon('file')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          </div>
+          <input type="hidden" id="cat-icon" value="file">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-toggle">
+          <input type="checkbox" id="cat-hidden">
+          <div class="form-toggle-text">
+            <div class="form-toggle-label">숨김 처리</div>
+            <div class="form-toggle-help">수강생에게 보이지 않습니다</div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('cat-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveCatModal()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 자료 모달 (수업자료) -->
+<div class="modal-backdrop" id="mat-modal">
+  <div class="modal xlarge">
+    <div class="modal-header">
+      <div class="modal-title" id="mat-modal-title">새 자료 작성</div>
+      <button class="modal-close" onclick="closeModal('mat-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mat-id">
+      <input type="hidden" id="mat-categoryId">
+      <input type="hidden" id="mat-mode" value="guide">
+      <div class="form-row">
+        <label class="form-label">제목</label>
+        <input type="text" class="form-input" id="mat-title" placeholder="예: 포토샵 기초 완성 교재">
+      </div>
+      <div class="form-row">
+        <label class="form-label">설명 (선택)</label>
+        <input type="text" class="form-input" id="mat-description" placeholder="간단한 한 줄 요약">
+      </div>
+      <div class="form-row">
+        <label class="form-toggle">
+          <input type="checkbox" id="mat-hidden">
+          <div class="form-toggle-text">
+            <div class="form-toggle-label">숨김 처리</div>
+            <div class="form-toggle-help">수강생에게 보이지 않습니다</div>
+          </div>
+        </label>
+      </div>
+      
+      <!-- 교재 모드 전용 필드 -->
+      <div id="mat-book-section" style="display: none;">
+        <div class="form-row split">
+          <div>
+            <label class="form-label">가격 (선택)</label>
+            <input type="text" class="form-input" id="mat-bookPrice" placeholder="예: 25,000원">
+          </div>
+          <div>
+            <label class="form-label">부제 (선택)</label>
+            <input type="text" class="form-input" id="mat-bookSub" placeholder="예: SBS 컴퓨터아트학원 출판">
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">교재몰 구매 링크 *</label>
+          <input type="url" class="form-input" id="mat-bookLink" placeholder="https://...">
+          <div class="form-help">탭하면 외부 브라우저에서 이 링크가 열립니다.</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">교재 썸네일 이미지 (선택)</label>
+          <div>
+            <input type="file" id="mat-bookImage-input" accept="image/*" style="display: none;" onchange="onMatBookImageSelected(event)">
+            <div id="mat-bookImage-preview" style="display: none; position: relative; margin-bottom: 8px;">
+              <img id="mat-bookImage-preview-img" src="" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 0.5px solid var(--border); display: block;">
+              <button type="button" onclick="removeMatBookImage()" style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #fff; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px;">×</button>
+            </div>
+            <button type="button" class="btn" onclick="document.getElementById('mat-bookImage-input').click()" id="mat-bookImage-btn">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span id="mat-bookImage-label">썸네일 이미지 선택</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 가이드 모드 전용 (단계별 가이드) -->
+      <div id="mat-guide-section">
+        <div class="steps-section">
+          <div class="steps-head">
+            <div class="steps-title">단계별 가이드</div>
+            <button class="btn" onclick="addStep()">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              단계 추가
+            </button>
+          </div>
+          <div id="steps-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('mat-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveMatModal()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 확인 모달 -->
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal confirm-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="confirm-title">삭제 확인</div>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-text" id="confirm-text">정말 삭제하시겠습니까?</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('confirm-modal')">취소</button>
+      <button class="btn btn-danger" id="confirm-action-btn" onclick="confirmAction()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script>
+/* config.js 내용 */
+// ============================================================
+// Firebase 설정
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDvYKTh4G2SFxw8LKgz1YaP3oR1mFbR8Kc",
+  authDomain: "notice-3aef1.firebaseapp.com",
+  projectId: "notice-3aef1",
+  storageBucket: "notice-3aef1.firebasestorage.app",
+  messagingSenderId: "39136833631",
+  appId: "1:39136833631:web:e85baeeee4dd80f03bebea"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+window.CONFIG = { USE_FIREBASE: true };
+
+// 기본 색상 (운영자가 색상 컬렉션을 안 만들었을 때 fallback)
+// type: 'class' (수업일) | 'cancel' (휴강일) | 'other' (기타)
+window.DEFAULT_SCHEDULE_COLORS = [
+  { id: '_d_green',  name: '정상 수업',   color: '#10b981', type: 'class',  order: 1 },
+  { id: '_d_red',    name: '휴강/공강',   color: '#dc2626', type: 'cancel', order: 2 },
+  { id: '_d_blue',   name: '월수금 수업', color: '#2563eb', type: 'class',  order: 3 },
+  { id: '_d_yellow', name: '화목금 수업', color: '#ca8a04', type: 'class',  order: 4 }
+];
+
+// ============================================================
+// API 헬퍼
+// ============================================================
+window.api = {
+  // 이메일 로그인 여부로 확인 (실제 쓰기 권한은 Firestore 규칙이 판단)
+  async verifyAuth() {
+    try {
+      return !!(firebase.auth && firebase.auth().currentUser);
+    } catch (err) {
+      return false;
+    }
+  },
+
+  async call(action, data = {}, auth = null) {
+    // ===== 읽기 =====
+    if (action === 'getHome')        return await this._getHome();
+    if (action === 'getPosts')       return await this._getPosts(data.category);
+    if (action === 'getPost')        return await this._getPost(data.id);
+    if (action === 'getSchedule')    return await this._getSchedule();
+    if (action === 'getCurriculum')  return await this._getList('curriculum', 'startDate', 'asc');
+    if (action === 'getClassrooms')  return await this._getList('classrooms', 'order', 'asc');
+    if (action === 'getRules')       return await this._getList('rules', 'order', 'asc');
+    if (action === 'getSettings')    return await this._getSettings();
+    if (action === 'getScheduleColors') return await this._getScheduleColors();
+    if (action === 'getCourses')     return await this._getList('courses', 'startDate', 'asc');
+    if (action === 'getSeminars')    return await this._getList('seminars', 'order', 'asc');
+    
+    // 수업자료
+    if (action === 'getMaterialCategories') return await this._getMaterialCategories(data.includeHidden);
+    if (action === 'getMaterials')   return await this._getMaterials(data.categoryId, data.includeHidden);
+    if (action === 'getMaterial')    return await this._getMaterial(data.id);
+
+    // ===== 쓰기 (인증 필요) =====
+    if (auth) {
+      const ok = await this.verifyAuth(auth);
+      if (!ok) throw new Error('인증 실패');
+    }
+
+    if (action === 'savePost')         return await this._save('posts', data);
+    if (action === 'deletePost')       return await this._delete('posts', data.id);
+    if (action === 'saveSchedule')     return await this._save('schedule', data);
+    if (action === 'deleteSchedule')   return await this._delete('schedule', data.id);
+    if (action === 'saveScheduleBatch') return await this._saveScheduleBatch(data);
+    if (action === 'saveCurriculum')   return await this._save('curriculum', data);
+    if (action === 'deleteCurriculum') return await this._delete('curriculum', data.id);
+    if (action === 'saveCourse')       return await this._save('courses', data);
+    if (action === 'deleteCourse')     return await this._delete('courses', data.id);
+    if (action === 'saveClassroom')    return await this._save('classrooms', data);
+    if (action === 'deleteClassroom')  return await this._delete('classrooms', data.id);
+    if (action === 'saveRule')         return await this._save('rules', data);
+    if (action === 'deleteRule')       return await this._delete('rules', data.id);
+    if (action === 'saveSettings')     return await this._saveSettings(data);
+    if (action === 'saveScheduleColor')   return await this._save('scheduleColors', data);
+    if (action === 'deleteScheduleColor') return await this._delete('scheduleColors', data.id);
+    if (action === 'saveSeminar')      return await this._save('seminars', data);
+    if (action === 'deleteSeminar')    return await this._delete('seminars', data.id);
+    if (action === 'reorderItems')     return await this._reorderItems(data.collection, data.orderedIds);
+    
+    if (action === 'saveMaterialCategory')   return await this._save('materialCategories', data);
+    if (action === 'deleteMaterialCategory') return await this._deleteMaterialCategory(data.id);
+    if (action === 'saveMaterial')           return await this._save('materials', data);
+    if (action === 'deleteMaterial')         return await this._delete('materials', data.id);
+
+    throw new Error('Unknown action: ' + action);
+  },
+
+  // ===== 내부 헬퍼 =====
+  async _getList(collection, orderField = null, orderDir = 'desc') {
+    // 인덱스 회피: 단순 조회 후 클라이언트 정렬
+    const snap = await db.collection(collection).get();
+    let items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (orderField) {
+      items.sort((a, b) => {
+        const av = a[orderField];
+        const bv = b[orderField];
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (av < bv) return orderDir === 'asc' ? -1 : 1;
+        if (av > bv) return orderDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return items;
+  },
+
+  async _getHome() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 21);
+    const futureStr = futureDate.toISOString().split('T')[0];
+
+    // 공지: 전체 가져와서 클라이언트에서 정렬/제한
+    const postsSnap = await db.collection('posts').get();
+    const posts = postsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .slice(0, 5);
+
+    // 일정: 전체 가져와서 클라이언트에서 필터/정렬
+    const scheduleSnap = await db.collection('schedule').get();
+    const schedule = scheduleSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(s => s.date >= todayStr && s.date <= futureStr)
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+      .slice(0, 4);
+
+    const settings = await this._getSettings();
+    return { posts, schedule, settings };
+  },
+
+  async _getPosts(category) {
+    // 전체 가져와서 클라이언트에서 필터/정렬 (인덱스 회피)
+    const snap = await db.collection('posts').get();
+    let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (category && category !== 'all' && category !== '전체') {
+      items = items.filter(p => p.category === category);
+    }
+    items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    return items;
+  },
+
+  async _getPost(id) {
+    const doc = await db.collection('posts').doc(id).get();
+    if (!doc.exists) throw new Error('Post not found');
+    return { id: doc.id, ...doc.data() };
+  },
+
+  async _getSchedule() {
+    const snap = await db.collection('schedule').get();
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  },
+
+  async _getSettings() {
+    const doc = await db.collection('settings').doc('default').get();
+    if (!doc.exists) return {};
+    return doc.data();
+  },
+
+  async _getScheduleColors() {
+    const snap = await db.collection('scheduleColors').get();
+    let colors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    colors.sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (colors.length === 0) return window.DEFAULT_SCHEDULE_COLORS;
+    return colors;
+  },
+
+  // 수업자료
+  async _getMaterialCategories(includeHidden = false) {
+    const snap = await db.collection('materialCategories').get();
+    let cats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    cats.sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (!includeHidden) cats = cats.filter(c => !c.hidden);
+    return cats;
+  },
+
+  async _getMaterials(categoryId, includeHidden = false) {
+    // where만 사용 (orderBy 분리하면 인덱스 불필요)
+    const snap = await db.collection('materials').where('categoryId', '==', categoryId).get();
+    let materials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    materials.sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (!includeHidden) materials = materials.filter(m => !m.hidden);
+    return materials;
+  },
+
+  async _getMaterial(id) {
+    const doc = await db.collection('materials').doc(id).get();
+    if (!doc.exists) throw new Error('Material not found');
+    return { id: doc.id, ...doc.data() };
+  },
+
+  async _save(collection, data) {
+    const { id, ...rest } = data;
+    if (id) {
+      await db.collection(collection).doc(id).set(rest, { merge: true });
+      return { id, ...rest };
+    } else {
+      const ref = await db.collection(collection).add({
+        ...rest,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return { id: ref.id, ...rest };
+    }
+  },
+
+  async _delete(collection, id) {
+    await db.collection(collection).doc(id).delete();
+    return { deleted: id };
+  },
+
+  // 순서 일괄 변경 (드래그 앤 드롭용)
+  async _reorderItems(collection, orderedIds) {
+    if (!collection || !Array.isArray(orderedIds)) {
+      throw new Error('collection과 orderedIds 필요');
+    }
+    const batch = db.batch();
+    orderedIds.forEach((id, idx) => {
+      const ref = db.collection(collection).doc(id);
+      batch.update(ref, { order: idx });
+    });
+    await batch.commit();
+    return { ok: true, count: orderedIds.length };
+  },
+
+  // 일정 일괄 등록 (반복 패턴)
+  async _saveScheduleBatch(data) {
+    // data: { dates: [...], colorId, title, description }
+    const batch = db.batch();
+    const ids = [];
+    for (const date of data.dates) {
+      const ref = db.collection('schedule').doc();
+      batch.set(ref, {
+        date,
+        colorId: data.colorId,
+        title: data.title,
+        description: data.description || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      ids.push(ref.id);
+    }
+    await batch.commit();
+    return { count: data.dates.length, ids };
+  },
+
+  async _deleteMaterialCategory(id) {
+    const childSnap = await db.collection('materialCategories').where('parentId', '==', id).get();
+    const allIds = [id, ...childSnap.docs.map(d => d.id)];
+    
+    for (const catId of allIds) {
+      const matSnap = await db.collection('materials').where('categoryId', '==', catId).get();
+      for (const mDoc of matSnap.docs) {
+        // 이미지도 삭제
+        const matData = mDoc.data();
+        if (matData.steps) {
+          for (const step of matData.steps) {
+            if (step.imagePath) {
+              await this.deleteImage(step.imagePath).catch(() => {});
+            }
+          }
+        }
+        await mDoc.ref.delete();
+      }
+    }
+    
+    for (const catId of allIds) {
+      await db.collection('materialCategories').doc(catId).delete();
+    }
+    
+    return { deleted: id };
+  },
+
+  async _saveSettings(data) {
+    await db.collection('settings').doc('default').set(data, { merge: true });
+    return data;
+  },
+
+  // ===== Storage =====
+  async uploadImage(file, path = 'materials') {
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fullPath = `${path}/${timestamp}_${safeName}`;
+    const ref = storage.ref(fullPath);
+    const snap = await ref.put(file);
+    const url = await snap.ref.getDownloadURL();
+    return { url, path: fullPath };
+  },
+
+  async deleteImage(path) {
+    if (!path) return;
+    try {
+      const ref = storage.ref(path);
+      await ref.delete();
+    } catch (e) {
+      console.warn('이미지 삭제 실패:', e);
+    }
+  }
+};
+
+// ============================================================
+// 유틸: 요일 패턴으로 날짜 생성
+// ============================================================
+window.expandDateRange = function(startDate, endDate, weekdays) {
+  // weekdays: [0,1,2,3,4,5,6] (일=0, 월=1, ...)
+  const result = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (isNaN(start) || isNaN(end) || start > end) return [];
+  
+  const cur = new Date(start);
+  while (cur <= end) {
+    if (weekdays.includes(cur.getDay())) {
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, '0');
+      const d = String(cur.getDate()).padStart(2, '0');
+      result.push(`${y}-${m}-${d}`);
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return result;
+};
+
+// ============================================================
+// 유틸: 과정 기반 회차 진행률 계산
+// ============================================================
+// course: { startDate, endDate, name, ... }
+// schedule: 전체 일정 배열
+// colors: 색상 정의 (type 필드 포함)
+// 결과: { totalSessions, completedSessions, cancelDays, percent, dDay, course }
+window.computeCourseProgress = function(course, schedule, colors) {
+  if (!course || !course.startDate || !course.endDate) return null;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // 색상 type 매핑
+  const typeMap = {};
+  (colors || []).forEach(c => { typeMap[c.id] = c.type || 'other'; });
+  
+  // 과정 기간 내 일정만 필터
+  const inRange = (schedule || []).filter(s => 
+    s.date && s.date >= course.startDate && s.date <= course.endDate
+  );
+  
+  if (inRange.length === 0) return null;
+  
+  // 수업일/휴강일 분리
+  const classDays = inRange.filter(s => typeMap[s.colorId] === 'class');
+  const cancelDays = inRange.filter(s => typeMap[s.colorId] === 'cancel');
+  
+  // 휴강일과 겹치지 않는 수업일만 카운트
+  const cancelDates = new Set(cancelDays.map(c => c.date));
+  let realClasses = classDays.filter(c => !cancelDates.has(c.date));
+  
+  // 중복 날짜 제거 (같은 날짜에 같은 분류 색상 여러 개 등록된 경우)
+  const seenDates = new Set();
+  realClasses = realClasses.filter(c => {
+    if (seenDates.has(c.date)) return false;
+    seenDates.add(c.date);
+    return true;
+  });
+  
+  if (realClasses.length === 0) return null;
+  
+  realClasses.sort((a, b) => a.date.localeCompare(b.date));
+  
+  // 오늘까지 진행된 회차
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const completedSessions = realClasses.filter(c => c.date <= todayStr).length;
+  
+  // 종강 D-day (course.endDate 기준)
+  const endDateObj = new Date(course.endDate);
+  endDateObj.setHours(0, 0, 0, 0);
+  const dDayNum = Math.round((endDateObj - today) / (1000 * 60 * 60 * 24));
+  let dDay;
+  if (dDayNum > 0) dDay = `D-${dDayNum}`;
+  else if (dDayNum === 0) dDay = 'D-DAY';
+  else dDay = `D+${Math.abs(dDayNum)}`;
+  
+  return {
+    totalSessions: realClasses.length,
+    completedSessions,
+    cancelDays: cancelDays.length,
+    percent: Math.round((completedSessions / realClasses.length) * 100),
+    dDay,
+    course
+  };
+};
+
+// ============================================================
+// 유틸: 월별 회차 진행률 계산 (구버전 호환용)
+// ============================================================
+// schedule: 해당 월의 모든 일정
+// colors: 색상 정의 (type 필드 포함)
+// targetMonth: 'YYYY-MM' (예: '2026-05')
+// 결과: { totalSessions, completedSessions, totalDays, cancelDays, startDate, endDate, percent, dDay }
+window.computeMonthProgress = function(schedule, colors, targetMonth) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // 해당 월 일정만 필터
+  const monthEvents = (schedule || []).filter(s => 
+    s.date && s.date.startsWith(targetMonth)
+  );
+  
+  if (monthEvents.length === 0) return null;
+  
+  // 색상별 type 매핑
+  const typeMap = {};
+  (colors || []).forEach(c => { typeMap[c.id] = c.type || 'other'; });
+  
+  // 수업일/휴강일 분리
+  const classDays = monthEvents.filter(s => typeMap[s.colorId] === 'class');
+  const cancelDays = monthEvents.filter(s => typeMap[s.colorId] === 'cancel');
+  
+  if (classDays.length === 0) return null;
+  
+  // 정렬
+  classDays.sort((a, b) => a.date.localeCompare(b.date));
+  
+  // 휴강일과 겹치지 않는 수업일만 카운트
+  const cancelDates = new Set(cancelDays.map(c => c.date));
+  const realClasses = classDays.filter(c => !cancelDates.has(c.date));
+  
+  if (realClasses.length === 0) return null;
+  
+  // 오늘 이전(또는 오늘 포함)에 진행된 회차 수
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const completedSessions = realClasses.filter(c => c.date <= todayStr).length;
+  
+  // 첫 수업일 / 마지막 수업일
+  const startDate = realClasses[0].date;
+  const endDate = realClasses[realClasses.length - 1].date;
+  
+  // 종강 D-day
+  const endDateObj = new Date(endDate);
+  endDateObj.setHours(0, 0, 0, 0);
+  const dDayNum = Math.round((endDateObj - today) / (1000 * 60 * 60 * 24));
+  let dDay;
+  if (dDayNum > 0) dDay = `D-${dDayNum}`;
+  else if (dDayNum === 0) dDay = 'D-DAY';
+  else dDay = `D+${Math.abs(dDayNum)}`;
+  
+  return {
+    totalSessions: realClasses.length,
+    completedSessions,
+    totalDays: classDays.length,
+    cancelDays: cancelDays.length,
+    startDate,
+    endDate,
+    percent: Math.round((completedSessions / realClasses.length) * 100),
+    dDay
+  };
+};
+
+</script>
+<script>
+const ADMIN_TOKEN_KEY = 'admin_token';
+let currentView = 'posts';
+let pendingAction = null;
+
+// ============================================================
+// 인증
+// ============================================================
+// 예전 방식(관리자 비밀번호) 흔적 정리
+try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch (e) {}
+function isLoggedIn() { return !!firebase.auth().currentUser; }
+function getAuth() { return firebase.auth().currentUser ? 'firebase-user' : ''; }
+
+async function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return;
+  try {
+    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    await firebase.auth().signInWithEmailAndPassword(email, password);
+    // 화면 전환은 onAuthStateChanged 가 처리
+  } catch (e) {
+    console.error(e);
+    showLoginError();
+  }
+}
+
+function showLoginError() {
+  const err = document.getElementById('login-error');
+  err.style.display = 'block';
+  setTimeout(() => err.style.display = 'none', 3000);
+}
+
+async function logout() {
+  try { await firebase.auth().signOut(); } catch (e) {}
+  location.reload();
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  loadView();
+}
+
+// ============================================================
+// 뷰 전환
+// ============================================================
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+  document.getElementById('view-' + view).style.display = 'block';
+  loadView();
+}
+
+async function loadView() {
+  if (currentView === 'posts') await loadPosts();
+  else if (currentView === 'schedule') await loadSchedule();
+  else if (currentView === 'materials') await loadMaterialsAdmin();
+  else if (currentView === 'classrooms') await loadClassrooms();
+  else if (currentView === 'seminars') await loadSeminars();
+  else if (currentView === 'rules') await loadRules();
+  else if (currentView === 'colors') await loadColors();
+  else if (currentView === 'settings') await loadSettings();
+}
+
+// ============================================================
+// 모달 헬퍼
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
+  }
+});
+
+// ============================================================
+// 토스트
+// ============================================================
+let toastTimer = null;
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type === 'error' ? 'var(--danger)' : 'var(--text)';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// 드래그 앤 드롭 정렬 헬퍼
+// ============================================================
+// containerId: 카드들이 있는 컨테이너의 id
+// collection: Firestore 컬렉션 이름 (저장용)
+// onChange: 순서 변경 후 호출 (orderedIds 인자)
+function initSortable(containerId, collection, onChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  let draggedEl = null;
+  
+  container.querySelectorAll('.sortable-card').forEach(card => {
+    card.addEventListener('dragstart', (e) => {
+      draggedEl = card;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      // Firefox 호환을 위해 데이터 설정 필요
+      try { e.dataTransfer.setData('text/plain', card.dataset.id); } catch(_){}
+    });
+    
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      container.querySelectorAll('.sortable-card').forEach(c => c.classList.remove('drag-over'));
+      draggedEl = null;
+    });
+    
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (draggedEl && draggedEl !== card) {
+        // 마우스 위치에 따라 위/아래 결정
+        const rect = card.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height / 2;
+        if (after) {
+          card.parentNode.insertBefore(draggedEl, card.nextSibling);
+        } else {
+          card.parentNode.insertBefore(draggedEl, card);
+        }
+      }
+    });
+    
+    card.addEventListener('drop', async (e) => {
+      e.preventDefault();
+    });
+  });
+  
+  // 컨테이너 자체에 drop 핸들러 - 모든 카드에서 떨어진 후 저장
+  container.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const newOrder = [...container.querySelectorAll('.sortable-card')].map(c => c.dataset.id);
+    if (typeof onChange === 'function') {
+      try { onChange(newOrder); } catch (_) {}
+    }
+    try {
+      await window.api.call('reorderItems', { collection, orderedIds: newOrder }, getAuth());
+      toast('순서가 변경되었습니다');
+    } catch (err) {
+      toast('순서 저장 실패: ' + err.message, 'error');
+    }
+  });
+}
+
+// ============================================================
+// 유틸
+// ============================================================
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatScheduleDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const days = ['일','월','화','수','목','금','토'];
+  return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${days[d.getDay()]}`;
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function dayLabel(days) {
+  if (!days || days.length === 0) return '';
+  const names = ['일','월','화','수','목','금','토'];
+  return days.sort().map(d => names[d]).join('·');
+}
+
+// ============================================================
+// 공지
+// ============================================================
+async function loadPosts() {
+  const posts = await window.api.call('getPosts');
+  document.getElementById('posts-count').textContent = `전체 ${posts.length}건`;
+  if (posts.length === 0) {
+    document.getElementById('posts-list').innerHTML = `<div class="empty-state">등록된 공지가 없습니다</div>`;
+    return;
+  }
+  document.getElementById('posts-list').innerHTML = posts.map(p => `
+    <div class="table-row">
+      <div class="cell-tag"><span class="tag tag-${p.category}">${escapeHtml(p.category)}</span></div>
+      <div class="cell-title">${escapeHtml(p.title)}</div>
+      <div class="cell-date">${formatDate(p.date)}</div>
+      <div class="cell-actions">
+        <button class="icon-btn" onclick="editPost('${p.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="icon-btn danger" onclick="confirmDeletePost('${p.id}', '${escapeHtml(p.title).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 공지 이미지 상태
+let postImageState = { url: '', path: '' };
+
+function resetPostImageUI() {
+  postImageState = { url: '', path: '' };
+  document.getElementById('post-image-input').value = '';
+  document.getElementById('post-image-preview').style.display = 'none';
+  document.getElementById('post-image-preview-img').src = '';
+  document.getElementById('post-image-upload-label').textContent = '이미지 선택';
+}
+
+function showPostImageUI(url) {
+  postImageState.url = url;
+  document.getElementById('post-image-preview-img').src = url;
+  document.getElementById('post-image-preview').style.display = 'block';
+  document.getElementById('post-image-upload-label').textContent = '이미지 변경';
+}
+
+async function onPostImageSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('post-image-upload-btn');
+  const label = document.getElementById('post-image-upload-label');
+  btn.disabled = true;
+  label.textContent = '업로드 중...';
+  try {
+    const result = await window.api.uploadImage(file, 'posts');
+    postImageState.url = result.url;
+    postImageState.path = result.path;
+    showPostImageUI(result.url);
+    toast('이미지가 업로드되었습니다');
+  } catch (e) {
+    toast('업로드 실패: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+}
+
+async function removePostImage() {
+  if (postImageState.path) {
+    try { await window.api.deleteImage(postImageState.path); } catch (e) {}
+  }
+  resetPostImageUI();
+}
+
+function openPostModal() {
+  document.getElementById('post-modal-title').textContent = '새 공지 작성';
+  document.getElementById('post-id').value = '';
+  document.getElementById('post-category').value = '학사';
+  document.getElementById('post-title').value = '';
+  document.getElementById('post-content').value = '';
+  document.getElementById('post-linkUrl').value = '';
+  document.getElementById('post-date').value = todayStr();
+  resetPostImageUI();
+  openModal('post-modal');
+  setTimeout(() => document.getElementById('post-title').focus(), 100);
+}
+
+async function editPost(id) {
+  const post = await window.api.call('getPost', { id });
+  if (!post) return;
+  document.getElementById('post-modal-title').textContent = '공지 편집';
+  document.getElementById('post-id').value = post.id;
+  document.getElementById('post-category').value = post.category;
+  document.getElementById('post-title').value = post.title;
+  document.getElementById('post-content').value = post.content;
+  document.getElementById('post-linkUrl').value = post.linkUrl || '';
+  document.getElementById('post-date').value = post.date;
+  resetPostImageUI();
+  if (post.imageUrl) {
+    postImageState.url = post.imageUrl;
+    postImageState.path = post.imagePath || '';
+    showPostImageUI(post.imageUrl);
+  }
+  openModal('post-modal');
+}
+
+async function savePost() {
+  const data = {
+    id: document.getElementById('post-id').value || undefined,
+    category: document.getElementById('post-category').value,
+    title: document.getElementById('post-title').value.trim(),
+    content: document.getElementById('post-content').value.trim(),
+    date: document.getElementById('post-date').value,
+    linkUrl: document.getElementById('post-linkUrl').value.trim(),
+    imageUrl: postImageState.url || '',
+    imagePath: postImageState.path || ''
+  };
+  if (!data.title) { toast('제목을 입력해주세요', 'error'); return; }
+  if (!data.date) { toast('날짜를 선택해주세요', 'error'); return; }
+  // URL 형식 간단 체크
+  if (data.linkUrl && !/^https?:\/\//.test(data.linkUrl)) {
+    toast('링크는 http:// 또는 https://로 시작해야 합니다', 'error');
+    return;
+  }
+  try {
+    await window.api.call('savePost', data, getAuth());
+    closeModal('post-modal');
+    toast(data.id ? '공지가 수정되었습니다' : '새 공지가 등록되었습니다');
+    await loadPosts();
+  } catch (e) {
+    toast('저장 실패: ' + e.message, 'error');
+  }
+}
+
+function confirmDeletePost(id, title) {
+  document.getElementById('confirm-title').textContent = '공지 삭제';
+  document.getElementById('confirm-text').textContent = `"${title}" 공지를 삭제하시겠습니까?`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deletePost', { id }, getAuth());
+      toast('삭제되었습니다');
+      await loadPosts();
+    } catch (e) { toast('삭제 실패', 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// ============================================================
+// 수업일정 (수업일정 묶음 관리 + 캘린더 편집)
+// ============================================================
+let scheduleColors = [];
+let allSchedule = [];
+let selectedColorId = null;
+let coursesState = { items: [] };
+
+// 캘린더 편집 상태
+let editorState = {
+  course: null,         // 현재 편집 중인 수업일정 (course 객체)
+  year: 0, month: 0,    // 현재 보고 있는 월
+  schedule: [],         // 이 수업일정 기간 내 일정 (메모리 작업용)
+  changes: new Map()    // 변경 내역: dateStr -> { action: 'set'|'delete', colorId?, existingId? }
+};
+
+async function loadSchedule() {
+  // 모드: 목록 모드 (기본)
+  closeCourseEditor(false);  // UI 전환만, 데이터 다시 안 불러옴
+  
+  const [colors, courses] = await Promise.all([
+    window.api.call('getScheduleColors'),
+    window.api.call('getCourses')
+  ]);
+  scheduleColors = colors || [];
+  coursesState.items = courses || [];
+  renderCoursesList();
+}
+
+function renderCoursesList() {
+  const items = coursesState.items;
+  if (items.length === 0) {
+    document.getElementById('courses-list').innerHTML = `<div class="empty-state">등록된 수업일정이 없습니다.<br>"수업일정 추가"로 시작일과 종강일을 지정해보세요.</div>`;
+    return;
+  }
+  // 시작일 내림차순 정렬 (최신이 위)
+  const sorted = [...items].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+  document.getElementById('courses-list').innerHTML = sorted.map(c => `
+    <div class="table-row" style="cursor: pointer;" onclick="openCourseEditor('${c.id}')">
+      <div class="cell-title">${escapeHtml(c.name)}${c.description ? ` <span style="color: var(--text-faint); font-size: 11.5px; font-weight: 400;">· ${escapeHtml(c.description)}</span>` : ''}</div>
+      <div class="cell-date">${formatDate(c.startDate)}</div>
+      <div class="cell-date">${formatDate(c.endDate)}</div>
+      <div onclick="event.stopPropagation()">
+        ${c.active 
+          ? '<span style="display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 5px; font-weight: 600; background: #d1fae5; color: #047857;">● 진행 중</span>' 
+          : '<span style="display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 5px; font-weight: 500; background: var(--bg-soft); color: var(--text-faint);">대기</span>'}
+      </div>
+      <div class="cell-actions" onclick="event.stopPropagation()">
+        <button class="icon-btn" onclick="editCourse('${c.id}')" title="이름/기간 편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="icon-btn danger" onclick="confirmDeleteCourse('${c.id}', '${escapeHtml(c.name).replace(/\'/g, "\\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== 수업일정 추가/편집 모달 =====
+function openCourseModal() {
+  document.getElementById('course-modal-title').textContent = '수업일정 추가';
+  document.getElementById('course-id').value = '';
+  document.getElementById('course-name').value = '';
+  document.getElementById('course-startDate').value = '';
+  document.getElementById('course-endDate').value = '';
+  document.getElementById('course-description').value = '';
+  document.getElementById('course-active').checked = true;
+  openModal('course-modal');
+  setTimeout(() => document.getElementById('course-name').focus(), 100);
+}
+
+function editCourse(id) {
+  const c = coursesState.items.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('course-modal-title').textContent = '수업일정 편집';
+  document.getElementById('course-id').value = c.id;
+  document.getElementById('course-name').value = c.name || '';
+  document.getElementById('course-startDate').value = c.startDate || '';
+  document.getElementById('course-endDate').value = c.endDate || '';
+  document.getElementById('course-description').value = c.description || '';
+  document.getElementById('course-active').checked = !!c.active;
+  openModal('course-modal');
+}
+
+async function saveCourse() {
+  const data = {
+    id: document.getElementById('course-id').value || undefined,
+    name: document.getElementById('course-name').value.trim(),
+    startDate: document.getElementById('course-startDate').value,
+    endDate: document.getElementById('course-endDate').value,
+    description: document.getElementById('course-description').value.trim(),
+    active: document.getElementById('course-active').checked
+  };
+  if (!data.name) { toast('수업일정 이름을 입력해주세요', 'error'); return; }
+  if (!data.startDate || !data.endDate) { toast('시작일/종강일을 선택해주세요', 'error'); return; }
+  if (data.startDate > data.endDate) { toast('시작일이 종강일보다 늦을 수 없습니다', 'error'); return; }
+  try {
+    await window.api.call('saveCourse', data, getAuth());
+    closeModal('course-modal');
+    toast(data.id ? '수업일정이 수정되었습니다' : '수업일정이 추가되었습니다');
+    await loadSchedule();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+}
+
+function confirmDeleteCourse(id, name) {
+  document.getElementById('confirm-title').textContent = '수업일정 삭제';
+  document.getElementById('confirm-text').innerHTML = `"${name}" 수업일정을 삭제하시겠습니까?<br><span style="color: var(--text-faint); font-size: 12px;">캘린더에 칠해진 일정 데이터는 그대로 남습니다 (수업일정만 삭제).</span>`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deleteCourse', { id }, getAuth());
+      toast('삭제되었습니다');
+      await loadSchedule();
+    } catch (e) { toast('삭제 실패', 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// ===== 캘린더 편집 모드 =====
+async function openCourseEditor(courseId) {
+  const course = coursesState.items.find(c => c.id === courseId);
+  if (!course) return;
+  
+  // 색상이 없으면 등록 안내
+  if (scheduleColors.length === 0) {
+    scheduleColors = await window.api.call('getScheduleColors') || [];
+  }
+  if (scheduleColors.length === 0) {
+    toast('먼저 좌측 메뉴 "일정 색상"에서 색상을 등록해주세요', 'error');
+    return;
+  }
+  
+  // 해당 기간 일정 가져오기
+  const allSch = await window.api.call('getSchedule');
+  const inRange = (allSch || []).filter(s => 
+    s.date >= course.startDate && s.date <= course.endDate
+  );
+  
+  editorState.course = course;
+  editorState.schedule = inRange;
+  editorState.changes = new Map();
+  
+  // 시작일이 있는 월로 이동
+  const startDate = new Date(course.startDate);
+  editorState.year = startDate.getFullYear();
+  editorState.month = startDate.getMonth();
+  
+  // 첫 색상을 기본 선택
+  if (!selectedColorId || !scheduleColors.find(c => c.id === selectedColorId)) {
+    selectedColorId = scheduleColors[0].id;
+  }
+  
+  // UI 전환
+  document.getElementById('schedule-mode-list').style.display = 'none';
+  document.getElementById('schedule-mode-edit').style.display = 'block';
+  
+  document.getElementById('editor-course-name').textContent = course.name;
+  document.getElementById('editor-course-meta').textContent = 
+    `${formatDate(course.startDate)} ~ ${formatDate(course.endDate)}`;
+  
+  renderColorPalette();
+  renderEditorCalendar();
+  updateEditorProgress();
+  updateSaveButton();
+}
+
+function closeCourseEditor(reload = true) {
+  // 변경사항 있으면 확인
+  if (editorState.changes && editorState.changes.size > 0) {
+    if (!confirm(`저장하지 않은 변경사항이 ${editorState.changes.size}개 있습니다. 정말 나가시겠습니까?`)) {
+      return;
+    }
+  }
+  
+  editorState.course = null;
+  editorState.schedule = [];
+  editorState.changes = new Map();
+  
+  document.getElementById('schedule-mode-edit').style.display = 'none';
+  document.getElementById('schedule-mode-list').style.display = 'block';
+  
+  if (reload) loadSchedule();
+}
+
+function renderColorPalette() {
+  const container = document.getElementById('admin-color-palette');
+  if (scheduleColors.length === 0) {
+    container.innerHTML = `<div style="font-size: 11.5px; color: var(--text-faint);">먼저 좌측 메뉴 "일정 색상"에서 색상을 등록하세요</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="palette-label">칠하기:</div>
+    <div class="palette-options">
+      ${scheduleColors.map(c => `
+        <button class="palette-chip ${c.id === selectedColorId ? 'selected' : ''}" onclick="selectPaletteColor('${c.id}')">
+          <span class="palette-chip-dot" style="background: ${c.color}"></span>
+          <span class="palette-chip-name">${escapeHtml(c.name)}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectPaletteColor(colorId) {
+  selectedColorId = colorId;
+  renderColorPalette();
+}
+
+function adminCalPrev() {
+  // 시작일이 있는 월보다 이전으로는 못 감
+  const course = editorState.course;
+  if (!course) return;
+  const startMonthYear = new Date(course.startDate);
+  startMonthYear.setHours(0,0,0,0);
+  const startMonth = startMonthYear.getFullYear() * 12 + startMonthYear.getMonth();
+  const currMonth = editorState.year * 12 + editorState.month;
+  if (currMonth <= startMonth) return;
+  
+  editorState.month--;
+  if (editorState.month < 0) { editorState.month = 11; editorState.year--; }
+  renderEditorCalendar();
+}
+function adminCalNext() {
+  const course = editorState.course;
+  if (!course) return;
+  const endMonthYear = new Date(course.endDate);
+  endMonthYear.setHours(0,0,0,0);
+  const endMonth = endMonthYear.getFullYear() * 12 + endMonthYear.getMonth();
+  const currMonth = editorState.year * 12 + editorState.month;
+  if (currMonth >= endMonth) return;
+  
+  editorState.month++;
+  if (editorState.month > 11) { editorState.month = 0; editorState.year++; }
+  renderEditorCalendar();
+}
+// 호환성용 (사용 안 함)
+function adminCalToday() {}
+
+// 현재 보이는 일정 (서버 + 변경 내역 적용)
+function getEffectiveScheduleForDate(dateStr) {
+  if (editorState.changes.has(dateStr)) {
+    const change = editorState.changes.get(dateStr);
+    if (change.action === 'delete') return null;
+    if (change.action === 'set') {
+      return { date: dateStr, colorId: change.colorId, _temp: true };
+    }
+  }
+  // 변경 없음 → 서버 데이터 그대로
+  return editorState.schedule.find(s => s.date === dateStr) || null;
+}
+
+function renderEditorCalendar() {
+  const { year, month, course } = editorState;
+  if (!course) return;
+  
+  document.getElementById('admin-cal-month-label').textContent = `${year}년 ${month + 1}월`;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr_ = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDayOfWeek = firstDay.getDay();
+  const prevLastDay = new Date(year, month, 0).getDate();
+  
+  const days = [];
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    days.push({ date: new Date(year, month - 1, prevLastDay - i), otherMonth: true });
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push({ date: new Date(year, month, i), otherMonth: false });
+  }
+  while (days.length < 42) {
+    const last = days[days.length - 1].date;
+    const next = new Date(last);
+    next.setDate(next.getDate() + 1);
+    days.push({ date: next, otherMonth: true });
+  }
+  
+  document.getElementById('admin-cal-days').innerHTML = days.map(({ date, otherMonth }) => {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const isToday = dateStr === todayStr_;
+    const dayOfWeek = date.getDay();
+    
+    // 수업일정 기간 내인지
+    const inRange = dateStr >= course.startDate && dateStr <= course.endDate;
+    const isStart = dateStr === course.startDate;
+    const isEnd = dateStr === course.endDate;
+    const event = inRange ? getEffectiveScheduleForDate(dateStr) : null;
+    
+    let classes = ['admin-cal-day'];
+    if (otherMonth || !inRange) classes.push('other-month');
+    if (isToday) classes.push('today');
+    if (dayOfWeek === 0) classes.push('sun');
+    if (dayOfWeek === 6) classes.push('sat');
+    if (event) classes.push('has-event');
+    if (isStart) classes.push('start-day');
+    if (isEnd) classes.push('end-day');
+    
+    let eventHtml = '';
+    if (event) {
+      const color = scheduleColors.find(c => c.id === event.colorId);
+      const bg = color ? color.color : '#64748b';
+      const name = color ? color.name : '미정';
+      eventHtml = `<div class="admin-cal-event" style="background: ${bg}">${escapeHtml(name)}</div>`;
+    }
+    
+    const clickHandler = inRange ? `onclick="onEditorDayClick('${dateStr}')"` : '';
+    
+    return `
+      <div class="${classes.join(' ')}" ${clickHandler}>
+        <div class="admin-cal-day-num">${date.getDate()}</div>
+        <div class="admin-cal-events">${eventHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function onEditorDayClick(dateStr) {
+  if (!selectedColorId) {
+    toast('상단에서 칠할 색상을 먼저 선택해주세요', 'error');
+    return;
+  }
+  
+  const current = getEffectiveScheduleForDate(dateStr);
+  
+  if (current && current.colorId === selectedColorId) {
+    // 같은 색 다시 클릭 → 해제
+    if (current._temp) {
+      // 임시 추가한 거였다 → 변경 내역에서 제거
+      editorState.changes.delete(dateStr);
+    } else {
+      // 서버에 있는 거 → 삭제 표시
+      editorState.changes.set(dateStr, { action: 'delete', existingId: current.id });
+    }
+  } else if (current) {
+    // 다른 색으로 변경
+    if (current._temp) {
+      editorState.changes.set(dateStr, { action: 'set', colorId: selectedColorId });
+    } else {
+      // 서버에 있는 일정의 색상을 바꿈 (delete + set 조합 대신, 같은 ID 업데이트)
+      editorState.changes.set(dateStr, { action: 'set', colorId: selectedColorId, existingId: current.id });
+    }
+  } else {
+    // 빈 날짜 → 색칠
+    editorState.changes.set(dateStr, { action: 'set', colorId: selectedColorId });
+  }
+  
+  renderEditorCalendar();
+  updateEditorProgress();
+  updateSaveButton();
+}
+
+function updateSaveButton() {
+  const cnt = editorState.changes.size;
+  const span = document.getElementById('save-changes-count');
+  if (cnt > 0) {
+    span.style.display = '';
+    span.textContent = `(${cnt}개 변경)`;
+  } else {
+    span.style.display = 'none';
+  }
+}
+
+// 진행률 미리보기 (저장 전이라도 변경사항 반영)
+function updateEditorProgress() {
+  const course = editorState.course;
+  if (!course) return;
+  
+  // 변경사항 적용된 가상 일정 만들기
+  const virtualSchedule = [];
+  // 1) 서버 일정 중 삭제 안 된 것
+  editorState.schedule.forEach(s => {
+    const ch = editorState.changes.get(s.date);
+    if (!ch) {
+      virtualSchedule.push(s);
+    } else if (ch.action === 'set' && ch.existingId === s.id) {
+      // 같은 ID인데 색상만 바꾼 경우
+      virtualSchedule.push({ ...s, colorId: ch.colorId });
+    }
+    // delete는 안 추가
+  });
+  // 2) 새로 추가된 것
+  editorState.changes.forEach((ch, dateStr) => {
+    if (ch.action === 'set' && !ch.existingId) {
+      virtualSchedule.push({ date: dateStr, colorId: ch.colorId });
+    }
+  });
+  
+  const progress = window.computeCourseProgress(course, virtualSchedule, scheduleColors);
+  const target = document.getElementById('editor-progress');
+  
+  if (!progress) {
+    // 진행률 계산 불가 (수업일 색상 분류 일정이 없음)
+    target.innerHTML = `
+      <div style="background: var(--bg-section); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--text-soft);">
+        진행률 계산 가능한 일정이 없습니다. 수업일 색상으로 날짜를 칠하면 진행률이 표시됩니다.
+      </div>
+    `;
+    return;
+  }
+  
+  target.innerHTML = `
+    <div style="background: var(--bg-elevated); border: 0.5px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow-xs);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px;">
+        <span style="font-size: 12.5px; font-weight: 600;">현재 진행률 (${progress.totalSessions}일 중 ${progress.completedSessions}회차 · 휴강 ${progress.cancelDays}일)</span>
+        <span style="font-size: 12.5px; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums;">${progress.percent}%  ${progress.dDay}</span>
+      </div>
+      <div style="height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden;">
+        <div style="height: 100%; background: var(--accent); border-radius: 3px; width: ${progress.percent}%;"></div>
+      </div>
+    </div>
+  `;
+}
+
+// 변경사항 저장
+async function saveCourseSchedule() {
+  const course = editorState.course;
+  if (!course) return;
+  if (editorState.changes.size === 0) {
+    toast('변경된 내용이 없습니다');
+    return;
+  }
+  
+  const btn = document.getElementById('save-changes-btn');
+  if (btn) { btn.disabled = true; }
+  
+  try {
+    let added = 0, updated = 0, deleted = 0;
+    
+    for (const [dateStr, ch] of editorState.changes) {
+      if (ch.action === 'delete') {
+        await window.api.call('deleteSchedule', { id: ch.existingId }, getAuth());
+        deleted++;
+      } else if (ch.action === 'set') {
+        const color = scheduleColors.find(c => c.id === ch.colorId);
+        const data = {
+          date: dateStr,
+          colorId: ch.colorId,
+          title: color ? color.name : '',
+          description: ''
+        };
+        if (ch.existingId) {
+          data.id = ch.existingId;
+          await window.api.call('saveSchedule', data, getAuth());
+          updated++;
+        } else {
+          await window.api.call('saveSchedule', data, getAuth());
+          added++;
+        }
+      }
+    }
+    
+    if (btn) btn.disabled = false;
+    
+    let msg = '저장됨';
+    const parts = [];
+    if (added) parts.push(`추가 ${added}개`);
+    if (updated) parts.push(`수정 ${updated}개`);
+    if (deleted) parts.push(`삭제 ${deleted}개`);
+    if (parts.length) msg = `저장됨 · ${parts.join(', ')}`;
+    toast(msg);
+    
+    // 변경사항 비우고 다시 로드
+    editorState.changes = new Map();
+    const allSch = await window.api.call('getSchedule');
+    editorState.schedule = (allSch || []).filter(s => 
+      s.date >= course.startDate && s.date <= course.endDate
+    );
+    renderEditorCalendar();
+    updateEditorProgress();
+    updateSaveButton();
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    toast('저장 실패: ' + e.message, 'error');
+  }
+}
+
+// 초기화 (이 수업일정의 모든 일정 삭제)
+function confirmResetCourseSchedule() {
+  const course = editorState.course;
+  if (!course) return;
+  
+  // 서버에 저장된 일정 + 추가하려던 임시 변경
+  const serverCount = editorState.schedule.length;
+  const tempAdd = [...editorState.changes.values()].filter(ch => ch.action === 'set' && !ch.existingId).length;
+  const totalToReset = serverCount + tempAdd;
+  
+  if (totalToReset === 0) {
+    toast('초기화할 일정이 없습니다');
+    return;
+  }
+  
+  document.getElementById('confirm-title').textContent = '수업일정 초기화';
+  document.getElementById('confirm-text').innerHTML = `
+    "${escapeHtml(course.name)}" 수업일정의 캘린더에 칠해진 모든 색을 제거합니다.<br>
+    <span style="color: var(--danger); font-weight: 600;">${totalToReset}개 일정이 삭제됩니다.</span><br>
+    <span style="color: var(--text-faint); font-size: 12px;">저장하지 않은 변경사항도 함께 초기화됩니다.</span>
+  `;
+  pendingAction = async () => {
+    try {
+      // 서버 데이터 모두 삭제
+      for (const s of editorState.schedule) {
+        await window.api.call('deleteSchedule', { id: s.id }, getAuth());
+      }
+      // 메모리 변경사항 비우기
+      editorState.schedule = [];
+      editorState.changes = new Map();
+      
+      toast(`${totalToReset}개 일정이 초기화되었습니다`);
+      renderEditorCalendar();
+      updateEditorProgress();
+      updateSaveButton();
+    } catch (e) { toast('초기화 실패: ' + e.message, 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+
+// ============================================================
+// 색상 관리
+// ============================================================
+async function loadColors() {
+  const colors = await window.api.call('getScheduleColors');
+  scheduleColors = colors;
+  
+  const isDefault = c => c.id && c.id.startsWith('_d_');
+  
+  if (colors.length === 0 || colors.every(isDefault)) {
+    document.getElementById('colors-list').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div>
+        <div>현재는 기본 색상만 표시됩니다. "색상 추가"로 학원에 맞는 색상을 등록하세요.</div>
+      </div>
+    `;
+  }
+  
+  if (colors.length > 0) {
+    const typeLabels = {
+      'class': { label: '수업일', bg: '#d1fae5', color: '#047857' },
+      'cancel': { label: '휴강/공강', bg: '#fce8e9', color: '#8a1c23' },
+      'other': { label: '기타', bg: '#ebe9e3', color: '#3d3d38' }
+    };
+    document.getElementById('colors-list').innerHTML = colors.map((c, i) => {
+      const t = typeLabels[c.type || 'class'] || typeLabels['class'];
+      return `
+      <div class="table-row" ${isDefault(c) ? 'style="opacity: 0.65;"' : ''}>
+        <div class="cell-num">${i + 1}</div>
+        <div class="cell-title">${escapeHtml(c.name)}${isDefault(c) ? ' <span style="font-size: 10.5px; color: var(--text-faint); font-weight: 500; margin-left: 6px;">(기본값)</span>' : ''}</div>
+        <div><span style="display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 5px; font-weight: 600; background: ${t.bg}; color: ${t.color};">${t.label}</span></div>
+        <div class="cell-color"><span class="color-preview" style="background: ${c.color}"></span><span style="font-size: 11px; color: var(--text-soft); font-variant-numeric: tabular-nums;">${c.color}</span></div>
+        <div class="cell-actions">
+          ${isDefault(c) ? '' : `
+            <button class="icon-btn" onclick="editColor('${c.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="icon-btn danger" onclick="confirmDeleteColor('${c.id}', '${escapeHtml(c.name).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          `}
+        </div>
+      </div>
+    `;
+    }).join('');
+  }
+}
+
+function openColorModal() {
+  document.getElementById('color-modal-title').textContent = '색상 추가';
+  document.getElementById('color-id').value = '';
+  document.getElementById('color-name').value = '';
+  document.getElementById('color-type').value = 'class';
+  setColor('#10b981');
+  openModal('color-modal');
+  setTimeout(() => document.getElementById('color-name').focus(), 100);
+}
+
+function editColor(id) {
+  const c = scheduleColors.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('color-modal-title').textContent = '색상 편집';
+  document.getElementById('color-id').value = c.id;
+  document.getElementById('color-name').value = c.name;
+  document.getElementById('color-type').value = c.type || 'class';
+  setColor(c.color);
+  openModal('color-modal');
+}
+
+function setColor(hex) {
+  document.getElementById('color-value').value = hex;
+  document.getElementById('color-hex').value = hex;
+}
+
+async function saveColor() {
+  const id = document.getElementById('color-id').value || undefined;
+  const name = document.getElementById('color-name').value.trim();
+  const color = document.getElementById('color-hex').value.trim();
+  const type = document.getElementById('color-type').value || 'class';
+  
+  if (!name) { toast('이름을 입력해주세요', 'error'); return; }
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) { toast('올바른 색상 코드(#RRGGBB)를 입력해주세요', 'error'); return; }
+  
+  let order;
+  if (id) {
+    const existing = scheduleColors.find(c => c.id === id);
+    order = existing ? existing.order : 0;
+  } else {
+    const real = scheduleColors.filter(c => !c.id.startsWith('_d_'));
+    order = real.length + 1;
+  }
+  
+  try {
+    await window.api.call('saveScheduleColor', { id, name, color, type, order }, getAuth());
+    closeModal('color-modal');
+    toast(id ? '색상이 수정되었습니다' : '색상이 추가되었습니다');
+    await loadColors();
+  } catch (e) {
+    toast('저장 실패: ' + e.message, 'error');
+  }
+}
+
+function confirmDeleteColor(id, name) {
+  document.getElementById('confirm-title').textContent = '색상 삭제';
+  document.getElementById('confirm-text').innerHTML = `"${name}" 색상을 삭제하시겠습니까?<br><span style="color: var(--text-faint); font-size: 12px;">이 색상으로 등록된 일정은 색상이 사라진 상태가 됩니다.</span>`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deleteScheduleColor', { id }, getAuth());
+      toast('삭제되었습니다');
+      await loadColors();
+    } catch (e) { toast('삭제 실패: ' + e.message, 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+
+// ============================================================
+// 강의장 (비대면 안내)
+// ============================================================
+let classState = { items: [] };
+
+async function loadClassrooms() {
+  classState.items = await window.api.call('getClassrooms');
+  document.getElementById('classrooms-count').textContent = 
+    `${classState.items.length}개 강의장 · 드래그로 순서 변경 가능`;
+  if (classState.items.length === 0) {
+    document.getElementById('classrooms-list').innerHTML = `<div class="empty-state">등록된 강의장이 없습니다</div>`;
+    return;
+  }
+  renderClassroomsList();
+}
+
+function renderClassroomsList() {
+  document.getElementById('classrooms-list').innerHTML = classState.items.map(c => {
+    const programs = (c.programs || '').split(',').map(p => p.trim()).filter(Boolean);
+    const progChips = programs.length > 0
+      ? `<div class="sortable-card-chips">${programs.map(p => `<span class="sortable-card-chip">${escapeHtml(p)}</span>`).join('')}</div>`
+      : '';
+    return `
+      <div class="sortable-card" draggable="true" data-id="${c.id}">
+        <div class="sortable-handle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+        </div>
+        <div class="sortable-card-content">
+          <div class="sortable-card-title">${escapeHtml(c.name)}${c.description ? ` <span style="color: var(--text-faint); font-size: 11.5px; font-weight: 400;">· ${escapeHtml(c.description)}</span>` : ''}</div>
+          <div class="sortable-card-meta">
+            ${c.loginId ? `ID: <strong>${escapeHtml(c.loginId)}</strong>` : '<span style="color: var(--text-faint);">ID 없음</span>'}
+            ${c.password ? ` · PW: <strong>${escapeHtml(c.password)}</strong>` : ''}
+          </div>
+          ${progChips}
+        </div>
+        <div class="sortable-card-actions">
+          <button class="icon-btn" onclick="editClassroom('${c.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn danger" onclick="confirmDeleteClass('${c.id}', '${escapeHtml(c.name).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // 드래그 활성화
+  initSortable('classrooms-list', 'classrooms', async (orderedIds) => {
+    classState.items = orderedIds.map(id => classState.items.find(x => x.id === id)).filter(Boolean);
+  });
+}
+
+function openClassModal() {
+  document.getElementById('class-modal-title').textContent = '강의장 추가';
+  document.getElementById('class-id').value = '';
+  document.getElementById('class-name').value = '';
+  document.getElementById('class-loginId').value = '';
+  document.getElementById('class-password').value = '';
+  document.getElementById('class-description').value = '';
+  document.getElementById('class-programs').value = '';
+  openModal('class-modal');
+  setTimeout(() => document.getElementById('class-name').focus(), 100);
+}
+
+function editClassroom(id) {
+  const c = classState.items.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('class-modal-title').textContent = '강의장 편집';
+  document.getElementById('class-id').value = c.id;
+  document.getElementById('class-name').value = c.name;
+  document.getElementById('class-loginId').value = c.loginId || '';
+  document.getElementById('class-password').value = c.password || '';
+  document.getElementById('class-description').value = c.description || '';
+  document.getElementById('class-programs').value = c.programs || '';
+  openModal('class-modal');
+}
+
+async function saveClassroom() {
+  const data = {
+    id: document.getElementById('class-id').value || undefined,
+    name: document.getElementById('class-name').value.trim(),
+    loginId: document.getElementById('class-loginId').value.trim(),
+    password: document.getElementById('class-password').value.trim(),
+    description: document.getElementById('class-description').value.trim(),
+    programs: document.getElementById('class-programs').value.trim()
+  };
+  if (!data.name) { toast('이름을 입력해주세요', 'error'); return; }
+  // 신규 등록 시 order 부여
+  if (!data.id) {
+    data.order = classState.items.length;
+  } else {
+    const existing = classState.items.find(c => c.id === data.id);
+    if (existing && existing.order !== undefined) data.order = existing.order;
+  }
+  try {
+    await window.api.call('saveClassroom', data, getAuth());
+    closeModal('class-modal');
+    toast(data.id ? '수정되었습니다' : '추가되었습니다');
+    await loadClassrooms();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+}
+
+function confirmDeleteClass(id, name) {
+  document.getElementById('confirm-title').textContent = '강의장 삭제';
+  document.getElementById('confirm-text').textContent = `"${name}"을 삭제하시겠습니까?`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deleteClassroom', { id }, getAuth());
+      toast('삭제되었습니다');
+      await loadClassrooms();
+    } catch (e) { toast('삭제 실패', 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// ============================================================
+// 세미나
+// ============================================================
+let seminarState = { items: [] };
+let seminarImageState = { url: '', path: '' };
+
+async function loadSeminars() {
+  seminarState.items = await window.api.call('getSeminars');
+  document.getElementById('seminars-count').textContent = 
+    `${seminarState.items.length}개 세미나 · 드래그로 순서 변경 가능`;
+  if (seminarState.items.length === 0) {
+    document.getElementById('seminars-list').innerHTML = `<div class="empty-state">등록된 세미나가 없습니다</div>`;
+    return;
+  }
+  renderSeminarsList();
+}
+
+function renderSeminarsList() {
+  document.getElementById('seminars-list').innerHTML = seminarState.items.map(s => {
+    const linkBadge = s.linkUrl 
+      ? `<span style="display: inline-block; font-size: 10px; padding: 2px 6px; background: #ebe9fc; color: #3a2e8a; border-radius: 4px; font-weight: 600; margin-left: 6px;">🔗 LINK</span>` 
+      : '';
+    const imageBadge = s.imageUrl
+      ? `<span style="display: inline-block; font-size: 10px; padding: 2px 6px; background: #d1fae5; color: #047857; border-radius: 4px; font-weight: 600; margin-left: 6px;">🖼 IMG</span>`
+      : '';
+    const dateInfo = [
+      s.date ? formatDate(s.date) : '',
+      s.time ? s.time : '',
+      s.host ? `진행: ${escapeHtml(s.host)}` : ''
+    ].filter(Boolean).join(' · ');
+    return `
+      <div class="sortable-card" draggable="true" data-id="${s.id}">
+        <div class="sortable-handle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+        </div>
+        <div class="sortable-card-content">
+          <div class="sortable-card-title">${escapeHtml(s.title)}${linkBadge}${imageBadge}</div>
+          <div class="sortable-card-meta">${dateInfo || '<span style="color: var(--text-faint);">날짜 정보 없음</span>'}</div>
+        </div>
+        <div class="sortable-card-actions">
+          <button class="icon-btn" onclick="editSeminar('${s.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn danger" onclick="confirmDeleteSeminar('${s.id}', '${escapeHtml(s.title).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  initSortable('seminars-list', 'seminars', (orderedIds) => {
+    seminarState.items = orderedIds.map(id => seminarState.items.find(x => x.id === id)).filter(Boolean);
+  });
+}
+
+function resetSeminarImageUI() {
+  seminarImageState = { url: '', path: '' };
+  document.getElementById('seminar-image-input').value = '';
+  document.getElementById('seminar-image-preview').style.display = 'none';
+  document.getElementById('seminar-image-preview-img').src = '';
+  document.getElementById('seminar-image-upload-label').textContent = '이미지 선택';
+}
+
+function showSeminarImageUI(url) {
+  seminarImageState.url = url;
+  document.getElementById('seminar-image-preview-img').src = url;
+  document.getElementById('seminar-image-preview').style.display = 'block';
+  document.getElementById('seminar-image-upload-label').textContent = '이미지 변경';
+}
+
+async function onSeminarImageSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('seminar-image-upload-btn');
+  const label = document.getElementById('seminar-image-upload-label');
+  btn.disabled = true;
+  label.textContent = '업로드 중...';
+  try {
+    const result = await window.api.uploadImage(file, 'seminars');
+    seminarImageState.url = result.url;
+    seminarImageState.path = result.path;
+    showSeminarImageUI(result.url);
+    toast('이미지가 업로드되었습니다');
+  } catch (e) {
+    toast('업로드 실패: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+}
+
+async function removeSeminarImage() {
+  if (seminarImageState.path) {
+    try { await window.api.deleteImage(seminarImageState.path); } catch (_) {}
+  }
+  resetSeminarImageUI();
+}
+
+function openSeminarModal() {
+  document.getElementById('seminar-modal-title').textContent = '세미나 추가';
+  document.getElementById('seminar-id').value = '';
+  document.getElementById('seminar-title').value = '';
+  document.getElementById('seminar-date').value = '';
+  document.getElementById('seminar-time').value = '';
+  document.getElementById('seminar-host').value = '';
+  document.getElementById('seminar-target').value = '';
+  document.getElementById('seminar-capacity').value = '';
+  document.getElementById('seminar-fee').value = '';
+  document.getElementById('seminar-linkUrl').value = '';
+  document.getElementById('seminar-content').value = '';
+  resetSeminarImageUI();
+  openModal('seminar-modal');
+  setTimeout(() => document.getElementById('seminar-title').focus(), 100);
+}
+
+function editSeminar(id) {
+  const s = seminarState.items.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('seminar-modal-title').textContent = '세미나 편집';
+  document.getElementById('seminar-id').value = s.id;
+  document.getElementById('seminar-title').value = s.title || '';
+  document.getElementById('seminar-date').value = s.date || '';
+  document.getElementById('seminar-time').value = s.time || '';
+  document.getElementById('seminar-host').value = s.host || '';
+  document.getElementById('seminar-target').value = s.target || '';
+  document.getElementById('seminar-capacity').value = s.capacity || '';
+  document.getElementById('seminar-fee').value = s.fee || '';
+  document.getElementById('seminar-linkUrl').value = s.linkUrl || '';
+  document.getElementById('seminar-content').value = s.content || '';
+  resetSeminarImageUI();
+  if (s.imageUrl) {
+    seminarImageState.url = s.imageUrl;
+    seminarImageState.path = s.imagePath || '';
+    showSeminarImageUI(s.imageUrl);
+  }
+  openModal('seminar-modal');
+}
+
+async function saveSeminar() {
+  const data = {
+    id: document.getElementById('seminar-id').value || undefined,
+    title: document.getElementById('seminar-title').value.trim(),
+    date: document.getElementById('seminar-date').value,
+    time: document.getElementById('seminar-time').value.trim(),
+    host: document.getElementById('seminar-host').value.trim(),
+    target: document.getElementById('seminar-target').value.trim(),
+    capacity: document.getElementById('seminar-capacity').value.trim(),
+    fee: document.getElementById('seminar-fee').value.trim(),
+    linkUrl: document.getElementById('seminar-linkUrl').value.trim(),
+    content: document.getElementById('seminar-content').value.trim(),
+    imageUrl: seminarImageState.url || '',
+    imagePath: seminarImageState.path || ''
+  };
+  if (!data.title) { toast('특강 이름을 입력해주세요', 'error'); return; }
+  if (data.linkUrl && !/^https?:\/\//.test(data.linkUrl)) {
+    toast('링크는 http:// 또는 https://로 시작해야 합니다', 'error');
+    return;
+  }
+  if (!data.id) {
+    data.order = seminarState.items.length;
+  } else {
+    const existing = seminarState.items.find(x => x.id === data.id);
+    if (existing && existing.order !== undefined) data.order = existing.order;
+  }
+  try {
+    await window.api.call('saveSeminar', data, getAuth());
+    closeModal('seminar-modal');
+    toast(data.id ? '세미나가 수정되었습니다' : '세미나가 추가되었습니다');
+    await loadSeminars();
+  } catch (e) {
+    toast('저장 실패: ' + e.message, 'error');
+  }
+}
+
+function confirmDeleteSeminar(id, title) {
+  document.getElementById('confirm-title').textContent = '세미나 삭제';
+  document.getElementById('confirm-text').textContent = `"${title}" 세미나를 삭제하시겠습니까?`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deleteSeminar', { id }, getAuth());
+      toast('삭제되었습니다');
+      await loadSeminars();
+    } catch (e) { toast('삭제 실패: ' + e.message, 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// ============================================================
+// 학칙
+// ============================================================
+let ruleState = { items: [] };
+
+async function loadRules() {
+  ruleState.items = await window.api.call('getRules');
+  document.getElementById('rules-count').textContent = 
+    `${ruleState.items.length}개 항목 · 드래그로 순서 변경 가능`;
+  if (ruleState.items.length === 0) {
+    document.getElementById('rules-list').innerHTML = `<div class="empty-state">등록된 항목이 없습니다</div>`;
+    return;
+  }
+  document.getElementById('rules-list').innerHTML = ruleState.items.map(r => {
+    const preview = (r.content || '').slice(0, 60);
+    return `
+      <div class="sortable-card" draggable="true" data-id="${r.id}">
+        <div class="sortable-handle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+        </div>
+        <div class="sortable-card-content">
+          <div class="sortable-card-title">${escapeHtml(r.section)}</div>
+          ${preview ? `<div class="sortable-card-meta" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(preview)}${r.content.length > 60 ? '...' : ''}</div>` : ''}
+        </div>
+        <div class="sortable-card-actions">
+          <button class="icon-btn" onclick="editRule('${r.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn danger" onclick="confirmDeleteRule('${r.id}', '${escapeHtml(r.section).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  initSortable('rules-list', 'rules', (orderedIds) => {
+    ruleState.items = orderedIds.map(id => ruleState.items.find(x => x.id === id)).filter(Boolean);
+  });
+}
+
+function openRuleModal() {
+  document.getElementById('rule-modal-title').textContent = '학칙 항목 추가';
+  document.getElementById('rule-id').value = '';
+  document.getElementById('rule-section').value = '';
+  document.getElementById('rule-content').value = '';
+  document.getElementById('rule-order').value = (ruleState.items.length || 0) + 1;
+  openModal('rule-modal');
+  setTimeout(() => document.getElementById('rule-section').focus(), 100);
+}
+
+function editRule(id) {
+  const r = ruleState.items.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('rule-modal-title').textContent = '학칙 편집';
+  document.getElementById('rule-id').value = r.id;
+  document.getElementById('rule-section').value = r.section;
+  document.getElementById('rule-content').value = r.content || '';
+  document.getElementById('rule-order').value = r.order || 1;
+  openModal('rule-modal');
+}
+
+async function saveRule() {
+  const data = {
+    id: document.getElementById('rule-id').value || undefined,
+    section: document.getElementById('rule-section').value.trim(),
+    content: document.getElementById('rule-content').value.trim(),
+    order: parseInt(document.getElementById('rule-order').value) || 0
+  };
+  if (!data.section) { toast('제목을 입력해주세요', 'error'); return; }
+  try {
+    await window.api.call('saveRule', data, getAuth());
+    closeModal('rule-modal');
+    toast(data.id ? '수정되었습니다' : '추가되었습니다');
+    await loadRules();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+}
+
+function confirmDeleteRule(id, name) {
+  document.getElementById('confirm-title').textContent = '학칙 삭제';
+  document.getElementById('confirm-text').textContent = `"${name}"을 삭제하시겠습니까?`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deleteRule', { id }, getAuth());
+      toast('삭제되었습니다');
+      await loadRules();
+    } catch (e) { toast('삭제 실패', 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// ============================================================
+// 학원 정보 (settings)
+// ============================================================
+let zoomGuideState = { url: '', path: '' };
+
+function resetZoomGuideUI() {
+  zoomGuideState = { url: '', path: '' };
+  document.getElementById('set-zoomGuide-input').value = '';
+  document.getElementById('set-zoomGuide-preview').style.display = 'none';
+  document.getElementById('set-zoomGuide-preview-img').src = '';
+  document.getElementById('set-zoomGuide-label').textContent = '가이드 이미지 선택';
+}
+function showZoomGuideUI(url) {
+  zoomGuideState.url = url;
+  document.getElementById('set-zoomGuide-preview-img').src = url;
+  document.getElementById('set-zoomGuide-preview').style.display = 'block';
+  document.getElementById('set-zoomGuide-label').textContent = '이미지 변경';
+}
+async function onZoomGuideSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('set-zoomGuide-btn');
+  const label = document.getElementById('set-zoomGuide-label');
+  btn.disabled = true;
+  label.textContent = '업로드 중...';
+  try {
+    const result = await window.api.uploadImage(file, 'settings');
+    zoomGuideState.url = result.url;
+    zoomGuideState.path = result.path;
+    showZoomGuideUI(result.url);
+    toast('이미지가 업로드되었습니다');
+  } catch (e) {
+    toast('업로드 실패: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+}
+async function removeZoomGuide() {
+  if (zoomGuideState.path) {
+    try { await window.api.deleteImage(zoomGuideState.path); } catch(_){}
+  }
+  resetZoomGuideUI();
+}
+
+async function loadSettings() {
+  const s = await window.api.call('getSettings');
+  document.getElementById('set-notice').value = s.notice || '';
+  document.getElementById('set-academyName').value = s.academyName || '';
+  document.getElementById('set-phone').value = s.phone || '';
+  document.getElementById('set-contact').value = s.contact || '';
+  document.getElementById('set-address').value = s.address || '';
+  document.getElementById('set-hours').value = s.hours || '';
+  document.getElementById('set-zoomGuideLink').value = s.zoomGuideLink || '';
+  resetZoomGuideUI();
+  if (s.zoomGuideUrl) {
+    zoomGuideState.url = s.zoomGuideUrl;
+    zoomGuideState.path = s.zoomGuidePath || '';
+    showZoomGuideUI(s.zoomGuideUrl);
+  }
+}
+
+async function saveSettings() {
+  const linkUrl = document.getElementById('set-zoomGuideLink').value.trim();
+  if (linkUrl && !/^https?:\/\//.test(linkUrl)) {
+    toast('링크는 http:// 또는 https://로 시작해야 합니다', 'error');
+    return;
+  }
+  const data = {
+    notice: document.getElementById('set-notice').value.trim(),
+    academyName: document.getElementById('set-academyName').value.trim(),
+    phone: document.getElementById('set-phone').value.trim(),
+    contact: document.getElementById('set-contact').value.trim(),
+    address: document.getElementById('set-address').value.trim(),
+    hours: document.getElementById('set-hours').value.trim(),
+    zoomGuideUrl: zoomGuideState.url || '',
+    zoomGuidePath: zoomGuideState.path || '',
+    zoomGuideLink: linkUrl
+  };
+  try {
+    await window.api.call('saveSettings', data, getAuth());
+    toast('저장되었습니다');
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// 수업자료 (이전 코드 그대로)
+// ============================================================
+let matState = {
+  categories: [],
+  selectedCategoryId: null,
+  materials: [],
+  editingSteps: [],
+  uploadingStepIdx: null
+};
+
+async function loadMaterialsAdmin() {
+  matState.categories = await window.api.call('getMaterialCategories', { includeHidden: true });
+  // 선택된 카테고리가 있으면 자동 새로고침
+  if (matState.selectedCategoryId) {
+    const cat = matState.categories.find(c => c.id === matState.selectedCategoryId);
+    if (cat) {
+      const hasChildren = matState.categories.some(c => c.parentId === cat.id);
+      matState.materials = hasChildren ? [] : await window.api.call('getMaterials', { categoryId: cat.id, includeHidden: true });
+    } else {
+      matState.selectedCategoryId = null;
+      matState.materials = [];
+    }
+  }
+  renderMatTree();
+  renderMatContent();
+}
+
+function renderMatTree() {
+  const cats = matState.categories;
+  const tops = cats.filter(c => !c.parentId);
+  if (tops.length === 0) {
+    document.getElementById('mat-tree-list').innerHTML = `<div class="mat-tree-empty">카테고리가 없습니다.<br>+ 버튼으로 추가하세요.</div>`;
+    return;
+  }
+  const renderItem = (cat) => {
+    const children = cats.filter(c => c.parentId === cat.id);
+    const isActive = matState.selectedCategoryId === cat.id;
+    const hidden = cat.hidden ? 'hidden-cat' : '';
+    let html = `
+      <div class="mat-tree-item ${isActive ? 'active' : ''} ${hidden}" onclick="selectCategory('${cat.id}')">
+        <svg class="mat-tree-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getCatIconSvgAdmin(cat.icon)}</svg>
+        <span class="mat-tree-item-name">${escapeHtml(cat.name)}</span>
+        ${cat.hidden ? '<span class="mat-tree-item-badge">숨김</span>' : ''}
+        <div class="mat-tree-item-actions" onclick="event.stopPropagation()">
+          <button class="mat-tree-item-act" onclick="editCategory('${cat.id}')" title="편집"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="mat-tree-item-act danger" onclick="confirmDeleteCategory('${cat.id}', '${escapeHtml(cat.name).replace(/'/g, "\\'")}')" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    `;
+    if (children.length > 0) {
+      html += `<div class="mat-tree-children">${children.map(c => renderItem(c)).join('')}</div>`;
+    }
+    return html;
+  };
+  document.getElementById('mat-tree-list').innerHTML = tops.map(t => renderItem(t)).join('');
+}
+
+const ADMIN_CAT_ICONS = {
+  'package': '<path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/>',
+  'monitor': '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  'award': '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  'video': '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+  'tag': '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+  'book': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  'help': '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  'lightbulb': '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>',
+  'file': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'
+};
+function getCatIconSvgAdmin(iconName) {
+  return ADMIN_CAT_ICONS[iconName] || ADMIN_CAT_ICONS['file'];
+}
+
+async function selectCategory(id) {
+  const cat = matState.categories.find(c => c.id === id);
+  if (!cat) return;
+  matState.selectedCategoryId = id;
+  const hasChildren = matState.categories.some(c => c.parentId === id);
+  if (hasChildren) {
+    matState.materials = [];
+  } else {
+    matState.materials = await window.api.call('getMaterials', { categoryId: id, includeHidden: true });
+  }
+  renderMatTree();
+  renderMatContent();
+}
+
+function renderMatContent() {
+  const id = matState.selectedCategoryId;
+  if (!id) {
+    document.getElementById('mat-content').innerHTML = `
+      <div class="mat-content-empty">
+        <div class="mat-content-empty-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
+        좌측에서 카테고리를 선택하세요
+      </div>`;
+    return;
+  }
+  const cat = matState.categories.find(c => c.id === id);
+  if (!cat) return;
+  const hasChildren = matState.categories.some(c => c.parentId === id);
+  if (hasChildren) {
+    document.getElementById('mat-content').innerHTML = `
+      <div class="mat-content-head">
+        <div>
+          <div class="mat-content-title">${escapeHtml(cat.name)}</div>
+          <div class="mat-content-meta">상위 카테고리 · 하위 분류가 있습니다${cat.hidden ? '<span class="mat-content-meta-hidden">숨김</span>' : ''}</div>
+        </div>
+      </div>
+      <div class="mat-content-empty">이 카테고리는 하위 분류를 가지고 있습니다.<br>실제 자료는 좌측 트리의 하위 분류를 선택해 추가하세요.</div>`;
+    return;
+  }
+  const isBook = cat.type === 'book';
+  const buttonLabel = isBook ? '교재 추가' : '새 자료 작성';
+  const emptyText = isBook 
+    ? '아직 등록된 교재가 없습니다.<br>"교재 추가"로 썸네일과 구매 링크를 등록하세요.'
+    : '아직 등록된 자료가 없습니다.<br>"새 자료 작성"으로 단계별 가이드를 작성해보세요.';
+  
+  document.getElementById('mat-content').innerHTML = `
+    <div class="mat-content-head">
+      <div>
+        <div class="mat-content-title">${escapeHtml(cat.name)}${isBook ? ' <span style="font-size: 10.5px; padding: 2px 7px; background: var(--accent-soft); color: var(--accent); border-radius: 5px; font-weight: 700; margin-left: 6px;">교재</span>' : ''}</div>
+        <div class="mat-content-meta">전체 ${matState.materials.length}건${cat.hidden ? '<span class="mat-content-meta-hidden">카테고리 숨김</span>' : ''}</div>
+      </div>
+      <button class="btn btn-primary" onclick="openMatModal()"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>${buttonLabel}</button>
+    </div>
+    ${matState.materials.length === 0
+      ? `<div class="mat-content-empty">${emptyText}</div>`
+      : matState.materials.map((m, i) => isBook ? `
+        <div class="mat-item-card ${m.hidden ? 'hidden-mat' : ''}" style="align-items: flex-start;">
+          ${m.bookImageUrl 
+            ? `<img src="${escapeHtml(m.bookImageUrl)}" style="width: 52px; height: 64px; object-fit: cover; border-radius: 6px; flex-shrink: 0; border: 0.5px solid var(--border);">` 
+            : `<div style="width: 52px; height: 64px; background: var(--bg-section); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--text-faint);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>`}
+          <div class="mat-item-content">
+            <div class="mat-item-title">${escapeHtml(m.title)}${m.hidden ? ' <span style="color: var(--warning); font-size: 11px; font-weight: 600; margin-left: 6px;">[숨김]</span>' : ''}</div>
+            <div class="mat-item-meta">
+              ${m.bookPrice ? `<strong style="color: var(--accent); font-weight: 700;">${escapeHtml(m.bookPrice)}</strong>` : ''}
+              ${m.bookSub ? ` · ${escapeHtml(m.bookSub)}` : ''}
+            </div>
+            ${m.bookLink ? `<div style="font-size: 10.5px; color: var(--text-faint); margin-top: 4px; word-break: break-all; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🔗 ${escapeHtml(m.bookLink)}</div>` : ''}
+          </div>
+          <div class="mat-item-actions">
+            <button class="icon-btn" onclick="editMaterial('${m.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="icon-btn danger" onclick="confirmDeleteMaterial('${m.id}', '${escapeHtml(m.title).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+      ` : `
+        <div class="mat-item-card ${m.hidden ? 'hidden-mat' : ''}">
+          <div class="mat-item-num">${i + 1}</div>
+          <div class="mat-item-content">
+            <div class="mat-item-title">${escapeHtml(m.title)}${m.hidden ? ' <span style="color: var(--warning); font-size: 11px; font-weight: 600; margin-left: 6px;">[숨김]</span>' : ''}</div>
+            <div class="mat-item-meta">${m.description ? escapeHtml(m.description) : '설명 없음'}</div>
+          </div>
+          <div class="mat-item-actions">
+            <button class="icon-btn" onclick="editMaterial('${m.id}')" title="편집"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="icon-btn danger" onclick="confirmDeleteMaterial('${m.id}', '${escapeHtml(m.title).replace(/'/g, "\\'")}')" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+function openCatModal() {
+  document.getElementById('cat-modal-title').textContent = '카테고리 추가';
+  document.getElementById('cat-id').value = '';
+  document.getElementById('cat-name').value = '';
+  document.getElementById('cat-hidden').checked = false;
+  document.querySelector('input[name="cat-type"][value="guide"]').checked = true;
+  selectCatColor('6');
+  selectCatIcon('file');
+  populateCatParents();
+  updateCatTypeUI();
+  openModal('cat-modal');
+  setTimeout(() => document.getElementById('cat-name').focus(), 100);
+}
+
+function editCategory(id) {
+  const cat = matState.categories.find(c => c.id === id);
+  if (!cat) return;
+  document.getElementById('cat-modal-title').textContent = '카테고리 편집';
+  document.getElementById('cat-id').value = cat.id;
+  document.getElementById('cat-name').value = cat.name;
+  document.getElementById('cat-hidden').checked = !!cat.hidden;
+  const ctype = cat.type === 'book' ? 'book' : 'guide';
+  document.querySelector(`input[name="cat-type"][value="${ctype}"]`).checked = true;
+  selectCatColor(cat.color || '6');
+  selectCatIcon(cat.icon || (ctype === 'book' ? 'book' : 'file'));
+  populateCatParents(cat.id);
+  document.getElementById('cat-parent').value = cat.parentId || '';
+  updateCatTypeUI();
+  openModal('cat-modal');
+}
+
+function updateCatTypeUI() {
+  const selected = document.querySelector('input[name="cat-type"]:checked');
+  if (!selected) return;
+  const isBook = selected.value === 'book';
+  const help = document.getElementById('cat-type-help');
+  if (help) {
+    help.textContent = isBook 
+      ? '교재 카테고리: 썸네일 + 가격 + 구매 링크 형태로 표시됩니다.'
+      : '가이드 카테고리: 단계별 안내 자료를 등록합니다.';
+  }
+  // 아이콘 기본값 자동 선택 (사용자가 아직 안 골랐다면)
+  if (isBook && document.getElementById('cat-icon').value === 'file') {
+    selectCatIcon('book');
+  }
+}
+
+function populateCatParents(excludeId) {
+  const tops = matState.categories.filter(c => !c.parentId && c.id !== excludeId);
+  const select = document.getElementById('cat-parent');
+  select.innerHTML = '<option value="">없음 (최상위)</option>' + 
+    tops.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+}
+
+function selectCatColor(color) {
+  document.getElementById('cat-color').value = color;
+  document.querySelectorAll('#cat-color-picker .color-swatch').forEach(s => {
+    s.classList.toggle('selected', s.dataset.color === color);
+  });
+}
+
+function selectCatIcon(icon) {
+  document.getElementById('cat-icon').value = icon;
+  document.querySelectorAll('#cat-icon-picker .icon-swatch').forEach(s => {
+    s.classList.toggle('selected', s.dataset.icon === icon);
+  });
+}
+
+async function saveCatModal() {
+  const id = document.getElementById('cat-id').value || undefined;
+  const name = document.getElementById('cat-name').value.trim();
+  const parentId = document.getElementById('cat-parent').value || null;
+  const color = document.getElementById('cat-color').value;
+  const icon = document.getElementById('cat-icon').value;
+  const hidden = document.getElementById('cat-hidden').checked;
+  const type = (document.querySelector('input[name="cat-type"]:checked') || {}).value || 'guide';
+  if (!name) { toast('이름을 입력해주세요', 'error'); return; }
+  let order;
+  if (id) {
+    const existing = matState.categories.find(c => c.id === id);
+    order = existing ? existing.order : 0;
+  } else {
+    const siblings = matState.categories.filter(c => (c.parentId || null) === parentId);
+    order = siblings.length;
+  }
+  try {
+    const result = await window.api.call('saveMaterialCategory', { id, name, parentId, color, icon, hidden, order, type }, getAuth());
+    closeModal('cat-modal');
+    toast(id ? '카테고리가 수정되었습니다' : '카테고리가 추가되었습니다');
+    if (!id && result && result.id) {
+      matState.selectedCategoryId = result.id;
+    }
+    await loadMaterialsAdmin();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+}
+
+function confirmDeleteCategory(id, name) {
+  const hasChildren = matState.categories.some(c => c.parentId === id);
+  document.getElementById('confirm-title').textContent = '카테고리 삭제';
+  document.getElementById('confirm-text').innerHTML = hasChildren 
+    ? `"${name}"과 그 안의 <strong>모든 하위 분류 및 자료</strong>가 삭제됩니다.`
+    : `"${name}"과 그 안의 모든 자료가 삭제됩니다.`;
+  pendingAction = async () => {
+    try {
+      await window.api.call('deleteMaterialCategory', { id }, getAuth());
+      if (matState.selectedCategoryId === id) matState.selectedCategoryId = null;
+      toast('삭제되었습니다');
+      await loadMaterialsAdmin();
+    } catch (e) { toast('삭제 실패: ' + e.message, 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// 교재 이미지 상태
+let matBookImageState = { url: '', path: '' };
+
+function resetMatBookImageUI() {
+  matBookImageState = { url: '', path: '' };
+  document.getElementById('mat-bookImage-input').value = '';
+  document.getElementById('mat-bookImage-preview').style.display = 'none';
+  document.getElementById('mat-bookImage-preview-img').src = '';
+  document.getElementById('mat-bookImage-label').textContent = '썸네일 이미지 선택';
+}
+function showMatBookImageUI(url) {
+  matBookImageState.url = url;
+  document.getElementById('mat-bookImage-preview-img').src = url;
+  document.getElementById('mat-bookImage-preview').style.display = 'block';
+  document.getElementById('mat-bookImage-label').textContent = '이미지 변경';
+}
+async function onMatBookImageSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('mat-bookImage-btn');
+  const label = document.getElementById('mat-bookImage-label');
+  btn.disabled = true;
+  label.textContent = '업로드 중...';
+  try {
+    const result = await window.api.uploadImage(file, 'books');
+    matBookImageState.url = result.url;
+    matBookImageState.path = result.path;
+    showMatBookImageUI(result.url);
+    toast('이미지가 업로드되었습니다');
+  } catch (e) {
+    toast('업로드 실패: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+}
+async function removeMatBookImage() {
+  if (matBookImageState.path) {
+    try { await window.api.deleteImage(matBookImageState.path); } catch(_){}
+  }
+  resetMatBookImageUI();
+}
+
+// 현재 선택된 카테고리의 type에 따라 모달 UI 전환
+function applyMatModalMode(mode) {
+  const isBook = mode === 'book';
+  document.getElementById('mat-mode').value = mode;
+  document.getElementById('mat-book-section').style.display = isBook ? 'block' : 'none';
+  document.getElementById('mat-guide-section').style.display = isBook ? 'none' : 'block';
+  document.getElementById('mat-modal-title').textContent = isBook 
+    ? (document.getElementById('mat-id').value ? '교재 편집' : '교재 추가')
+    : (document.getElementById('mat-id').value ? '자료 편집' : '새 자료 작성');
+}
+
+function getCurrentCategoryType() {
+  const id = matState.selectedCategoryId;
+  if (!id) return 'guide';
+  const cat = matState.categories.find(c => c.id === id);
+  return (cat && cat.type === 'book') ? 'book' : 'guide';
+}
+
+function openMatModal() {
+  if (!matState.selectedCategoryId) return;
+  document.getElementById('mat-id').value = '';
+  document.getElementById('mat-categoryId').value = matState.selectedCategoryId;
+  document.getElementById('mat-title').value = '';
+  document.getElementById('mat-description').value = '';
+  document.getElementById('mat-hidden').checked = false;
+  document.getElementById('mat-bookPrice').value = '';
+  document.getElementById('mat-bookSub').value = '';
+  document.getElementById('mat-bookLink').value = '';
+  resetMatBookImageUI();
+  matState.editingSteps = [{ title: '', content: '', imageUrl: '', imagePath: '' }];
+  renderSteps();
+  applyMatModalMode(getCurrentCategoryType());
+  openModal('mat-modal');
+  setTimeout(() => document.getElementById('mat-title').focus(), 100);
+}
+
+async function editMaterial(id) {
+  const m = matState.materials.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('mat-id').value = m.id;
+  document.getElementById('mat-categoryId').value = m.categoryId;
+  document.getElementById('mat-title').value = m.title;
+  document.getElementById('mat-description').value = m.description || '';
+  document.getElementById('mat-hidden').checked = !!m.hidden;
+  // 교재 필드 복원
+  document.getElementById('mat-bookPrice').value = m.bookPrice || '';
+  document.getElementById('mat-bookSub').value = m.bookSub || '';
+  document.getElementById('mat-bookLink').value = m.bookLink || '';
+  resetMatBookImageUI();
+  if (m.bookImageUrl) {
+    matBookImageState.url = m.bookImageUrl;
+    matBookImageState.path = m.bookImagePath || '';
+    showMatBookImageUI(m.bookImageUrl);
+  }
+  matState.editingSteps = (m.steps || []).map(s => ({ ...s }));
+  if (matState.editingSteps.length === 0) matState.editingSteps.push({ title: '', content: '', imageUrl: '', imagePath: '' });
+  renderSteps();
+  applyMatModalMode(getCurrentCategoryType());
+  openModal('mat-modal');
+}
+
+function renderSteps() {
+  const html = matState.editingSteps.map((step, i) => `
+    <div class="step-card">
+      <div class="step-card-head">
+        <div class="step-card-num">${i + 1}</div>
+        <div style="font-size: 12px; color: var(--text-soft); flex: 1;">${i + 1}단계</div>
+        <div class="step-card-actions">
+          ${i > 0 ? `<button class="icon-btn" onclick="moveStep(${i}, -1)" title="위로"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>` : ''}
+          ${i < matState.editingSteps.length - 1 ? `<button class="icon-btn" onclick="moveStep(${i}, 1)" title="아래로"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}
+          ${matState.editingSteps.length > 1 ? `<button class="icon-btn danger" onclick="removeStep(${i})" title="삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>` : ''}
+        </div>
+      </div>
+      <div class="form-row">
+        <input type="text" class="form-input" placeholder="단계 제목" value="${escapeHtml(step.title || '')}" oninput="updateStepField(${i}, 'title', this.value)">
+      </div>
+      <div class="form-row" style="margin-bottom: 0;">
+        <textarea class="form-textarea" placeholder="이 단계의 내용" oninput="updateStepField(${i}, 'content', this.value)" style="min-height: 100px;">${escapeHtml(step.content || '')}</textarea>
+      </div>
+      ${step.imageUrl ? `
+        <div class="step-image-preview">
+          <img src="${escapeHtml(step.imageUrl)}" alt="">
+          <button class="step-image-remove" onclick="removeStepImage(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      ` : matState.uploadingStepIdx === i ? `
+        <div class="step-uploading"><div class="spinner"></div>이미지 업로드 중...</div>
+      ` : `
+        <label class="step-image-uploader">
+          <input type="file" accept="image/*" style="display: none;" onchange="uploadStepImage(${i}, this.files[0])">
+          📷 이미지 첨부 (선택)
+        </label>
+      `}
+    </div>
+  `).join('');
+  document.getElementById('steps-list').innerHTML = html;
+}
+
+function updateStepField(idx, field, value) {
+  if (matState.editingSteps[idx]) matState.editingSteps[idx][field] = value;
+}
+
+function addStep() {
+  matState.editingSteps.push({ title: '', content: '', imageUrl: '', imagePath: '' });
+  renderSteps();
+}
+
+function removeStep(idx) {
+  const step = matState.editingSteps[idx];
+  if (step && step.imagePath) window.api.deleteImage(step.imagePath).catch(() => {});
+  matState.editingSteps.splice(idx, 1);
+  renderSteps();
+}
+
+function moveStep(idx, direction) {
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= matState.editingSteps.length) return;
+  const tmp = matState.editingSteps[idx];
+  matState.editingSteps[idx] = matState.editingSteps[newIdx];
+  matState.editingSteps[newIdx] = tmp;
+  renderSteps();
+}
+
+async function uploadStepImage(idx, file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('이미지는 5MB 이하만 가능합니다', 'error'); return; }
+  matState.uploadingStepIdx = idx;
+  renderSteps();
+  try {
+    const result = await window.api.uploadImage(file, 'materials');
+    matState.editingSteps[idx].imageUrl = result.url;
+    matState.editingSteps[idx].imagePath = result.path;
+    matState.uploadingStepIdx = null;
+    renderSteps();
+    toast('이미지가 업로드되었습니다');
+  } catch (e) {
+    matState.uploadingStepIdx = null;
+    renderSteps();
+    toast('업로드 실패: ' + e.message, 'error');
+  }
+}
+
+async function removeStepImage(idx) {
+  const step = matState.editingSteps[idx];
+  if (step && step.imagePath) await window.api.deleteImage(step.imagePath).catch(() => {});
+  matState.editingSteps[idx].imageUrl = '';
+  matState.editingSteps[idx].imagePath = '';
+  renderSteps();
+}
+
+async function saveMatModal() {
+  const id = document.getElementById('mat-id').value || undefined;
+  const categoryId = document.getElementById('mat-categoryId').value;
+  const title = document.getElementById('mat-title').value.trim();
+  const description = document.getElementById('mat-description').value.trim();
+  const hidden = document.getElementById('mat-hidden').checked;
+  const mode = document.getElementById('mat-mode').value;
+  if (!title) { toast('제목을 입력해주세요', 'error'); return; }
+  
+  let order;
+  if (id) {
+    const existing = matState.materials.find(m => m.id === id);
+    order = existing ? existing.order : matState.materials.length;
+  } else {
+    order = matState.materials.length;
+  }
+  
+  let payload;
+  
+  if (mode === 'book') {
+    // 교재 모드
+    const bookPrice = document.getElementById('mat-bookPrice').value.trim();
+    const bookSub = document.getElementById('mat-bookSub').value.trim();
+    const bookLink = document.getElementById('mat-bookLink').value.trim();
+    if (!bookLink) {
+      toast('교재몰 구매 링크를 입력해주세요', 'error');
+      return;
+    }
+    if (!/^https?:\/\//.test(bookLink)) {
+      toast('링크는 http:// 또는 https://로 시작해야 합니다', 'error');
+      return;
+    }
+    payload = {
+      id, categoryId, title, description, hidden, order,
+      type: 'book',
+      bookPrice,
+      bookSub,
+      bookLink,
+      bookImageUrl: matBookImageState.url || '',
+      bookImagePath: matBookImageState.path || '',
+      steps: []
+    };
+  } else {
+    // 가이드 모드 (기존)
+    const steps = matState.editingSteps.filter(s => (s.title || '').trim() || (s.content || '').trim() || s.imageUrl);
+    if (steps.length === 0) { toast('최소 한 단계는 작성해주세요', 'error'); return; }
+    payload = {
+      id, categoryId, title, description, hidden, order,
+      type: 'guide',
+      steps
+    };
+  }
+  
+  try {
+    await window.api.call('saveMaterial', payload, getAuth());
+    closeModal('mat-modal');
+    toast(id ? '수정되었습니다' : '등록되었습니다');
+    await selectCategory(categoryId);
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+}
+
+function confirmDeleteMaterial(id, title) {
+  document.getElementById('confirm-title').textContent = '자료 삭제';
+  document.getElementById('confirm-text').textContent = `"${title}" 자료를 삭제하시겠습니까?`;
+  pendingAction = async () => {
+    try {
+      const m = matState.materials.find(x => x.id === id);
+      if (m && m.steps) {
+        for (const step of m.steps) {
+          if (step.imagePath) await window.api.deleteImage(step.imagePath).catch(() => {});
+        }
+      }
+      await window.api.call('deleteMaterial', { id }, getAuth());
+      toast('삭제되었습니다');
+      await selectCategory(matState.selectedCategoryId);
+    } catch (e) { toast('삭제 실패: ' + e.message, 'error'); }
+  };
+  openModal('confirm-modal');
+}
+
+// ============================================================
+// 공통 - 모달 외부 클릭으로 닫기
+// ============================================================
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', (e) => {
+    if (e.target === el) el.classList.remove('active');
+  });
+});
+
+['login-email', 'login-password'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') login();
+  });
+});
+
+function confirmAction() {
+  if (pendingAction) { pendingAction(); pendingAction = null; }
+  closeModal('confirm-modal');
+}
+
+let appShown = false;
+firebase.auth().onAuthStateChanged(user => {
+  if (user && !appShown) { appShown = true; showApp(); }
+  if (!user) {
+    appShown = false;
+    document.getElementById('login-screen').style.display = '';
+    document.getElementById('app').classList.remove('active');
+    setTimeout(() => document.getElementById('login-email').focus(), 50);
+  }
+});
+</script>
+
+</body>
+</html>

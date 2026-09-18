@@ -1,0 +1,2639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBS ACADEMY AIX 견적서 시스템</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #E8E5DC; color: #0F0F0F; min-height: 100vh; -webkit-font-smoothing: antialiased; font-weight: 400; }
+.app { display: grid; grid-template-columns: 460px 1fr; min-height: 100vh; }
+
+.panel { background: #FFFFFF; border-right: 0.5px solid #E5E2D9; padding: 38px 34px 96px; overflow-y: auto; max-height: 100vh; }
+.dept-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.dept-tab { padding: 6px 11px; border: 0.5px solid #D8D3C8; background: #FFFFFF; font-size: 12px; cursor: pointer; color: #4A4843; font-family: inherit; font-weight: 500; transition: all 0.15s; }
+.dept-tab:hover { border-color: #1A1A1A; color: #1A1A1A; }
+.dept-tab.active { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
+.panel::-webkit-scrollbar { width: 6px; }
+.panel::-webkit-scrollbar-thumb { background: #D8D3C8; }
+.panel h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; color: #1A1A1A; }
+.panel .sub { font-size: 10px; letter-spacing: 1.8px; color: #8C8A82; margin: 6px 0 20px; font-weight: 500; }
+
+.section-title { font-size: 10px; letter-spacing: 1.8px; color: #8C8A82; margin: 32px 0 12px; padding-top: 22px; border-top: 0.5px solid #EDEAE0; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+.section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 10px; letter-spacing: 1.3px; color: #8C8A82; margin-bottom: 7px; text-transform: uppercase; font-weight: 600; }
+.field input, .field select { width: 100%; padding: 10px 12px; border: 0.5px solid #D8D3C8; background: #FFFFFF; font-size: 13px; font-family: inherit; color: #1A1A1A; outline: none; font-weight: 400; transition: border-color 0.15s; }
+.field input:focus, .field select:focus { border-color: #1A1A1A; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.proc-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; padding: 10px; background: #F9F7F0; border: 0.5px solid #EDEAE0; }
+.proc-tab { padding: 7px 11px; background: #FFFFFF; border: 0.5px solid #D8D3C8; font-size: 12px; cursor: pointer; color: #4A4843; font-family: inherit; font-weight: 500; transition: all 0.15s; }
+.proc-tab:hover { border-color: #1A1A1A; color: #1A1A1A; }
+.proc-tab.active { background: #6B6862; color: #FFFFFF; border-color: #6B6862; }
+.proc-tab .dur { font-size: 10px; color: #A8A49C; margin-left: 5px; font-weight: 400; }
+.proc-tab.active .dur { color: #D8D3C8; }
+.proc-empty { font-size: 12px; color: #8C8A82; padding: 8px 4px; font-weight: 400; }
+
+.course-list { max-height: 360px; overflow-y: auto; border: 0.5px solid #E5E2D9; }
+.course-list::-webkit-scrollbar { width: 6px; }
+.course-list::-webkit-scrollbar-thumb { background: #D8D3C8; }
+.course-item { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid #EDEAE0; cursor: pointer; gap: 12px; user-select: none; transition: background 0.1s; }
+.course-item:last-child { border-bottom: none; }
+.course-item:hover { background: #F5EEDC; }
+.course-item:hover .plus { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
+.course-item .plus { width: 22px; height: 22px; border: 1px solid #B4B0A6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; font-weight: 400; color: #4A4843; background: #FFFFFF; border-radius: 3px; transition: all 0.15s; }
+.course-item .cname { font-size: 13.5px; flex: 1; font-weight: 500; color: #1A1A1A; }
+.course-item .cfee { font-size: 12px; color: #4A4843; font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; font-weight: 500; }
+
+.bulk-add { width: 100%; padding: 10px; margin-top: 10px; background: transparent; border: 0.5px dashed #B4B0A6; font-size: 12px; color: #4A4843; cursor: pointer; font-family: inherit; font-weight: 500; letter-spacing: 0.3px; transition: all 0.15s; }
+.bulk-add:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F9F7F0; }
+
+.promo-card { padding: 12px; margin-bottom: 8px; background: #FBF9F0; border: 0.5px solid #D8D3C8; border-left: 2px solid #9C6F00; }
+.promo-card-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.promo-card-row:last-child { margin-bottom: 0; }
+.promo-card input, .promo-card textarea { padding: 7px 9px; border: 0.5px solid #D8D3C8; background: #FFFFFF; font-size: 11.5px; font-family: inherit; color: #1A1A1A; outline: none; font-weight: 400; width: 100%; }
+.promo-card input:focus, .promo-card textarea:focus { border-color: #1A1A1A; }
+.promo-card textarea { resize: vertical; min-height: 38px; line-height: 1.5; }
+.promo-card .promo-del { background: none; border: 0.5px solid #D8D3C8; color: #9C2626; cursor: pointer; font-size: 15px; width: 30px; flex-shrink: 0; }
+.promo-card .promo-del:hover { background: #9C2626; color: #FFFFFF; border-color: #9C2626; }
+
+.mode-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.mode-tab { flex: 1; padding: 9px; border: 0.5px solid #D8D3C8; background: #FFFFFF; font-size: 12px; cursor: pointer; color: #4A4843; font-family: inherit; font-weight: 500; transition: all 0.15s; }
+.mode-tab:hover { border-color: #1A1A1A; color: #1A1A1A; }
+.mode-tab.active { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
+.mode-hint { font-size: 11px; color: #4A4843; padding: 10px 12px; background: #F9F7F0; margin-bottom: 12px; line-height: 1.7; font-weight: 400; letter-spacing: 0.1px; }
+
+/* 왼쪽 아래 떠 있는 작업 메뉴 */
+.fab-wrap { position: fixed; left: 20px; bottom: 20px; z-index: 400; }
+.fab-btn { display: flex; align-items: center; gap: 8px; padding: 12px 18px; border: none; background: #1A1A1A; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 10px 24px rgba(0,0,0,0.14); }
+.fab-btn:hover { background: #000000; }
+.fab-btn .caret { font-size: 10px; opacity: 0.7; }
+.fab-menu { position: absolute; left: 0; bottom: 52px; min-width: 208px; background: #FFFFFF; border: 0.5px solid #D8D3C8; box-shadow: 0 2px 6px rgba(0,0,0,0.10), 0 14px 34px rgba(0,0,0,0.16); padding: 6px; display: none; }
+.fab-menu.open { display: block; }
+.fab-menu button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 10px 12px; border: none; background: transparent; font-family: inherit; font-size: 13px; color: #1A1A1A; text-align: left; cursor: pointer; font-weight: 500; }
+.fab-menu button:hover { background: #F5F3EC; }
+.fab-menu button.primary { background: #1A1A1A; color: #FFFFFF; font-weight: 600; }
+.fab-menu button.primary:hover { background: #000000; }
+.fab-menu .sep { height: 0.5px; background: #EDEAE0; margin: 5px 2px; }
+.fab-menu .who { padding: 8px 12px 6px; font-size: 10px; letter-spacing: 0.6px; color: #8C8A82; font-weight: 600; }
+.btn { flex: 1; padding: 13px; border: none; cursor: pointer; font-family: inherit; font-size: 12px; letter-spacing: 0.8px; font-weight: 600; transition: all 0.15s; }
+.btn-primary { background: #1A1A1A; color: #FFFFFF; }
+.btn-primary:hover { background: #000; }
+.btn-secondary { background: #FFFFFF; color: #1A1A1A; border: 0.5px solid #1A1A1A; }
+.btn-secondary:hover { background: #1A1A1A; color: #FFFFFF; }
+
+.preview-wrap { padding: 48px 40px; overflow-y: auto; max-height: 100vh; }
+.preview-wrap::-webkit-scrollbar { width: 8px; }
+.preview-wrap::-webkit-scrollbar-thumb { background: #B4B0A6; }
+.quotation { background: #FFFFFF; padding: 68px 70px; max-width: 840px; margin: 0 auto; color: #0F0F0F; box-shadow: 0 2px 4px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08); font-weight: 400; }
+
+.q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 44px; padding-bottom: 26px; border-bottom: 2.5px solid #0F0F0F; position: relative; }
+.q-header::after { content: ''; position: absolute; left: 0; bottom: -2.5px; width: 80px; height: 2.5px; background: #B8860B; }
+.q-title-wrap { }
+.q-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #0F0F0F; }
+.q-title .sub { display: block; font-size: 11px; font-weight: 600; letter-spacing: 3px; color: #B8860B; margin-top: 2px; text-transform: uppercase; }
+.q-brand { font-size: 10px; letter-spacing: 1.5px; color: #4A4843; margin-top: 12px; font-weight: 500; }
+.q-meta { text-align: right; font-size: 11px; color: #1F1F1F; line-height: 2.1; letter-spacing: 0.2px; font-weight: 500; }
+.q-meta .mk { color: #8C8A82; display: inline-block; width: 56px; padding-right: 8px; font-weight: 600; font-size: 9px; letter-spacing: 1px; }
+
+.q-info { display: grid; grid-template-columns: 1.2fr 2fr 0.8fr; gap: 32px; padding: 22px 24px; margin-bottom: 36px; background: #FBF9F0; border-left: 3px solid #B8860B; }
+/* 국민취업지원제도 견적서는 하단 안내 박스와 같은 파란 계열로 맞춘다 */
+.q-info.ktp { background: #F0F5FF; border-left-color: #1B3F7A; }
+/* 국민취업지원제도 견적서는 금색 강조를 전부 파란 계열로 바꾼다 */
+.quotation.ktp .q-header::after { background: #1B3F7A; }
+.quotation.ktp .q-title .sub { color: #1B3F7A; }
+.quotation.ktp .q-ktp-mark { display: block; margin-top: 7px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #1B3F7A; }
+.quotation.ktp .q-row.clickable:hover td { background: #E3ECFA; }
+.quotation.ktp .q-row.is-free td { background: #F0F5FF; }
+.quotation.ktp .q-row.is-free td:first-child { box-shadow: inset 3px 0 0 #1B3F7A; }
+.quotation.ktp .q-row.is-free td.sub { color: #1B3F7A; }
+.quotation.ktp .q-row.is-free .x-btn { background: #F0F5FF; }
+.quotation.ktp .q-row.clickable.is-free:hover td,
+.quotation.ktp .q-row.clickable.is-free:hover .x-btn { background: #E3ECFA; }
+.quotation.ktp .q-row td.fee.free { color: #1B3F7A; }
+.quotation.ktp .q-promotions-box { background: #F0F5FF; border-left-color: #1B3F7A; }
+.quotation.ktp .q-promotions-title { color: #1B3F7A; }
+.quotation.ktp .q-promo-item { border-bottom-color: #A9BEE0; }
+.quotation.ktp .q-promo-deadline { color: #1B3F7A; }
+.q-info-item .label { font-size: 10px; letter-spacing: 1px; color: #6B6862; font-weight: 700; }
+.q-info-item .value { font-size: 16px; margin-top: 6px; letter-spacing: -0.2px; color: #0F0F0F; font-weight: 600; }
+
+.q-section { font-size: 11px; letter-spacing: 0.5px; color: #0F0F0F; margin: 0 0 12px; display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; }
+.q-section .hint { font-size: 10px; color: #6B6862; letter-spacing: 0.3px; text-transform: none; font-weight: 400; }
+
+.q-table { width: 100%; font-size: 13px; border-collapse: collapse; font-weight: 400; table-layout: fixed; }.q-table thead tr { border-top: 1.5px solid #0F0F0F; border-bottom: 0.5px solid #6B6862; }
+.q-table th { text-align: left; padding: 12px 0; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; color: #4A4843; }
+.q-table th.right { text-align: right; }
+.q-table th.hdrag { width: 22px; padding-left: 2px; }
+/* 폭을 고정해 두어야 과목명이 길어도 세부 내용 칸이 밀리지 않는다 */
+.q-table col.c-drag { width: 2%; }
+.q-table col.c-no { width: 3.5%; }
+.q-table col.c-sub { width: 16.5%; }
+.q-table col.c-fee { width: 15%; }
+.q-table th, .q-table td { vertical-align: top; word-break: keep-all; overflow-wrap: anywhere; }
+.q-row { cursor: default; transition: background 0.1s; }
+.q-row.clickable { cursor: pointer; }
+.q-row.clickable:hover td { background: #FFF8E1; }
+.q-row.dragging { opacity: 0.4; }
+.q-row.drag-over td { border-top: 2px solid #0F0F0F !important; }
+.q-row td { padding: 12px 0; border-bottom: 0.5px solid #E5E2D9; }
+.q-row td.drag { width: 22px; padding-left: 2px; color: #C4BFB4; font-size: 11px; cursor: grab; text-align: center; user-select: none; letter-spacing: -1px; }
+.q-row td.drag:hover { color: #0F0F0F; }
+.q-row td.no { color: #6B6862; width: 40px; font-variant-numeric: tabular-nums; font-size: 12px; padding-left: 2px; font-weight: 500; }
+.q-row td.sub { font-weight: 600; color: #0F0F0F; font-size: 13.5px; padding-right: 10px; line-height: 1.45; position: relative; }
+.q-row td.sub .nm { display: inline-block; white-space: nowrap; }
+.q-row td.sub .nm.wrapped { white-space: normal; }
+.q-row td.desc { color: #4A4843; font-size: 12px; padding-right: 12px; font-weight: 400; line-height: 1.45; }
+.q-row td.fee { text-align: right; font-variant-numeric: tabular-nums; width: 120px; padding-right: 2px; color: #0F0F0F; font-weight: 600; font-size: 13.5px; }
+.q-row td.fee.free { color: #9C6F00; font-size: 11px; letter-spacing: 0.2px; font-weight: 700; white-space: nowrap; }
+.q-row td.fee .was { color: #9C2626; font-size: 11px; font-weight: 500; text-decoration: line-through; text-decoration-thickness: 1px; margin-right: 6px; letter-spacing: 0; }
+.q-row.is-free td { background: #FBF9F0; }
+.q-row.is-free td:first-child { box-shadow: inset 3px 0 0 #B8860B; }
+.q-row.is-free td.sub { color: #6B5A2E; }
+.q-row.is-free .x-btn { background: #FBF9F0; }
+.q-row.clickable.is-free:hover td { background: #F5EFD9; }
+.q-row.clickable.is-free:hover .x-btn { background: #F5EFD9; }
+.q-row.last td { border-bottom: 1.5px solid #0F0F0F; }
+.q-row.fixed td.sub { color: #1F1F1F; }
+.q-row.fixed td.no { color: #8C8A82; }
+.q-row .x-btn { position: absolute; right: 0; top: 10px; width: 18px; height: 18px; line-height: 16px; text-align: center; color: #8C8A82; font-size: 15px; cursor: pointer; opacity: 0; transition: opacity 0.15s; font-weight: 400; border-radius: 3px; background: #FFFFFF; }
+.q-row:hover .x-btn { opacity: 1; }
+.q-row .x-btn:hover { color: #FFFFFF; background: #C00; }
+
+
+
+.q-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 48px; padding-top: 28px; border-top: 2px solid #0F0F0F; }
+.q-total-label { font-size: 11px; letter-spacing: 1.8px; color: #4A4843; text-transform: uppercase; font-weight: 700; }
+.q-total-sub { font-size: 11px; color: #4A4843; margin-top: 8px; letter-spacing: 0.3px; font-weight: 400; }
+.q-total-amount { font-size: 28px; letter-spacing: -0.3px; line-height: 1; font-variant-numeric: tabular-nums; color: #0F0F0F; font-weight: 700; }
+.q-total-amount .cur { font-size: 12px; color: #6B6862; font-weight: 500; margin-right: 6px; letter-spacing: 0; }
+.q-total-amount .won { font-size: 13px; color: #6B6862; font-weight: 500; margin-left: 4px; }
+
+/* 하단 블록 */
+.q-bottom-section { margin-top: 36px; }
+
+/* 프로모션 박스 */
+.q-promotions-box { padding: 18px 22px 14px; margin-bottom: 16px; background: #F5F4F0; border: 0.5px solid #D8D3C8; }
+.q-promotions-title { font-size: 10px; letter-spacing: 1px; color: #4A4843; font-weight: 700; margin-bottom: 12px; }
+.q-promo-item { padding: 8px 0; border-bottom: 0.5px dashed #D8D3C8; }
+.q-promo-item:last-child { border-bottom: none; padding-bottom: 0; }
+.q-promo-item:first-of-type { padding-top: 0; }
+.q-promo-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.q-promo-name { font-size: 13px; font-weight: 700; color: #0F0F0F; }
+.q-promo-deadline { font-size: 10px; color: #6B6862; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.3px; }
+.q-promo-desc { font-size: 11px; color: #4A4843; line-height: 1.7; font-weight: 400; }
+
+/* 합계 박스 */
+.q-summary-box { padding: 20px 22px 24px; background: #FFFFFF; border: 0.5px solid #D8D3C8; }
+.q-sum-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; font-size: 13px; }
+.q-sum-row .lbl { color: #4A4843; font-weight: 500; }
+.q-sum-row .val { font-variant-numeric: tabular-nums; color: #0F0F0F; font-weight: 600; }
+.q-sum-row.minus .val { color: #9C2626; }
+.q-sum-row.plus .val { color: #1F1F1F; }
+.q-sum-detail { font-size: 11px; color: #8C8A82; padding: 0 0 6px; font-weight: 400; letter-spacing: 0.1px; }
+.q-sum-final { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 16px; border-top: 2px solid #0F0F0F; }
+.q-sum-final .lbl { font-size: 15px; color: #0F0F0F; font-weight: 800; letter-spacing: 0.3px; }
+.q-sum-final .val { font-size: 32px; color: #0F0F0F; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; line-height: 1; }
+.q-sum-final .val .won { font-size: 15px; color: #6B6862; font-weight: 600; margin-left: 4px; }
+/* 국민취업지원제도 */
+.doc-tabs { display: flex; gap: 6px; margin: 0 0 20px; }
+.doc-tab { flex: 1; padding: 10px 6px; border: 0.5px solid #D8D3C8; background: #FFFFFF; font-size: 12px; cursor: pointer; color: #4A4843; font-family: inherit; font-weight: 600; transition: all 0.15s; }
+.doc-tab:hover { border-color: #1A1A1A; color: #1A1A1A; }
+.doc-tab.active { background: #1B3F7A; color: #FFFFFF; border-color: #1B3F7A; }
+.q-sum-support { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; }
+.q-sum-support .lbl { font-size: 12.5px; color: #1B3F7A; font-weight: 600; }
+.q-sum-support .val { font-size: 14px; color: #1B3F7A; font-weight: 700; font-variant-numeric: tabular-nums; }
+.q-sum-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid #6B6862; }
+.q-sum-total .lbl { font-size: 13px; color: #0F0F0F; font-weight: 700; }
+.q-sum-total .val { font-size: 15px; color: #0F0F0F; font-weight: 700; font-variant-numeric: tabular-nums; }
+.q-support-box { margin-top: 32px; padding: 20px 24px; background: #F0F5FF; border-left: 3px solid #1B3F7A; }
+.q-support-title { font-size: 11px; letter-spacing: 0.5px; color: #1B3F7A; font-weight: 700; margin-bottom: 12px; }
+.q-support-line { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; font-size: 12px; color: #1F1F1F; }
+.q-support-line .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+.q-support-desc { font-size: 11px; color: #4A4843; line-height: 1.7; margin-top: 10px; padding-top: 10px; border-top: 0.5px dashed #A9BEE0; }
+.q-sum-install { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid #D8D3C8; }
+.q-sum-install .lbl { font-size: 12px; color: #4A4843; font-weight: 500; }
+.q-sum-install .val { font-size: 17px; color: #0F0F0F; font-weight: 700; font-variant-numeric: tabular-nums; }
+.q-sum-install .val .won { font-size: 12px; color: #6B6862; font-weight: 500; margin-left: 3px; }
+
+/* 학원 안내 섹션 */
+.q-policies { margin-top: 44px; padding-top: 26px; border-top: 1.5px solid #0F0F0F; }
+
+/* 프로모션 박스 */
+.q-promotions-box { margin-top: 32px; padding: 20px 24px; background: #FFF8E1; border-left: 3px solid #B8860B; }
+.q-promotions-title { font-size: 11px; letter-spacing: 0.5px; color: #9C6F00; font-weight: 700; margin-bottom: 14px; }
+.q-promo-item { padding: 10px 0; border-bottom: 0.5px dashed #D8B85C; }
+.q-promo-item:last-child { border-bottom: none; padding-bottom: 0; }
+.q-promo-item:first-child { padding-top: 0; }
+.q-promo-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.q-promo-name { font-size: 13px; font-weight: 700; color: #0F0F0F; }
+.q-promo-deadline { font-size: 10px; color: #9C6F00; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.3px; }
+.q-promo-desc { font-size: 11px; color: #4A4843; line-height: 1.7; font-weight: 400; }
+
+.q-policy-block { margin-bottom: 24px; }
+.q-policy-block:last-child { margin-bottom: 0; }
+.q-policy-title { font-size: 11px; letter-spacing: 0.5px; color: #0F0F0F; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 0.5px solid #0F0F0F; }
+.q-policy-list { list-style: none; padding: 0; margin: 0; }
+.q-policy-list li { font-size: 11.5px; color: #1F1F1F; line-height: 1.8; padding: 4px 0 4px 24px; position: relative; font-weight: 400; letter-spacing: 0.1px; white-space: nowrap; }
+.q-policy-list li .n { position: absolute; left: 0; color: #8C8A82; font-weight: 600; font-variant-numeric: tabular-nums; }
+.q-policy-list li.warn { color: #9C2626; }
+.q-policy-list li.warn .n { color: #9C2626; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(28,27,25,0.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 30px; }
+.modal-overlay.show { display: flex; }
+.modal { background: #FFFFFF; border-radius: 4px; max-width: 1100px; width: 100%; max-height: 88vh; display: flex; flex-direction: column; }
+.modal-header { padding: 20px 28px; border-bottom: 0.5px solid #ECE8DE; display: flex; justify-content: space-between; align-items: center; }
+.master-tabs { display: flex; border-bottom: 0.5px solid #ECE8DE; padding: 0 28px; }
+.master-tab { padding: 12px 18px; background: none; border: none; font-family: inherit; font-size: 12px; cursor: pointer; color: #4A4843; border-bottom: 2px solid transparent; font-weight: 500; }
+.master-tab:hover { color: #0F0F0F; }
+.master-tab.active { color: #0F0F0F; border-bottom-color: #0F0F0F; font-weight: 600; }
+
+.policy-row { display: grid; grid-template-columns: 24px 1fr 32px 32px; gap: 6px; align-items: start; margin-bottom: 6px; }
+.policy-row .idx { font-size: 11px; color: #8C8A82; padding-top: 9px; text-align: center; font-weight: 500; }
+.policy-row textarea { padding: 7px 9px; font-size: 12px; border: 0.5px solid #D8D3C8; background: #FBF9F0; outline: none; font-family: inherit; resize: vertical; min-height: 32px; line-height: 1.5; color: #0F0F0F; }
+.policy-row textarea.warn { color: #9C2626; background: #FFF5F5; border-color: #E8C4C4; }
+.policy-row textarea:focus { border-color: #0F0F0F; }
+.policy-row .warn-btn { background: #FFFFFF; border: 0.5px solid #D8D3C8; color: #8C8A82; cursor: pointer; font-size: 12px; font-family: inherit; }
+.policy-row .warn-btn.on { background: #9C2626; color: #FFFFFF; border-color: #9C2626; }
+.policy-row .del-row { background: none; border: 0.5px solid #D8D3C8; color: #8C8A82; cursor: pointer; font-size: 14px; }
+.policy-row .del-row:hover { color: #9C2626; border-color: #9C2626; }
+
+.addon-row { display: grid; grid-template-columns: 1.5fr 1fr 32px; gap: 6px; margin-bottom: 6px; }
+.addon-row input { padding: 7px 9px; font-size: 12px; border: 0.5px solid #D8D3C8; background: #FBF9F0; outline: none; font-family: inherit; color: #0F0F0F; }
+.addon-row input:focus { border-color: #0F0F0F; }
+.addon-row .del-row { background: none; border: 0.5px solid #D8D3C8; color: #8C8A82; cursor: pointer; font-size: 14px; }
+.addon-row .del-row:hover { color: #9C2626; border-color: #9C2626; }
+.modal-header h2 { font-family: 'Noto Serif KR', serif; font-size: 18px; font-weight: 500; }
+.modal-header .close { background: none; border: none; font-size: 22px; cursor: pointer; color: #9C9890; padding: 4px 10px; }
+.modal-body { padding: 20px 28px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 28px; border-top: 0.5px solid #ECE8DE; display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+
+.master-grid { display: grid; grid-template-columns: 170px 200px 1fr; gap: 0; border: 0.5px solid #ECE8DE; min-height: 440px; }
+.col-deps, .col-procs, .col-courses { overflow-y: auto; max-height: 500px; }
+.col-deps { border-right: 0.5px solid #ECE8DE; }
+.col-procs { border-right: 0.5px solid #ECE8DE; }
+
+.col-header { padding: 10px 14px; font-size: 9px; letter-spacing: 1.5px; color: #9C9890; text-transform: uppercase; border-bottom: 0.5px solid #ECE8DE; background: #FAF8F4; position: sticky; top: 0; }
+
+.list-item { padding: 10px 14px; border-bottom: 0.5px solid #ECE8DE; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.list-item:hover { background: #FAF8F4; }
+.list-item.active { background: #1C1B19; color: #FAF8F4; }
+.list-item .item-meta { font-size: 10px; color: #9C9890; margin-top: 2px; }
+.list-item.active .item-meta { color: #B4B0A6; }
+.list-item .label-wrap { flex: 1; min-width: 0; }
+.list-item .del-x { background: none; border: none; color: inherit; opacity: 0.4; cursor: pointer; font-size: 16px; padding: 0 4px; flex-shrink: 0; }
+.list-item .del-x:hover { opacity: 1; }
+.list-item input.rename { background: transparent; border: none; color: inherit; font-size: 13px; font-family: inherit; padding: 0; outline: none; width: 100%; }
+.list-item input.rename-meta { background: transparent; border: none; color: inherit; font-size: 10px; font-family: inherit; padding: 0; outline: none; width: 100%; margin-top: 2px; }
+.list-item.active input { color: #FAF8F4; }
+.list-add { padding: 10px 14px; font-size: 11px; color: #9C9890; cursor: pointer; border-top: 0.5px dashed #D8D3C8; }
+.list-add:hover { background: #FAF8F4; color: #1C1B19; }
+
+.col-courses { padding: 12px 14px; }
+.master-row { display: grid; grid-template-columns: 1.2fr 2fr 0.9fr auto; gap: 8px; margin-bottom: 6px; align-items: center; }
+.master-row input { padding: 7px 9px; font-size: 12px; border: 0.5px solid #D8D3C8; background: #FAF8F4; outline: none; font-family: inherit; }
+.master-row input:focus { border-color: #1C1B19; }
+.master-row .del-row { background: none; border: none; color: #9C9890; cursor: pointer; font-size: 16px; padding: 4px 8px; }
+.master-row .del-row:hover { color: #C00; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1C1B19; color: #FAF8F4; padding: 12px 22px; font-size: 13px; z-index: 200; opacity: 0; transition: opacity 0.2s; }
+.toast.show { opacity: 1; }
+
+.history-list { max-height: 60vh; overflow-y: auto; }
+.history-item { display: grid; grid-template-columns: 80px 1fr 120px 140px 110px 56px; gap: 8px; padding: 12px 24px; border-bottom: 0.5px solid #ECE8DE; align-items: center; cursor: pointer; transition: background 0.1s; }
+.history-item:hover { background: #FBF9F0; }
+.history-item .col-date { font-size: 12px; color: #0F0F0F; font-weight: 500; font-variant-numeric: tabular-nums; }
+.history-item .col-student { font-size: 13px; color: #0F0F0F; font-weight: 600; }
+.history-item .col-contact { font-size: 12px; color: #4A4843; font-weight: 400; font-variant-numeric: tabular-nums; }
+.history-item .col-mentor { font-size: 12px; color: #4A4843; }
+.history-item .col-amount { font-size: 13px; color: #0F0F0F; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.history-item .col-actions { text-align: right; }
+.history-item .hist-btn { background: none; border: 0.5px solid #D8D3C8; padding: 4px 8px; cursor: pointer; font-size: 11px; font-family: inherit; color: #4A4843; }
+.history-item .hist-btn:hover { border-color: #0F0F0F; color: #0F0F0F; }
+.history-item .hist-btn.del:hover { border-color: #C00; color: #C00; }
+.history-header { display: grid; grid-template-columns: 80px 1fr 120px 140px 110px 56px; gap: 8px; padding: 12px 24px; background: #F5F4F0; border-bottom: 1px solid #0F0F0F; font-size: 10px; color: #6B6862; font-weight: 700; letter-spacing: 0.5px; }
+.history-empty { text-align: center; padding: 60px 20px; color: #8C8A82; font-size: 13px; }
+.mentor-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 24px; background: #FAF8F4; border-bottom: 0.5px solid #ECE8DE; }
+.mentor-tab { background: #FFFFFF; border: 0.5px solid #D8D3C8; padding: 6px 14px; font-size: 12px; font-family: inherit; color: #4A4843; cursor: pointer; transition: all 0.1s; }
+.mentor-tab:hover { border-color: #0F0F0F; color: #0F0F0F; }
+.mentor-tab.active { background: #1C1B19; border-color: #1C1B19; color: #FAF8F4; font-weight: 600; }
+.mentor-tab .cnt { font-size: 10px; opacity: 0.65; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.editing-banner { background: #FFF8E1; border-bottom: 1px solid #B8860B; padding: 10px 26px; font-size: 12px; color: #9C6F00; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.editing-banner button { background: transparent; border: 0.5px solid #9C6F00; color: #9C6F00; padding: 4px 10px; font-size: 11px; cursor: pointer; font-family: inherit; }
+.ktp-tag { display: inline-block; margin-left: 5px; padding: 1px 4px; border: 0.5px solid #A9BEE0; border-radius: 3px; font-size: 9px; font-weight: 600; color: #1B3F7A; background: #F0F5FF; vertical-align: middle; }
+.name-banner { background: #F0F5FF; border-bottom: 1px solid #2A5DB0; padding: 12px 26px; font-size: 12px; color: #1B3F7A; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.name-banner .msg { font-weight: 600; flex: 1 1 100%; line-height: 1.5; }
+.name-banner input { flex: 1 1 140px; padding: 6px 9px; font-size: 12px; border: 0.5px solid #A9BEE0; background: #FFFFFF; outline: none; font-family: inherit; color: #0F0F0F; }
+.name-banner input:focus { border-color: #2A5DB0; }
+.name-banner button { background: #2A5DB0; border: none; color: #FFFFFF; padding: 7px 14px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.name-banner button:hover { background: #1B3F7A; }
+
+/* 잠금화면 */
+.lock-screen { position: fixed; inset: 0; background: #0F0F0F; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.lock-box { background: #FFFFFF; padding: 56px 64px; max-width: 420px; width: 90%; text-align: center; }
+.lock-title { font-size: 22px; font-weight: 700; color: #0F0F0F; letter-spacing: -0.3px; margin-bottom: 8px; }
+.lock-sub { font-size: 11px; letter-spacing: 2px; color: #B8860B; font-weight: 600; margin-bottom: 36px; text-transform: uppercase; }
+.lock-input { width: 100%; padding: 14px 16px; border: 0.5px solid #D8D3C8; background: #FBF9F0; font-size: 16px; font-family: inherit; color: #0F0F0F; outline: none; text-align: center; letter-spacing: 6px; font-weight: 600; }
+.lock-input:focus { border-color: #0F0F0F; }
+.lock-input + .lock-input { margin-top: 8px; }
+.lock-input.plain { letter-spacing: 0; text-align: left; font-size: 14px; font-weight: 500; }
+.lock-btn { width: 100%; margin-top: 12px; padding: 14px; background: #0F0F0F; color: #FFFFFF; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: 1px; }
+.lock-btn:hover { background: #000000; }
+.lock-error { color: #C00; font-size: 12px; margin-top: 14px; min-height: 16px; font-weight: 500; }
+
+.cap-note { font-size: 11px; color: #C00; margin-top: 6px; line-height: 1.5; }
+.lock-hint { font-size: 11px; color: #6B6862; margin-top: 16px; line-height: 1.6; }
+.lock-link { background: none; border: none; color: #6B6862; font-size: 11px; font-family: inherit; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 10px; }
+.lock-link:hover { color: #0F0F0F; }
+
+@media screen and (max-width: 1080px) {
+  .app { display: block; }
+  .panel { max-height: none; border-right: none; border-bottom: 0.5px solid #E5E2D9; padding: 26px 20px; }
+  .preview-wrap { padding: 24px 14px; max-height: none; }
+  .quotation { padding: 32px 22px !important; }
+  .q-info { grid-template-columns: 1fr; gap: 14px; }
+  .master-grid { grid-template-columns: 1fr; min-height: 0; }
+  .col-deps, .col-procs, .col-courses { max-height: 260px; }
+  .modal { max-height: 94vh; }
+  .history-header { display: none; }
+  .history-item { grid-template-columns: 1fr auto; gap: 4px 10px; }
+  .history-item .col-amount { text-align: left; }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 8mm;
+}
+@media print {
+  html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
+  .panel, .fab-wrap { display: none !important; }
+  .app { display: block !important; grid-template-columns: none !important; }
+  .preview-wrap { padding: 0 !important; max-height: none !important; overflow: visible !important; }
+  .quotation {
+    box-shadow: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .q-table thead { display: table-header-group; }
+  .q-row.is-free td { background: #FBF9F0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .quotation.ktp .q-row.is-free td { background: #F0F5FF !important; }
+  .q-row.is-free td:first-child { box-shadow: none !important; }
+  .q-row.is-free td.no { box-shadow: inset 3px 0 0 #B8860B !important; }
+  .quotation.ktp .q-row.is-free td.no { box-shadow: inset 3px 0 0 #1B3F7A !important; }
+  .q-row .x-btn { display: none !important; }
+  .q-row td.drag, .q-table th.hdrag { font-size: 0 !important; padding: 0 !important; overflow: hidden; }
+  .q-table col.c-drag { width: 0; }
+  /* 인쇄 시 밀도 자동 압축 - 한 장에 맞도록 */
+  .quotation .q-header { margin-bottom: 14px !important; padding-bottom: 10px !important; }
+  .quotation .q-header::after { width: 60px !important; }
+  .quotation .q-title { font-size: 20px !important; }
+  .quotation .q-title .sub { font-size: 9px !important; margin-top: 1px !important; }
+  .quotation .q-brand { font-size: 8.5px !important; margin-top: 6px !important; }
+  .quotation .q-meta { font-size: 9px !important; line-height: 1.7 !important; }
+  .quotation .q-info { padding: 12px 16px !important; margin-bottom: 14px !important; gap: 18px !important; }
+  .quotation .q-info-item .label { font-size: 8.5px !important; }
+  .quotation .q-info-item .value { font-size: 12px !important; margin-top: 3px !important; }
+  .quotation .q-section { font-size: 10px !important; margin-bottom: 6px !important; }
+  .quotation .q-table { font-size: 10px !important; }
+  .quotation .q-table th { padding: 6px 0 !important; font-size: 9px !important; }
+  .quotation .q-row td { padding: 4px 0 !important; }
+  .quotation .q-row td.no { font-size: 9px !important; }
+  .quotation .q-table col.c-no { width: 3.5%; }
+  .quotation .q-table col.c-sub { width: 16.5%; }
+  .quotation .q-table col.c-fee { width: 14%; }
+  .quotation .q-row td.sub { font-size: 10.5px !important; }
+  .quotation .q-row td.desc { font-size: 9px !important; }
+  .quotation .q-row td.fee { font-size: 10.5px !important; }
+  .quotation .q-row td.fee.free { font-size: 8.5px !important; }
+  .quotation .q-row td.fee .was { font-size: 8.5px !important; margin-right: 4px !important; }
+  .quotation .q-bottom-section { margin-top: 12px !important; }
+  .quotation .q-promotions-box { padding: 8px 12px 6px !important; margin-bottom: 8px !important; }
+  .quotation .q-promotions-title { font-size: 8.5px !important; margin-bottom: 4px !important; }
+  .quotation .q-promo-item { padding: 3px 0 !important; }
+  .quotation .q-promo-name { font-size: 10px !important; }
+  .quotation .q-promo-deadline { font-size: 8px !important; }
+  .quotation .q-promo-desc { font-size: 9px !important; line-height: 1.4 !important; }
+  .quotation .q-summary-box { padding: 8px 12px 10px !important; }
+  .quotation .q-sum-row { padding: 2px 0 !important; font-size: 10px !important; }
+  .quotation .q-sum-detail { font-size: 9px !important; padding: 0 0 3px !important; }
+  .quotation .q-sum-final { margin-top: 6px !important; padding-top: 6px !important; }
+  .quotation .q-sum-final .lbl { font-size: 11px !important; }
+  .quotation .q-sum-final .val { font-size: 20px !important; }
+  .quotation .q-sum-final .val .won { font-size: 10px !important; }
+  .quotation .q-sum-install { margin-top: 4px !important; padding-top: 4px !important; }
+  .quotation .q-sum-install .lbl { font-size: 9px !important; }
+  .quotation .q-sum-install .val { font-size: 12px !important; }
+  .quotation .q-sum-install .val .won { font-size: 9px !important; }
+  .quotation .q-sum-support { padding: 3px 0 !important; }
+  .quotation .q-sum-support .lbl { font-size: 9.5px !important; }
+  .quotation .q-sum-support .val { font-size: 10.5px !important; }
+  .quotation .q-sum-total { margin-top: 5px !important; padding-top: 5px !important; }
+  .quotation .q-sum-total .lbl, .quotation .q-sum-total .val { font-size: 10.5px !important; }
+  .quotation .q-info.ktp { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .quotation .q-support-box { margin-top: 12px !important; padding: 8px 12px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .quotation .q-support-title { font-size: 8.5px !important; margin-bottom: 5px !important; }
+  .quotation .q-support-line { padding: 2px 0 !important; font-size: 9px !important; }
+  .quotation .q-support-desc { font-size: 8.5px !important; margin-top: 5px !important; padding-top: 5px !important; line-height: 1.5 !important; }
+  .quotation .q-policies { margin-top: 14px !important; padding-top: 10px !important; }
+  .quotation .q-policy-block { margin-bottom: 10px !important; }
+  .quotation .q-policy-title { font-size: 9px !important; margin-bottom: 6px !important; padding-bottom: 4px !important; }
+  .quotation .q-policy-list li { font-size: 9px !important; padding: 2px 0 2px 18px !important; line-height: 1.5 !important; }
+  /* 페이지 나눔 방지 */
+  .q-row, .q-policy-list li, .q-promo-item { page-break-inside: avoid; break-inside: avoid; }
+  .q-summary-box, .q-bottom-section, .q-promotions-box, .q-policies { page-break-inside: avoid; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-title">SBS ACADEMY AIX</div>
+    <div class="lock-sub">Quotation System</div>
+    <input type="email" id="lockEmail" class="lock-input plain" placeholder="직원 이메일" autocomplete="username" autofocus>
+    <input type="password" id="lockInput" class="lock-input plain" placeholder="비밀번호" autocomplete="current-password">
+    <button class="lock-btn" id="lockBtn" onclick="tryUnlock()">로그인</button>
+    <div class="lock-error" id="lockError"></div>
+    <div class="lock-hint" id="lockHint">Firebase 콘솔에서 발급받은 직원 계정으로 로그인합니다.</div>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="panel">
+    <div id="nameBanner" style="display:none;" class="name-banner">
+      <span class="msg" id="nameBannerMsg"></span>
+      <input type="text" id="nameBannerInput" placeholder="예: 김태욱" maxlength="20">
+      <button onclick="saveMyName()">저장</button>
+    </div>
+    <div id="editingBanner" style="display:none;" class="editing-banner">
+      <span id="editingBannerText"></span>
+      <button onclick="cancelEditing()">새 견적으로 전환</button>
+    </div>
+    <h1>견적서 작성</h1>
+    <div class="sub">SBS ACADEMY AIX · HONGDAE <span style="color:#0F8A5F; margin-left:6px; font-weight:700;">● FIRESTORE</span></div>
+
+    <div class="doc-tabs">
+      <button class="doc-tab active" data-doc="normal">일반 견적서</button>
+      <button class="doc-tab" data-doc="ktp">국민취업지원제도</button>
+    </div>
+
+    <div class="field">
+      <label>학생명</label>
+      <input type="text" id="student" placeholder="홍길동">
+    </div>
+    <div class="field">
+      <label>연락처</label>
+      <input type="text" id="contact" placeholder="010-0000-0000">
+    </div>
+    <div class="row2">
+      <div class="field"><label>담당 멘토</label><select id="mentorSelect"></select><input type="text" id="mentorCustom" placeholder="이름 입력" style="display:none; margin-top:6px;"></div>
+      <div class="field"><label>상담자</label><select id="counselorSelect"></select><input type="text" id="counselorCustom" placeholder="이름 입력" style="display:none; margin-top:6px;"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>발급일</label><input type="date" id="issued"></div>
+      <div class="field"><label>프로그램명</label><input type="text" id="program" placeholder="자동 또는 직접 입력"></div>
+    </div>
+
+    <div class="section-title">학과 선택</div>
+    <div class="dept-tabs" id="deptTabs"></div>
+
+    <div class="section-title" style="margin-top:14px; padding-top:0; border-top:none;">과정 선택</div>
+    <div class="proc-tabs" id="procTabs"></div>
+    <div class="course-list" id="courseList"></div>
+    <button class="bulk-add" id="bulkAddBtn">＋ 이 과정 전체 추가</button>
+
+    <div class="section-title">프로모션 (명분·기한)</div>
+    <div id="promoListPanel"></div>
+    <button class="bulk-add" onclick="addPromotion()" style="margin-top:6px;">＋ 프로모션 추가</button>
+
+    <div class="section-title">할인 적용</div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="free">N+N 무료과목</button>
+      <button class="mode-tab" data-mode="percent">% 할인</button>
+    </div>
+
+    <div id="percentField" style="display:none;">
+      <div class="field">
+        <label>할인율 (%)</label>
+        <input type="number" id="percentInput" min="0" max="100" value="0" placeholder="예: 20">
+      </div>
+    </div>
+    <div class="field">
+      <label>직권 할인 (정액)</label>
+      <input type="number" id="directInput" min="0" value="0" placeholder="예: 500000">
+      <div class="cap-note" id="directNote" style="display:none;"></div>
+    </div>
+    <div class="field">
+      <label>할부 개월수</label>
+      <input type="number" id="monthsInput" min="0" max="60" value="0" placeholder="예: 12 (0이면 표시 안함)">
+      <div class="cap-note" id="monthsNote" style="display:none;"></div>
+    </div>
+
+    <div class="section-title">별도 판매</div>
+    <div class="field"><label>따즈아</label><select id="ddajuaSelect"><option value="">선택 안함</option></select></div>
+    <div class="field"><label>ACP 자격증</label><select id="acpSelect"><option value="">선택 안함</option></select></div>
+  </aside>
+
+  <main class="preview-wrap">
+    <div class="quotation" id="quotation"></div>
+  </main>
+</div>
+
+<div class="fab-wrap" id="fabWrap">
+  <div class="fab-menu" id="fabMenu">
+    <div class="who" id="fabWho"></div>
+    <button class="primary" onclick="fabRun(printQuotation)">📄 PDF 저장 / 인쇄</button>
+    <button onclick="fabRun(saveQuoteFlow)">💾 견적 저장</button>
+    <button onclick="fabRun(openHistory)">📋 저장 이력</button>
+    <div class="sep"></div>
+    <button onclick="fabRun(openMaster)">⚙ 마스터 편집</button>
+    <button onclick="fabRun(resetAll)">↺ 초기화</button>
+    <button onclick="fabRun(logout)">→ 로그아웃</button>
+  </div>
+  <button class="fab-btn" id="fabBtn" onclick="toggleFab(event)">메뉴 <span class="caret">▲</span></button>
+</div>
+
+<div class="modal-overlay" id="masterModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>마스터 데이터 편집</h2>
+      <button class="close" onclick="closeMaster()">×</button>
+    </div>
+    <div class="master-tabs">
+      <button class="master-tab active" data-tab="courses">학과 · 과정 · 과목</button>
+      <button class="master-tab" data-tab="mentors">멘토 명단</button>
+      <button class="master-tab" data-tab="policies">수강 안내 · 등록 방법</button>
+      <button class="master-tab" data-tab="addons">따즈아 · ACP 옵션</button>
+    </div>
+    <div class="modal-body">
+      <div id="tabCourses">
+        <p style="font-size:12px; color:#4A4843; margin-bottom:14px; line-height:1.6;">
+          학과 → 과정 → 과목 3단계로 관리합니다. 항목을 클릭하면 이름·기간을 수정할 수 있고, 변경사항은 자동 저장됩니다.
+        </p>
+        <div class="master-grid">
+          <div class="col-deps">
+            <div class="col-header">학과</div>
+            <div id="masterDeps"></div>
+          </div>
+          <div class="col-procs">
+            <div class="col-header">과정 (이름 · 기간)</div>
+            <div id="masterProcs"></div>
+          </div>
+          <div class="col-courses">
+            <div class="col-header" style="margin: -12px -14px 12px; padding: 10px 14px;">과목</div>
+            <div id="masterCourses"></div>
+          </div>
+        </div>
+      </div>
+      <div id="tabMentors" style="display:none;">
+        <p style="font-size:12px; color:#4A4843; margin-bottom:14px; line-height:1.6;">
+          담당 멘토 / 상담자 드롭다운에 표시되는 명단입니다. 로그인 이메일을 함께 적어 두면,
+          그 계정으로 접속했을 때 해당 이름이 목록 맨 위에 나오고 기본값으로 잡힙니다.
+        </p>
+        <div style="max-width: 480px;">
+          <div id="masterMentors"></div>
+          <button class="bulk-add" onclick="addMentor()" style="margin-top:8px;">+ 멘토 추가</button>
+        </div>
+      </div>
+      <div id="tabPolicies" style="display:none;">
+        <p style="font-size:12px; color:#4A4843; margin-bottom:14px; line-height:1.6;">
+          견적서 하단에 표시되는 수강 안내와 등록 방법을 수정합니다. <b>⚠ 체크박스</b>를 켜면 해당 조항이 빨간색으로 강조됩니다.
+        </p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <div>
+            <div class="col-header" style="margin-bottom:10px;">※ 수강 안내</div>
+            <div id="masterGuide"></div>
+            <button class="bulk-add" onclick="addPolicy('guide')" style="margin-top:8px;">+ 조항 추가</button>
+          </div>
+          <div>
+            <div class="col-header" style="margin-bottom:10px;">※ 등록 방법</div>
+            <div id="masterPayment"></div>
+            <button class="bulk-add" onclick="addPolicy('payment')" style="margin-top:8px;">+ 조항 추가</button>
+          </div>
+        </div>
+      </div>
+      <div id="tabAddons" style="display:none;">
+        <p style="font-size:12px; color:#4A4843; margin-bottom:14px; line-height:1.6;">
+          별도 판매 항목(따즈아·ACP)의 옵션과 가격을 수정합니다.
+        </p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <div>
+            <div class="col-header" style="margin-bottom:10px;">따즈아</div>
+            <div id="masterDdajua"></div>
+            <button class="bulk-add" onclick="addAddon('ddajua')" style="margin-top:8px;">+ 옵션 추가</button>
+          </div>
+          <div>
+            <div class="col-header" style="margin-bottom:10px;">ACP 자격증</div>
+            <div id="masterAcp"></div>
+            <button class="bulk-add" onclick="addAddon('acp')" style="margin-top:8px;">+ 옵션 추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-secondary" style="padding:9px 14px; flex:none;" onclick="exportMaster()">📥 마스터 내보내기 (JSON)</button>
+        <button class="btn btn-secondary" style="padding:9px 14px; flex:none;" onclick="document.getElementById('importFile').click()">📤 JSON 불러오기</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importMaster(event)">
+        <button class="btn btn-secondary" style="padding:9px 14px; flex:none; color:#C00; border-color:#C00;" onclick="resetMaster()">↺ 초기 마스터로 복원</button>
+      </div>
+      <button class="btn btn-primary" style="padding:9px 18px; flex:none;" onclick="closeMaster()">완료</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="historyModal">
+  <div class="modal" style="max-width: 900px;">
+    <div class="modal-header">
+      <h2>저장된 견적 이력</h2>
+      <button class="close" onclick="closeHistory()">×</button>
+    </div>
+    <div class="modal-body" style="padding: 0;">
+      <div class="mentor-tabs" id="mentorTabs"></div>
+      <div id="historyList"></div>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-secondary" style="padding:9px 14px; flex:none;" onclick="exportHistory()">📥 이력 내보내기 (JSON)</button>
+        <button class="btn btn-secondary" style="padding:9px 14px; flex:none;" onclick="document.getElementById('importHistFile').click()">📤 이력 불러오기</button>
+        <input type="file" id="importHistFile" accept=".json" style="display:none;" onchange="importHistory(event)">
+      </div>
+      <button class="btn btn-primary" style="padding:9px 18px; flex:none;" onclick="closeHistory()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="saveDialog">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-header">
+      <h2 id="saveDialogTitle">견적 저장</h2>
+      <button class="close" onclick="closeSaveDialog()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:#1F1F1F; line-height:1.7; margin-bottom:16px;" id="saveDialogMsg"></p>
+      <div id="saveDialogSummary" style="background:#FBF9F0; padding:14px 16px; font-size:12px; color:#4A4843; line-height:1.8; border-left: 2px solid #B8860B;"></div>
+    </div>
+    <div class="modal-footer" id="saveDialogFooter">
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ FIREBASE ============
+firebase.initializeApp({
+  apiKey: "AIzaSyB8qZIVzINN5BGSNd6ojqshNC9RXh7jqKU",
+  authDomain: "cash-eabc1.firebaseapp.com",
+  projectId: "cash-eabc1",
+  storageBucket: "cash-eabc1.firebasestorage.app",
+  messagingSenderId: "8436628517",
+  appId: "1:8436628517:web:3a072098e57c02397353cc"
+});
+const db = firebase.firestore();
+const storage = firebase.storage();
+const auth = firebase.auth();
+
+/* 전환기용 스위치.
+   true 로 두면 예전처럼 Firestore 의 sbs_auth/config 문서에 든 공용 비밀번호로 접속합니다.
+   이 방식은 비밀번호와 학생 개인정보가 외부에 그대로 노출되므로,
+   직원 계정 발급이 끝나면 반드시 false 로 되돌리고 sbs_auth 컬렉션을 삭제하세요. */
+const LEGACY_SHARED_PASSWORD_MODE = false;
+
+// ============ LOCK SCREEN ============
+let APP_STARTED = false;
+function startApp(user) {
+  if (APP_STARTED) return;
+  APP_STARTED = true;
+  CURRENT_USER = user ? { email: user.email || '', displayName: user.displayName || '' } : null;
+  document.getElementById('lockScreen').style.display = 'none';
+  initApp();
+}
+function setLockError(msg, holdMs) {
+  const error = document.getElementById('lockError');
+  error.textContent = msg || '';
+  if (msg) setTimeout(() => { if (error.textContent === msg) error.textContent = ''; }, holdMs || 5000);
+}
+function authErrorMessage(e) {
+  switch (e && e.code) {
+    case 'auth/invalid-email': return '이메일 형식이 올바르지 않습니다';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential': return '이메일 또는 비밀번호가 올바르지 않습니다';
+    case 'auth/too-many-requests': return '시도가 너무 많습니다. 잠시 후 다시 시도해 주세요';
+    case 'auth/network-request-failed': return '네트워크에 연결할 수 없습니다';
+    case 'auth/user-disabled': return '사용이 중지된 계정입니다';
+    case 'auth/operation-not-allowed': return '이메일 로그인이 비활성 상태입니다. Firebase 콘솔에서 켜 주세요';
+    default: return '로그인 실패: ' + ((e && (e.message || e.code)) || '알 수 없는 오류');
+  }
+}
+async function tryUnlock() {
+  const emailEl = document.getElementById('lockEmail');
+  const pwEl = document.getElementById('lockInput');
+  const btn = document.getElementById('lockBtn');
+  const pw = pwEl.value;
+  if (LEGACY_SHARED_PASSWORD_MODE) return legacyUnlock(pwEl, btn);
+  const email = emailEl.value.trim();
+  if (!email || !pw) { setLockError('이메일과 비밀번호를 모두 입력해 주세요'); return; }
+  btn.disabled = true; btn.textContent = '확인 중...';
+  setLockError('');
+  try {
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    await auth.signInWithEmailAndPassword(email, pw);
+    // 화면 전환은 onAuthStateChanged 가 처리합니다.
+  } catch (err) {
+    setLockError(authErrorMessage(err));
+    pwEl.value = '';
+    pwEl.focus();
+  }
+  btn.disabled = false; btn.textContent = '로그인';
+}
+async function legacyUnlock(pwEl, btn) {
+  const pw = pwEl.value.trim();
+  if (!pw) return;
+  btn.disabled = true; btn.textContent = '확인 중...';
+  setLockError('');
+  try {
+    const doc = await db.collection('sbs_auth').doc('config').get();
+    if (!doc.exists) {
+      setLockError('서버에 비밀번호 설정이 없습니다');
+    } else if (String(pw) === String(doc.data().password)) {
+      startApp();
+    } else {
+      setLockError('비밀번호가 올바르지 않습니다', 4000);
+      pwEl.value = '';
+      pwEl.focus();
+    }
+  } catch (err) {
+    setLockError('서버 연결 실패: ' + err.message);
+  }
+  btn.disabled = false; btn.textContent = '접속';
+}
+async function logout() {
+  if (!confirm('로그아웃할까요? 작성 중인 견적은 저장되지 않습니다.')) return;
+  try { await auth.signOut(); } catch (e) {}
+  location.reload();
+}
+function setupLockScreen() {
+  const emailEl = document.getElementById('lockEmail');
+  const pwEl = document.getElementById('lockInput');
+  const btn = document.getElementById('lockBtn');
+  const hint = document.getElementById('lockHint');
+  if (LEGACY_SHARED_PASSWORD_MODE) {
+    emailEl.style.display = 'none';
+    pwEl.placeholder = '공용 비밀번호';
+    pwEl.classList.remove('plain');
+    pwEl.setAttribute('autofocus', '');
+    btn.textContent = '접속';
+    hint.textContent = '공용 비밀번호 모드로 동작 중입니다. 직원 계정 전환 전까지만 사용하세요.';
+    hint.style.color = '#C00';
+    setTimeout(() => pwEl.focus(), 50);
+  } else {
+    const hintEl = document.getElementById('lockHint');
+    let firstAuthCheck = true;
+    hintEl.textContent = '로그인 상태 확인 중...';
+    auth.onAuthStateChanged(user => {
+      if (user) { startApp(user); return; }
+      if (firstAuthCheck) {
+        firstAuthCheck = false;
+        hintEl.textContent = 'Firebase 콘솔에서 발급받은 직원 계정으로 로그인합니다.';
+      }
+    });
+  }
+  [emailEl, pwEl].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+  });
+}
+setupLockScreen();
+
+const DEFAULT_DATA = {"version": 3, "departments": [{"id": "d0", "name": "아트웍", "processes": [{"id": "d0p0", "name": "기본", "duration": "", "courses": [{"id": "d0p0c0", "subject": "발상과표현", "desc": "아이디어와 표현 (머리속에 떠오르는 아이디어나 기획들을 핸드 드로잉으로 표현하는 과정)", "fee": 400000}, {"id": "d0p0c1", "subject": "색채학", "desc": "색에 대한 이해 (색이주는 효과 / 감정 / 느낌을 시각화 하는 과정)", "fee": 400000}, {"id": "d0p0c2", "subject": "해부학", "desc": "인체 및 캐릭터 드로잉을 하기 위한 드로잉 과정 (관절 / 인체 / 비율 / 움직임)", "fee": 400000}, {"id": "d0p0c3", "subject": "조소", "desc": "인체 및 캐릭터 드로잉을 하기 위한 모형제작 과정 (관절 / 인체 / 비율 / 움직임 / 근육)", "fee": 400000}]}]}, {"id": "d1", "name": "디지털드로잉", "processes": [{"id": "d1p0", "name": "기본", "duration": "", "courses": [{"id": "d1p0c0", "subject": "디지털드로잉1", "desc": "인물이나 캐릭터 중심의 핸드 드로잉 과정 (연필/크로키북 필요)", "fee": 500000}, {"id": "d1p0c1", "subject": "디지털드로잉2", "desc": "포토샵을 사용한 디지털 타블렛에 피드백 드로잉 수업을 진행", "fee": 500000}, {"id": "d1p0c2", "subject": "디지털드로잉PO", "desc": "모작 -> 창작 변경 / 타블렛 개인 드로잉 포트폴리오 준비 과정", "fee": 500000}, {"id": "d1p0c3", "subject": "Ai아트웍", "desc": "Ai 명령어 활용 / 아트웍 이미지 제작과정", "fee": 600000}, {"id": "d1p0c4", "subject": "스토리보드", "desc": "테블렛을 활용한 시나리오 / 스토리 기획 연출 제작 과정", "fee": 500000}, {"id": "d1p0c5", "subject": "크리에이터굿즈", "desc": "공모전 및 굿즈 관련 저작권등록 기획 연출 제작 과정 (굿즈작가 활동 및 SNS 활동 포함)", "fee": 600000}]}]}, {"id": "d2", "name": "편집디자인", "processes": [{"id": "d2p0", "name": "기본", "duration": "", "courses": [{"id": "d2p0c0", "subject": "포토샵", "desc": "픽셀형식 / 이미지나 사진을 보정, 효과, 합성, 리터칭 하는 편집 프로그램", "fee": 350000}, {"id": "d2p0c1", "subject": "일러스트", "desc": "벡터기반 / 그래픽 생성형 이미지로 도형, 픽토그램, 이모티콘, 아이콘, 로고 등 그래픽 생성 작업", "fee": 350000}, {"id": "d2p0c2", "subject": "포토웍스", "desc": "포토샵 심화 실습 과정으로 포토샵의 모든 기능을 활용한 실전 포토샵 작업 경험 수업", "fee": 400000}, {"id": "d2p0c3", "subject": "디일러", "desc": "일러스트 심화 그래픽 드로잉 생성 과정으로 인물/폴리곤/팝아트/제품/3D 등 그래픽 경험 수업", "fee": 400000}, {"id": "d2p0c4", "subject": "인디자인", "desc": "그래픽 시각 자료를 인쇄, 출판, 출력물 형태에 맞춰 레이아웃 페이지 설정하는 프로그램", "fee": 400000}, {"id": "d2p0c5", "subject": "어드밴스디자인", "desc": "앨범자켓, 포스터 등 실제 시각디자이너들이 하는 실무 업무들을 경험하는 수업", "fee": 400000}, {"id": "d2p0c6", "subject": "브랜딩디자인", "desc": "브랜드의 제품의 특징과 정보에 맞게 시각 이미지로 제작하는 과정 (패키지,상품,브랜딩디자인)", "fee": 500000}, {"id": "d2p0c7", "subject": "Ai심화 편집", "desc": "GPT / 미드저니 / 런웨이 등 시각편집 전문 AI 프로그램을 활용한 시각편집 디자인 심화 과정", "fee": 600000}, {"id": "d2p0c8", "subject": "편집포폴1", "desc": "편집 디자인 포트폴리오 기획 / 연출 / 컨셉 과정 (포폴 기초 설계 및 방향 설정)", "fee": 500000}, {"id": "d2p0c9", "subject": "편집포폴2", "desc": "편집 디자인 포트폴리오 제작 과정", "fee": 500000}, {"id": "d2p0c10", "subject": "편집포폴3", "desc": "편집 디자인 포트폴리오 제작 과정", "fee": 500000}]}]}, {"id": "d3", "name": "웹디자인", "processes": [{"id": "d3p0", "name": "기본", "duration": "", "courses": [{"id": "d3p0c0", "subject": "UI/UX", "desc": "웹 페이지를 구현하기 전에 사용자 경험을 활용 및 아이디어 도출을 알려주는 기획을 팀으로 진행", "fee": 500000}, {"id": "d3p0c1", "subject": "피그마1", "desc": "피그마를 통한 프로토타입구현 (UI/UX는 사용자를 고려한 인터페이스와 레이아웃 제작)", "fee": 500000}, {"id": "d3p0c2", "subject": "피그마2", "desc": "페르소나 선정을 하여 모션의 기획 및 개인작업을 통해 프로토타입 및 기획서까지의 준포폴", "fee": 500000}, {"id": "d3p0c3", "subject": "웹1", "desc": "HTML + CSS 기초 코딩 과정 (기초 웹 사이트 제작)", "fee": 450000}, {"id": "d3p0c4", "subject": "웹2", "desc": "HTML5 + CSS3 최신 웹 사이트 코딩 과정 (트렌디한 웹 사이트 제작-반응형, 모바일웹제작)", "fee": 450000}, {"id": "d3p0c5", "subject": "웹3", "desc": "자바스크립트 + 제이쿼리 (만들어진 웹 페이지에 기능 / 모션 / 움직임을 설정하는 과정)", "fee": 450000}, {"id": "d3p0c6", "subject": "AI 웹디자인", "desc": "피그마 MAKE와 AI툴을 활용하여 Ai로 웹사이트 제작(반응형)", "fee": 600000}, {"id": "d3p0c7", "subject": "디자인포폴", "desc": "웹디자인 상세페이지 등 기획과정", "fee": 500000}, {"id": "d3p0c8", "subject": "편집포폴", "desc": "디자인 포트폴리오 작업 진행 과정", "fee": 500000}, {"id": "d3p0c9", "subject": "코딩포폴", "desc": "웹퍼블리싱 / 반응형 웹 코딩 포트폴리오 준비 과정", "fee": 500000}]}]}, {"id": "d4", "name": "실내건축", "processes": [{"id": "d4p0", "name": "기본", "duration": "", "courses": [{"id": "d4p0c0", "subject": "실내건축자격증1", "desc": "실내건축자격증 캐드 대비반 (부족할 경우 재수강 or 정규 캐드 수업 참여)", "fee": 450000}, {"id": "d4p0c1", "subject": "실내건축자격증2", "desc": "실내건축자격증 스케치업 대비반 (부족할 경우 재수강 or 정규 스케치업 수업 참여)", "fee": 450000}, {"id": "d4p0c2", "subject": "실내건축자격증3", "desc": "실내건축 기능사/산업기사/기사 대비/모의테스트(기초 이론부터 자격증 시험 대비까지 진행)", "fee": 450000}, {"id": "d4p0c3", "subject": "실내건축자격증4", "desc": "실내건축 기능사/산업기사/기사 대비/모의테스트(기초 이론부터 자격증 시험 대비까지 진행)", "fee": 450000}, {"id": "d4p0c4", "subject": "실내건축자격증5", "desc": "실내건축 기능사/산업기사/기사 대비/모의테스트(기초 이론부터 자격증 시험 대비까지 진행)", "fee": 450000}, {"id": "d4p0c5", "subject": "실내건축자격증6", "desc": "실내건축 기능사/산업기사/기사 대비/모의테스트(기초 이론부터 자격증 시험 대비까지 진행)", "fee": 450000}, {"id": "d4p0c6", "subject": "스케치1", "desc": "기초 선연습 / 공간감각 연습 / 소점 개념 공부 / 마감재 스케치", "fee": 450000}, {"id": "d4p0c7", "subject": "스케치2", "desc": "1소점 공간 스케치 (연필), 2소점 공감 스케치(연필), 마카 작업", "fee": 450000}, {"id": "d4p0c8", "subject": "스케치3", "desc": "상세 컷 공산 스케치 , 건축 스케치 , 개별작업", "fee": 450000}, {"id": "d4p0c9", "subject": "제품 스케치", "desc": "제품디자인 관련 스케치 수업", "fee": 450000}, {"id": "d4p0c10", "subject": "배경 스케치", "desc": "배경,공간 디자인 관련 스케치 수업", "fee": 450000}, {"id": "d4p0c11", "subject": "캐드1", "desc": "캐드 프로그램 기초과정으로 기본 인터페이스 / 명령어 / 단축키 등 캐드 프로그램 배우는 수업", "fee": 400000}, {"id": "d4p0c12", "subject": "캐드2", "desc": "건축 & 인테리어 용도로 실무 도면 설계 과정", "fee": 400000}, {"id": "d4p0c13", "subject": "스케치업1", "desc": "교재 중심 인터페이스 모델링 기초(외부 건축 인테리어 중심 벽/뼈대 등 공간,루비 포함,렌더링)", "fee": 500000}, {"id": "d4p0c14", "subject": "스케치업2", "desc": "모델링 심화 (실내 인테리어 중심)", "fee": 500000}, {"id": "d4p0c15", "subject": "스케치업3", "desc": "스케치업 렌더링 종합반 (V-Ray 심화 + 엔스케이프 작업)", "fee": 500000}, {"id": "d4p0c16", "subject": "맥스1", "desc": "교재 활용 / 직선 위주의 모델링 작업 진행 (벽 / 뼈대 등 공간 모델링)", "fee": 450000}, {"id": "d4p0c17", "subject": "맥스2", "desc": "모델링 예제 진행 / 곡선 위주의 모델링 작업 진행 (제품 / 사물 / 기물 / 가구 등 사물 모델링)", "fee": 450000}, {"id": "d4p0c18", "subject": "V-ray", "desc": "맥스 모델링-현실적이고 감각있는 결과물로 변환하기 위한 랜더링 과정 (조명/빛/재질 등)", "fee": 450000}, {"id": "d4p0c19", "subject": "라이노", "desc": "넙스 (NURBS) 기반 3D 모델링", "fee": 550000}, {"id": "d4p0c20", "subject": "BIM1", "desc": "레빗 기초진행 (바닥 /계단 / 벽 / 천장 / 지붕 / 문 등 구성요소 제작, 매스 모델링, 렌더링 기초)", "fee": 500000}, {"id": "d4p0c21", "subject": "BIM2", "desc": "레빗 심화진행 (평면도 주석표현 / 면적도 작성 / 입면도 작성 / 모델링 주요 작업)", "fee": 500000}, {"id": "d4p0c22", "subject": "인포폴1", "desc": "포트폴리오 기획 및 방향성 설정 / 포트폴리오 제작 준비 과정", "fee": 500000}, {"id": "d4p0c23", "subject": "인포폴2", "desc": "인테리어 과정 / 취업 포트폴리오 제작과정", "fee": 500000}, {"id": "d4p0c24", "subject": "인포폴3", "desc": "인테리어 과정 / 취업 포트폴리오 제작과정", "fee": 500000}]}]}, {"id": "d5", "name": "모션그래픽", "processes": [{"id": "d5p0", "name": "기본", "duration": "", "courses": [{"id": "d5p0c0", "subject": "프리미어", "desc": "영상편집 과정 (컷 편집 / BGM / 자막 / 필터)", "fee": 500000}, {"id": "d5p0c1", "subject": "에펙1", "desc": "에펙기초 과정 (인터페이스 / 명령어 / 단축키 / 기능 위주 수업)", "fee": 550000}, {"id": "d5p0c2", "subject": "에펙2", "desc": "에펙심화 과정 (에펙 비쥬얼 이펙트 효과 위주 수업) + 플러그인 포함 수업", "fee": 550000}, {"id": "d5p0c3", "subject": "합성에펙", "desc": "에펙고급 과정 (포토샵을 활용한 합성 이펙트 위주 수업 / 드라마, 영화 인트로 / 콜라주)", "fee": 550000}, {"id": "d5p0c4", "subject": "플랫모션", "desc": "에펙고급 과정 (일러스트 플랫 소스 모션작업 / 애니메이션 위주 수업)", "fee": 550000}, {"id": "d5p0c5", "subject": "유크리1", "desc": "기획 - 유튜브 채널 생성 및 운영 (썸네일 제작부터 수익구조 등 컨셉 도출 및 유튜브 시작단계)", "fee": 600000}, {"id": "d5p0c6", "subject": "유크리2", "desc": "촬영-유튜브 컨셉에 맞는 장비를 활용한 실제 촬영 실습(장비선택/촬영구도 등 실전 수업)", "fee": 600000}, {"id": "d5p0c7", "subject": "유크리3", "desc": "편집 - 유튜브 영상 수준의 에펙 & 프리미어 활용 실전 수업", "fee": 600000}, {"id": "d5p0c8", "subject": "AI크리에이터 유튜브1", "desc": "AI의 기본 원리 파악 및 유튜브 채널 운영실습을 통한 구체화 및 영상제작&업로드", "fee": 600000}, {"id": "d5p0c9", "subject": "AI크리에이터 유튜브2", "desc": "AI유튜브크리에이터 1에서 업로드한 영상을 기반으로 데이터분석 및 채널 운영방향성 수정", "fee": 600000}, {"id": "d5p0c10", "subject": "영상편집실전", "desc": "영상 촬영본으로 영상툴을 활용해 영상 제작 실습(feat. 숏폼콘텐츠, 유튜브 콘텐츠, 취업연계)", "fee": 500000}, {"id": "d5p0c11", "subject": "영상편집포폴", "desc": "포폴과정(기획-촬영-편집 과정)포폴로 나오는 것: 기획안 1개,기획안에서 나온 편집본 1개", "fee": 500000}, {"id": "d5p0c12", "subject": "2D모션포폴", "desc": "2D모션그래픽 포트폴리오 작업 - 결과물 생성 과정", "fee": 500000}, {"id": "d5p0c13", "subject": "Ai심화 모션", "desc": "GPT/Sora/런웨이/C4D/에펙 등 영상디자인 전문 AI 프로그램을 활용한 모션 디자인 심화과정", "fee": 600000}, {"id": "d5p0c14", "subject": "시포디1", "desc": "3D 모델링 과정", "fee": 600000}, {"id": "d5p0c15", "subject": "시포디2", "desc": "애니메이팅 / 리깅 과정", "fee": 600000}, {"id": "d5p0c16", "subject": "시포디3", "desc": "옥테인 랜더링 기초 과정 (쉐이딩 / 맵핑 / 텍스쳐링 / 재질테스트 / 빛계산)", "fee": 600000}, {"id": "d5p0c17", "subject": "비주얼모션1", "desc": "옥테인 프로그램 습득 (렌더링 고급과정)", "fee": 600000}, {"id": "d5p0c18", "subject": "비주얼모션2", "desc": "에펙 & C4D 합성 과정", "fee": 600000}, {"id": "d5p0c19", "subject": "비주얼모션3", "desc": "VFX 특수효과 (물/불/연기/폭발 등 특수효과 제작)를 활용 포트폴리오 기획 및 제작 빌드업", "fee": 600000}, {"id": "d5p0c20", "subject": "3D모션포폴1", "desc": "포폴 기획 & 연출 (컨셉 / 스토리보드 / 자료수집)", "fee": 500000}, {"id": "d5p0c21", "subject": "3D모션포폴2", "desc": "포폴 소스 제작 (제작에 필요한 소스 생성 및 수집)", "fee": 500000}, {"id": "d5p0c22", "subject": "3D모션포폴3", "desc": "포폴 제작 (최종 결과물로 완성)", "fee": 500000}]}]}, {"id": "d6", "name": "마야", "processes": [{"id": "d6p0", "name": "기본", "duration": "", "courses": [{"id": "d6p0c0", "subject": "마야기초1", "desc": "마야과정 기초 선수강 과정 (인터페이스 / 단축키 / 명령어 / 기능)", "fee": 600000}, {"id": "d6p0c1", "subject": "마야기초2", "desc": "마야과정 기초 선수강 과정 (인터페이스 / 단축키 / 명령어 / 기능)", "fee": 600000}, {"id": "d6p0c2", "subject": "모델링1", "desc": "모델링 기초 (메카닉 모델링 / 자동차, 기차, 제품 등)", "fee": 600000}, {"id": "d6p0c3", "subject": "모델링2", "desc": "모델링 심화1 (캐릭터 모델링 / 하드서페이스 모델링)", "fee": 600000}, {"id": "d6p0c4", "subject": "모델링3", "desc": "모델링 심화2 (인체 모델링 / Zbrush 활용한 스컬핑 모델링)", "fee": 600000}, {"id": "d6p0c5", "subject": "룩뎁1", "desc": "룩뎁 기초 (UV 맵핑 / 쉐이딩 / 텍스쳐링 / 라이팅)", "fee": 600000}, {"id": "d6p0c6", "subject": "룩뎁2", "desc": "룩뎁 심화1 (서브스텐스 페인터 / 아놀드 렌더 기초 심화)", "fee": 600000}, {"id": "d6p0c7", "subject": "룩뎁3", "desc": "룩뎁 심화2 (마블러스 / 서브스텐스 페인터 심화)", "fee": 600000}, {"id": "d6p0c8", "subject": "애니1", "desc": "애니메이션 기초 (리깅 기초 -> 리깅 심화 / 뼈대작업, 관절)", "fee": 600000}, {"id": "d6p0c9", "subject": "애니2", "desc": "애니메이션 심화1 (리깅 심화 / 애니메이션 12법칙 적용)", "fee": 600000}, {"id": "d6p0c10", "subject": "애니3", "desc": "애니메이션 심화2 (애니메이션 심화 예제 실습 작업)", "fee": 600000}, {"id": "d6p0c11", "subject": "후디니1", "desc": "프로스듀얼 모델링 (후디니 사용법)", "fee": 600000}, {"id": "d6p0c12", "subject": "후디니2", "desc": "후디니 VFX (액체 작업) + 후디니 VFX (불 / 불꽃 / 폭발)", "fee": 600000}, {"id": "d6p0c13", "subject": "후디니3", "desc": "후디니 VFX (기체 작업)", "fee": 600000}, {"id": "d6p0c14", "subject": "언리얼엔진1", "desc": "언리얼엔진 tool 기초 (인터페이스 / 단축키 / 명령어 / 기능)", "fee": 600000}, {"id": "d6p0c15", "subject": "언리얼엔진2", "desc": "얼리얼엔진 심화1 (심화 예제 실습 작업 / 모델링, 렌더링)", "fee": 600000}, {"id": "d6p0c16", "subject": "언리얼엔진3", "desc": "언리얼엔진 심화2 (심화 예제 실습 작업 / 애니메이팅, 다이나믹 이펙트)", "fee": 600000}, {"id": "d6p0c17", "subject": "컴포지팅1", "desc": "합성 컴포지팅 누크 기초과정 (매치무비 / 간판교체 합성 / 크로마키 / 리무빙 / 누끼)", "fee": 600000}, {"id": "d6p0c18", "subject": "컴포지팅2", "desc": "합성 컴포지팅 누크 심화과정 (3D 누크 / 3D 라이팅 / 트레킹 / 우주배경 / 매트페인팅)", "fee": 600000}, {"id": "d6p0c19", "subject": "컴포지팅3", "desc": "합성 컴포지팅 에펙 / 누크 연동 매트페인팅 실무", "fee": 600000}, {"id": "d6p0c20", "subject": "지브러쉬1", "desc": "지브러시 기초 인터페이스 / 캐릭터 제작 진행", "fee": 600000}, {"id": "d6p0c21", "subject": "지브러쉬2", "desc": "지브러시 심화 리얼리티 크리처 제작 > 디테일 > 텍스처링", "fee": 600000}, {"id": "d6p0c22", "subject": "블렌더", "desc": "3D 프로그램 모델링 과정", "fee": 600000}, {"id": "d6p0c23", "subject": "마야포폴", "desc": "종합 PO 진행", "fee": 600000}, {"id": "d6p0c24", "subject": "모델링/룩뎁PO", "desc": "모델링 / 렌더링 / 룩뎁 포트폴리오 1-6개월", "fee": 600000}, {"id": "d6p0c25", "subject": "애니PO", "desc": "애니메이션 포트폴리오 작업 1-6개월", "fee": 600000}, {"id": "d6p0c26", "subject": "VFXPO", "desc": "CG 특수효과 포트폴리오 작업 1-6개월", "fee": 600000}, {"id": "d6p0c27", "subject": "합성PO", "desc": "합성 컴포지팅 포트폴리오 작업 1-6개월", "fee": 600000}]}]}, {"id": "d7", "name": "OA", "processes": [{"id": "d7p0", "name": "기본", "duration": "", "courses": [{"id": "d7p0c0", "subject": "모스", "desc": "마이크로소프트사주관 국제공인자격증 엑셀 / 파워포인트 / 액세스 / 워드", "fee": 350000}, {"id": "d7p0c1", "subject": "엑셀실무", "desc": "컴활2급 실기 시험 대비 (엑셀 중급) + 엑셀 실무 스킬업", "fee": 350000}, {"id": "d7p0c2", "subject": "컴활", "desc": "컴활1급 실기 시험 대비 (엑셀 상급 + 엑세스 상급)", "fee": 350000}, {"id": "d7p0c3", "subject": "전산회계1급", "desc": "회계원리 / 원가회계 / 세무회계(부가가치세법)", "fee": 600000}, {"id": "d7p0c4", "subject": "전산세무2급", "desc": "재무회계 / 원가회계 / 세무회계(부가가치세법, 소득세법)", "fee": 600000}, {"id": "d7p0c5", "subject": "전산세무1급", "desc": "세무회계(법인세법, 부가가치세법, 소득세법, 조세특례제한법)", "fee": 750000}]}]}, {"id": "d8", "name": "자격증대비", "processes": [{"id": "d8p0", "name": "기본", "duration": "", "courses": [{"id": "d8p0c0", "subject": "컬러리스트", "desc": "컬러리스트산업기사/기사 자격증 실기 대비반", "fee": 550000}, {"id": "d8p0c1", "subject": "컴퓨터그래픽기능사", "desc": "컴퓨터 그래픽스 기능사 자격증 실기 대비반 (포토샵/일러스트/인디자인 활용)", "fee": 250000}, {"id": "d8p0c2", "subject": "웹디자인기능사", "desc": "웹디자인 기능사 자격증 실기 대비반 (포토샵/일러스트/웹1~3 활용)", "fee": 500000}, {"id": "d8p0c3", "subject": "전산응용건축제도", "desc": "산업인력 공단에서 주관하는 건축캐드 국가 공인 기술 자격증 과정 (캐드1-2 활용)", "fee": 500000}, {"id": "d8p0c4", "subject": "전산응용기계제도", "desc": "산업인력 공단에서 주관하는 기계캐드+인벤터 국가 공인 기술 자격증 과정 (캐드1 / 인벤터 활용)", "fee": 550000}, {"id": "d8p0c5", "subject": "인벤터", "desc": "기계제도 기능사 3D 작업 대비 인벤터 기초 -> 심화 과정", "fee": 400000}]}]}, {"id": "d9", "name": "코딩", "processes": [{"id": "d9p0", "name": "기본", "duration": "", "courses": [{"id": "d9p0c0", "subject": "C언어", "desc": "C언어 기초 코딩 (기초 문법 / 조건문 / 반복문 / 포인터 / 함수 / 구조체)", "fee": 400000}, {"id": "d9p0c1", "subject": "자바", "desc": "JAVA 코딩 (변수와자료형 / 연산자 / 제어문 / 배열 / 클래스 / 메서드 / 상속 / 다영성 / 예외처리 / 프로젝트)", "fee": 400000}, {"id": "d9p0c2", "subject": "파이썬1", "desc": "Python 기초 코딩 (변수와자료형 / 기본입출력 / 연산자 / 조건문 / 반복문 / 함수 / 예외처리 / 프로젝트)", "fee": 400000}]}]}, {"id": "d10", "name": "AI", "processes": [{"id": "d10p0", "name": "기본", "duration": "", "courses": [{"id": "d10p0c0", "subject": "AI프롬프트1", "desc": "뤼튼 / 챗 GPT 를 활용한 프롬프트 원리 (후카츠 프롬프트), 뤼튼 자격증 취득", "fee": 600000}, {"id": "d10p0c1", "subject": "AI프롬프트2", "desc": "미드저니 등 다양한 AI 프로그램을 활용한 이미지 및 영상 소스 생성", "fee": 600000}, {"id": "d10p0c2", "subject": "AICE", "desc": "파이썬 기초활용, 데이터 전처리, 데이터 시각화, 머신러닝, 딥러닝 (국가공인자격증 취득 가능)", "fee": 800000}]}]}, {"id": "d11", "name": "방학특강", "processes": [{"id": "d11p0", "name": "기본", "duration": "", "courses": [{"id": "d11p0c0", "subject": "포토샵1/방학", "desc": "픽셀형식 / 이미지나 사진을 보정, 효과, 합성, 리터칭 하는 편집 프로그램", "fee": 300000}, {"id": "d11p0c1", "subject": "포토샵2/방학", "desc": "픽셀형식 / 이미지나 사진을 보정, 효과, 합성, 리터칭 하는 편집 프로그램", "fee": 300000}, {"id": "d11p0c2", "subject": "일러스트1/방학", "desc": "벡터기반 / 그래픽 생성형 이미지로 도형, 픽토그램, 이모티콘, 아이콘, 로고 등 그래픽 생성 작업", "fee": 300000}, {"id": "d11p0c3", "subject": "일러스트2/방학", "desc": "벡터기반 / 그래픽 생성형 이미지로 도형, 픽토그램, 이모티콘, 아이콘, 로고 등 그래픽 생성 작업", "fee": 300000}, {"id": "d11p0c4", "subject": "캐드1/방학", "desc": "캐드 프로그램 기초과정으로 기본 인터페이스 / 명령어 / 단축키 등 캐드 프로그램 배우는 수업", "fee": 300000}, {"id": "d11p0c5", "subject": "캐드2/방학", "desc": "건축 & 인테리어 용도로 실무 도면 설계 과정", "fee": 300000}, {"id": "d11p0c6", "subject": "라이노1/방학", "desc": "넙스 (NURBS) 기반 3D 모델링", "fee": 350000}, {"id": "d11p0c7", "subject": "라이노2/방학", "desc": "넙스 (NURBS) 기반 3D 모델링", "fee": 350000}]}]}, {"id": "d12", "name": "기타", "processes": [{"id": "d12p0", "name": "기본", "duration": "", "courses": [{"id": "d12p0c0", "subject": "포폴디렉터", "desc": "자기 분석 및 AI를 활용한 본인만의 장단첨 도출", "fee": 600000}]}]}], "addons": {"ddajua": [{"label": "따즈아 1년", "fee": 320000}, {"label": "따즈아 2년", "fee": 390000}, {"label": "따즈아 3년", "fee": 500000}, {"label": "따즈아 평생", "fee": 990000}], "acp": [{"label": "ACP 1과목", "fee": 70000}, {"label": "ACP 2과목", "fee": 130000}, {"label": "ACP 3과목", "fee": 190000}, {"label": "ACP 4과목", "fee": 250000}, {"label": "ACP 5과목", "fee": 310000}]}};
+
+let MASTER = null;
+let state = {
+  selectedDept: null,
+  selectedProc: null,
+  selected: [],
+  discountMode: 'free',
+  percent: 0,
+  direct: 0,
+  docType: 'normal',
+  months: 0,
+  ddajua: '',
+  acp: '',
+  promotions: [],
+  masterEditTab: 'courses',
+  masterEditDept: null,
+  masterEditProc: null,
+  editingQuoteId: null,
+};
+let nextSelId = 1;
+
+// ============ DATA LOAD + MIGRATION ============
+function migrate(data) {
+  if (!data || typeof data !== 'object') data = {};
+  if (!Array.isArray(data.departments)) data.departments = [];
+  data.departments.forEach(d => {
+    if (!d.processes) {
+      d.processes = [{
+        id: d.id + 'p0',
+        name: '기본',
+        duration: '',
+        courses: (d.courses || []).map(c => ({...c}))
+      }];
+      delete d.courses;
+    }
+  });
+  // 구조 보정: 배열이 아닌 값이 들어와도 화면이 죽지 않게 한다
+  const seenCourseIds = new Set();
+  data.departments.forEach(d => {
+    if (!d.id) d.id = uid('d');
+    if (!Array.isArray(d.processes)) d.processes = [];
+    d.processes.forEach(pr => {
+      if (!pr.id) pr.id = uid(d.id + 'p');
+      if (!Array.isArray(pr.courses)) pr.courses = [];
+      pr.courses.forEach(c => {
+        // 과목 id 로 견적과 마스터를 연결하므로 중복 id 는 반드시 갈라 준다
+        if (!c.id || seenCourseIds.has(c.id)) c.id = uid('c');
+        seenCourseIds.add(c.id);
+        c.subject = c.subject == null ? '' : String(c.subject);
+        c.desc = c.desc == null ? '' : String(c.desc);
+        c.fee = Number(c.fee) || 0;
+      });
+    });
+  });
+  if (!data.addons || typeof data.addons !== 'object') data.addons = {};
+  if (!Array.isArray(data.addons.ddajua)) data.addons.ddajua = [];
+  if (!Array.isArray(data.addons.acp)) data.addons.acp = [];
+  if (!data.policies) {
+    data.policies = {
+      guide: [
+        { text: '위 수강료는 학원내 게시 된 수강료이며, 교육청에 신고 된 금액입니다.', warn: false },
+        { text: '프로모션 할인 내역은 위 수강료에 한해서 적용됩니다.', warn: false },
+        { text: '프로모션 과목 수강신청을 원할시 담당멘토를 통해 안내되는 기간내 납부가 되어야 합니다.', warn: false },
+        { text: '무료과목은 음영으로 표기되어 있습니다.', warn: true },
+        { text: '무료과목 먼저 진행시 유료과목이 소진 됩니다.', warn: true },
+        { text: '무료지원 과목은 학원의 이벤트에 따라 지급된 서비스이며, 등록한 과목이 아니기에 환불에 해당되지 않습니다.', warn: true },
+      ],
+      payment: [
+        { text: '현금수납 — 학원 안내접수처에서 접수 및 결제 (현금영수증 발행가능)' },
+        { text: '신용카드 결제 — 할부 결제 가능 및 카드사별 할부 개월 수 상이 / 담당멘토 문의' },
+        { text: '계좌이체 / 인터넷뱅킹 — 현금영수증 발행가능 / 담당멘토 문의' },
+        { text: '온라인 결제 — 나이스페이 / 담당멘토 문의' },
+      ],
+    };
+  }
+  if (!data.policies || typeof data.policies !== 'object') data.policies = {};
+  if (!Array.isArray(data.policies.guide)) data.policies.guide = [];
+  if (!Array.isArray(data.policies.payment)) data.policies.payment = [];
+  if (!Array.isArray(data.mentors) || data.mentors.length === 0) data.mentors = ['김태욱'];
+  // 멘토는 이름만 있던 옛 형식과 이메일이 붙은 새 형식을 함께 받아 준다
+  data.mentors = data.mentors.map(m => (typeof m === 'string')
+    ? { name: m.trim(), email: '' }
+    : { name: String((m && m.name) || '').trim(), email: String((m && m.email) || '').trim().toLowerCase() });
+  return data;
+}
+let masterRev = 0;        // 서버 문서의 개정 번호 (동시 편집 충돌 감지용)
+let masterOffline = false; // 서버에서 못 읽어온 상태 → 서버에 덮어쓰지 않는다
+let masterConflict = false;
+
+async function loadMaster() {
+  // 1. Firestore
+  try {
+    const doc = await db.collection('sbs_master').doc('data').get();
+    if (doc.exists) {
+      const raw = doc.data() || {};
+      masterRev = Number(raw.rev) || 0;
+      delete raw.rev;
+      delete raw.updatedAt;
+      MASTER = migrate(raw);
+      try { localStorage.setItem('sbsMasterV3', JSON.stringify(MASTER)); } catch(e){}
+      return;
+    }
+  } catch (e) {
+    masterOffline = true;
+    console.warn('Firestore 마스터 로드 실패, 로컬 캐시로 폴백', e);
+  }
+  // 2. 로컬 캐시
+  const local = localStorage.getItem('sbsMasterV3');
+  if (local) {
+    try { MASTER = migrate(JSON.parse(local)); return; } catch(e) {}
+  }
+  // 3. 동봉된 data.json
+  try {
+    const res = await fetch('data.json');
+    if (res.ok) { MASTER = migrate(await res.json()); return; }
+  } catch(e) {}
+  MASTER = migrate(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+}
+
+let masterSaveTimer = null;
+function saveMaster() {
+  try { localStorage.setItem('sbsMasterV3', JSON.stringify(MASTER)); } catch(e) {}
+  if (masterConflict) return;
+  if (masterOffline) { toast('서버에 연결되지 않아 이 기기에만 저장됩니다'); return; }
+  if (masterSaveTimer) clearTimeout(masterSaveTimer);
+  masterSaveTimer = setTimeout(pushMaster, 1500);
+}
+// 지연 없이 지금 바로 서버에 올린다 (설정처럼 한 번에 끝내야 하는 변경용)
+async function flushMaster() {
+  if (masterSaveTimer) { clearTimeout(masterSaveTimer); masterSaveTimer = null; }
+  if (masterConflict || masterOffline) return;
+  await pushMaster();
+}
+
+// 마스터는 문서 하나를 통째로 덮어쓰므로, 개정 번호를 비교해
+// 다른 사람이 먼저 저장한 내용을 조용히 지우는 일을 막는다.
+async function pushMaster() {
+  const ref = db.collection('sbs_master').doc('data');
+  const payload = JSON.parse(JSON.stringify(MASTER));
+  try {
+    const nextRev = await db.runTransaction(async tx => {
+      const snap = await tx.get(ref);
+      const serverRev = snap.exists ? (Number(snap.data().rev) || 0) : 0;
+      if (snap.exists && serverRev !== masterRev) {
+        const conflict = new Error('master revision mismatch');
+        conflict.name = 'MasterConflict';
+        throw conflict;
+      }
+      const rev = serverRev + 1;
+      tx.set(ref, Object.assign({}, payload, { rev: rev, updatedAt: new Date().toISOString() }));
+      return rev;
+    });
+    masterRev = nextRev;
+  } catch (e) {
+    if (e && e.name === 'MasterConflict') {
+      masterConflict = true;
+      alert('다른 사용자가 마스터 데이터를 먼저 수정했습니다.\n이 기기에서 방금 바꾼 내용은 서버에 반영되지 않았습니다.\n페이지를 새로고침한 뒤 다시 수정해 주세요.');
+    } else {
+      console.warn('마스터 동기화 실패', e);
+      toast('마스터 서버 저장 실패 (이 기기에는 저장됨)');
+    }
+  }
+}
+
+// ============ HELPERS ============
+function fmt(n) { return Number(n||0).toLocaleString('ko-KR'); }
+// 별도 판매 옵션명은 "따즈아 3,500,000원(프로모션 적용시) - >" 처럼 길게 적히기도 한다.
+// 표가 지저분해지지 않게 괄호 앞까지만 과목명으로 쓰고 나머지는 세부 내용으로 넘긴다.
+function splitAddonLabel(label) {
+  const raw = String(label || '').trim();
+  // 금액 표기나 괄호가 나오는 지점에서 자른다 ('1년', '6개월' 같은 기간은 이름에 남긴다)
+  const priceAt = raw.search(/\d[\d,]*\s*원/);
+  const parenAt = raw.indexOf('(');
+  const marks = [priceAt, parenAt].filter(i => i > 0);
+  const cut = marks.length ? Math.min.apply(null, marks) : -1;
+  let name = cut > 0 ? raw.slice(0, cut) : raw;
+  let detail = cut > 0 ? raw.slice(cut) : '';
+  const trim = t => t.replace(/^[\s\-–—>·,]+/, '').replace(/[\s\-–—>·,]+$/, '').trim();
+  name = trim(name);
+  detail = trim(detail);
+  if (!name) { name = trim(raw) || '별도 판매'; detail = ''; }
+  return { name, detail };
+}
+// 화면에 넣는 모든 사용자 입력은 이 함수를 거친다 (본문·속성 공용)
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+// 서버에서 받은 링크는 https 만 통과시킨다
+function safeUrl(u) {
+  return /^https:\/\//i.test(String(u || '')) ? String(u) : '';
+}
+// 같은 밀리초에 두 번 눌러도 겹치지 않는 id
+function uid(prefix) {
+  return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+// 저장된 날짜는 ISO 문자열 등 여러 형태로 들어올 수 있어 "26.04.15" 형식으로 통일한다
+function toShortDate(raw) {
+  if (!raw) return '—';
+  let s = String(raw);
+  // ISO 형식 "2026-04-15T15:00:00.000Z" 또는 "2026-04-15" → 앞 10자만
+  if (s.length > 10 && s.includes('T')) s = s.slice(0, 10);
+  if (s.length > 10 && s.includes('-')) s = s.slice(0, 10);
+  // "2026-04-15" → "26.04.15"
+  if (s.length === 10 && s[4] === '-') return s.slice(2).replace(/-/g, '.');
+  // 이미 "26.04.15" 형식이면 그대로
+  return s.replace(/-/g, '.');
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function findCourseDeep(courseId) {
+  for (const d of MASTER.departments) {
+    for (const p of d.processes) {
+      for (const c of p.courses) {
+        if (c.id === courseId) return {course: c, dept: d, proc: p};
+      }
+    }
+  }
+  return null;
+}
+function findExistingCourse(subjectName, excludeId) {
+  if (!subjectName) return null;
+  const norm = subjectName.trim().toLowerCase();
+  for (const d of MASTER.departments) {
+    for (const p of d.processes) {
+      for (const c of p.courses) {
+        if (c.id === excludeId) continue;
+        if ((c.subject||'').trim().toLowerCase() === norm) return c;
+      }
+    }
+  }
+  return null;
+}
+function getCurrentDept() { return MASTER.departments.find(d => d.id === state.selectedDept); }
+function getCurrentProc() {
+  const d = getCurrentDept();
+  return d ? d.processes.find(p => p.id === state.selectedProc) : null;
+}
+// 로그인한 직원 정보
+let CURRENT_USER = null;
+function mentorNames() {
+  return (MASTER.mentors || []).map(m => m.name).filter(n => n);
+}
+function currentEmail() {
+  return String((CURRENT_USER && CURRENT_USER.email) || '').trim().toLowerCase();
+}
+// 로그인 이메일에 짝지어진 한글 이름을 찾는다. 못 찾으면 빈 값을 돌려주고
+// 이메일 앞부분(영문)을 이름 대신 쓰지 않는다.
+function resolveStaffName() {
+  if (!CURRENT_USER) return '';
+  const email = currentEmail();
+  if (email) {
+    const hit = (MASTER.mentors || []).find(m => m.email && m.email === email);
+    if (hit && hit.name) return hit.name;
+  }
+  return String(CURRENT_USER.displayName || '').trim();
+}
+// 이름이 아직 연결되지 않은 계정이면 배너로 한 번만 물어본다
+function renderNameBanner() {
+  const bar = document.getElementById('nameBanner');
+  if (!bar) return;
+  if (!CURRENT_USER || resolveStaffName()) { bar.style.display = 'none'; return; }
+  document.getElementById('nameBannerMsg').textContent =
+    `${currentEmail()} 계정에 연결된 이름이 없습니다. 견적서에 찍을 한글 이름을 입력해 주세요.`;
+  bar.style.display = 'flex';
+}
+async function saveMyName() {
+  const inp = document.getElementById('nameBannerInput');
+  const name = inp.value.trim();
+  if (!name) { inp.focus(); return; }
+  const email = currentEmail();
+  MASTER.mentors = MASTER.mentors || [];
+  // 같은 이름이 명단에 있으면 그 항목에 이메일을 붙이고, 없으면 새로 넣는다
+  const sameName = MASTER.mentors.find(m => m.name === name);
+  const sameMail = MASTER.mentors.find(m => m.email && m.email === email);
+  if (sameMail) { sameMail.name = name; }
+  else if (sameName) { sameName.email = email; }
+  else { MASTER.mentors.push({ name: name, email: email }); }
+  saveMaster();
+  await flushMaster();
+  if (CURRENT_USER) CURRENT_USER.displayName = name;
+  // Firebase 계정에도 남겨 두면 다른 기기에서 바로 인식된다
+  try {
+    const u = auth.currentUser;
+    if (u && u.updateProfile) await u.updateProfile({ displayName: name });
+  } catch (e) { console.warn('표시 이름 저장 실패', e); }
+  inp.value = '';
+  render();
+  applyStaffDefaultSelects();
+  toast(`${name} 님으로 설정했습니다`);
+}
+function getSelectedMentor() {
+  const sel = document.getElementById('mentorSelect').value;
+  if (sel === '__custom__') return document.getElementById('mentorCustom').value.trim();
+  return sel;
+}
+function getSelectedCounselor() {
+  const sel = document.getElementById('counselorSelect').value;
+  if (sel === '__custom__') return document.getElementById('counselorCustom').value.trim();
+  return sel;
+}
+function toggleFab(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('fabMenu');
+  const open = menu.classList.toggle('open');
+  document.querySelector('#fabBtn .caret').textContent = open ? '▼' : '▲';
+}
+function closeFab() {
+  const menu = document.getElementById('fabMenu');
+  if (!menu.classList.contains('open')) return;
+  menu.classList.remove('open');
+  document.querySelector('#fabBtn .caret').textContent = '▲';
+}
+// 메뉴에서 고른 작업을 실행하고 메뉴를 닫는다
+function fabRun(fn) {
+  closeFab();
+  setTimeout(fn, 0);
+}
+document.addEventListener('click', e => {
+  if (!document.getElementById('fabWrap').contains(e.target)) closeFab();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFab(); });
+
+function updatePercentFieldUI() {
+  document.getElementById('percentField').style.display = state.discountMode === 'percent' ? 'block' : 'none';
+}
+function renderMentorSelects() {
+  const me = resolveStaffName();
+  // 로그인한 직원을 목록 맨 위에 올리고 기본값으로 잡는다
+  const names = mentorNames();
+  const ordered = me ? [me, ...names.filter(n => n !== me)] : names;
+  ['mentorSelect','counselorSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = '';
+    ordered.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = (me && n === me) ? n + ' (나)' : n;
+      el.appendChild(opt);
+    });
+    const customOpt = document.createElement('option');
+    customOpt.value = '__custom__'; customOpt.textContent = '+ 직접 입력';
+    el.appendChild(customOpt);
+    if (cur && [...el.options].some(o => o.value === cur)) el.value = cur;
+    else if (me) el.value = me;
+  });
+}
+// 초기화·수정 종료 후 다시 로그인한 직원으로 돌려놓는다
+function applyDocTabs() {
+  document.querySelectorAll('.doc-tab').forEach(x => x.classList.toggle('active', x.dataset.doc === state.docType));
+}
+function applyStaffDefaultSelects() {
+  const me = resolveStaffName();
+  if (!me) return;
+  ['mentorSelect','counselorSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if ([...el.options].some(o => o.value === me)) el.value = me;
+  });
+}
+function getSelectedProcessSummary() {
+  const map = new Map();
+  state.selected.forEach(s => {
+    const key = s.deptId + '|' + s.procId;
+    if (!map.has(key)) {
+      const d = MASTER.departments.find(x => x.id === s.deptId);
+      const p = d?.processes.find(x => x.id === s.procId);
+      if (d && p) map.set(key, {dept: d, proc: p});
+    }
+  });
+  return Array.from(map.values());
+}
+
+// ============ LEFT PANEL RENDER ============
+// 학과는 한 줄짜리 가로 스크롤 띠에 버튼으로 늘어놓는다
+function renderDeptTabs() {
+  const el = document.getElementById('deptTabs');
+  el.innerHTML = '';
+  let activeBtn = null;
+  MASTER.departments.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'dept-tab' + (d.id === state.selectedDept ? ' active' : '');
+    b.textContent = d.name;
+    if (d.id === state.selectedDept) activeBtn = b;
+    b.onclick = () => {
+      state.selectedDept = d.id;
+      state.selectedProc = d.processes[0]?.id || null;
+      render();
+    };
+    el.appendChild(b);
+  });
+  // 선택한 학과가 화면 밖에 있으면 보이는 위치로 끌어온다
+  if (activeBtn && activeBtn.scrollIntoView) {
+    try { activeBtn.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+  }
+}
+function renderProcTabs() {
+  const el = document.getElementById('procTabs');
+  el.innerHTML = '';
+  const d = getCurrentDept();
+  if (!d || d.processes.length === 0) {
+    el.innerHTML = '<div class="proc-empty">등록된 과정이 없습니다. 마스터 편집에서 추가하세요.</div>';
+    return;
+  }
+  d.processes.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'proc-tab' + (p.id === state.selectedProc ? ' active' : '');
+    b.innerHTML = `${esc(p.name)}${p.duration ? `<span class="dur">· ${esc(p.duration)}</span>` : ''}`;
+    b.onclick = () => { state.selectedProc = p.id; render(); };
+    el.appendChild(b);
+  });
+}
+function renderCourseList() {
+  const el = document.getElementById('courseList');
+  el.innerHTML = '';
+  const proc = getCurrentProc();
+  if (!proc) return;
+  if (proc.courses.length === 0) {
+    el.innerHTML = '<div style="padding:14px; text-align:center; color:#9C9890; font-size:11px;">등록된 과목이 없습니다.</div>';
+    return;
+  }
+  proc.courses.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'course-item';
+    item.innerHTML = `<div class="plus">+</div><span class="cname">${esc(c.subject)}</span><span class="cfee">${fmt(c.fee)}</span>`;
+    item.onclick = () => addCourse(c.id);
+    el.appendChild(item);
+  });
+}
+function addCourse(courseId) {
+  const found = findCourseDeep(courseId);
+  if (!found) return;
+  state.selected.push({
+    selId: nextSelId++,
+    course: {...found.course},
+    free: false,
+    deptId: found.dept.id,
+    procId: found.proc.id,
+  });
+  render();
+}
+function removeCourse(selId) {
+  state.selected = state.selected.filter(s => s.selId !== selId);
+  render();
+}
+function toggleFree(selId) {
+  const item = state.selected.find(s => s.selId === selId);
+  if (item) { item.free = !item.free; render(); }
+}
+function bulkAddCurrentProcess() {
+  const proc = getCurrentProc();
+  const dept = getCurrentDept();
+  if (!proc || !dept) return;
+  proc.courses.forEach(c => {
+    state.selected.push({
+      selId: nextSelId++,
+      course: {...c},
+      free: false,
+      deptId: dept.id,
+      procId: proc.id,
+    });
+  });
+  render();
+  toast(`${proc.name} 과정 ${proc.courses.length}과목 추가됨`);
+}
+document.getElementById('bulkAddBtn').onclick = bulkAddCurrentProcess;
+
+function renderAddons() {
+  const dd = document.getElementById('ddajuaSelect');
+  const acp = document.getElementById('acpSelect');
+  dd.innerHTML = '<option value="">선택 안함</option>';
+  acp.innerHTML = '<option value="">선택 안함</option>';
+  (MASTER.addons.ddajua||[]).forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.label; opt.textContent = `${o.label} — ${fmt(o.fee)}원`;
+    if (state.ddajua === o.label) opt.selected = true;
+    dd.appendChild(opt);
+  });
+  (MASTER.addons.acp||[]).forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.label; opt.textContent = `${o.label} — ${fmt(o.fee)}원`;
+    if (state.acp === o.label) opt.selected = true;
+    acp.appendChild(opt);
+  });
+}
+
+// ============ PROMOTIONS ============
+function addPromotion() {
+  state.promotions.push({ name: '', deadline: '', desc: '' });
+  renderPromoPanel();
+  renderPreview();
+}
+function removePromotion(i) {
+  state.promotions.splice(i, 1);
+  renderPromoPanel();
+  renderPreview();
+}
+function renderPromoPanel() {
+  const el = document.getElementById('promoListPanel');
+  el.innerHTML = '';
+  if (state.promotions.length === 0) {
+    el.innerHTML = '<div style="font-size:11px; color:#8C8A82; padding:8px 0;">프로모션이 있을 경우 추가하세요.</div>';
+    return;
+  }
+  state.promotions.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'promo-card';
+    card.innerHTML = `
+      <div class="promo-card-row">
+        <input type="text" placeholder="프로모션 명분 (예: 겨울방학 프로모션)" value="${esc(p.name)}" data-field="name">
+        <button class="promo-del" title="삭제">×</button>
+      </div>
+      <div class="promo-card-row">
+        <input type="date" value="${esc(p.deadline)}" data-field="deadline">
+      </div>
+      <div class="promo-card-row">
+        <textarea placeholder="설명 (예: 2026년 12월 31일까지 등록 시 6과목 무료 지원)" data-field="desc">${esc(p.desc)}</textarea>
+      </div>
+    `;
+    card.querySelectorAll('[data-field]').forEach(inp => {
+      inp.oninput = e => { state.promotions[i][e.target.dataset.field] = e.target.value; renderPreview(); };
+    });
+    card.querySelector('.promo-del').onclick = () => removePromotion(i);
+    el.appendChild(card);
+  });
+}
+
+// ============ CALC + PREVIEW ============
+// 국민취업지원제도: 월 60만원씩 6개월, 최대 360만원 지원
+const KTP_MONTHS = 6;
+const KTP_MONTHLY = 600000;
+const KTP_MAX = KTP_MONTHS * KTP_MONTHLY;
+
+function calc() {
+  const items = state.selected;
+  const ddObj = (MASTER.addons.ddajua||[]).find(o => o.label === state.ddajua);
+  const acpObj = (MASTER.addons.acp||[]).find(o => o.label === state.acp);
+  const ddFee = ddObj ? (Number(ddObj.fee) || 0) : 0;
+
+  // 할인은 정규 과목에만 적용한다. 따즈아는 과목 목록에 함께 보이지만 할인 대상이 아니다.
+  const courseSubtotal = items.reduce((s, i) => s + Number(i.course.fee), 0);
+  const subtotal = courseSubtotal + ddFee;
+
+  let freeAmount = 0;
+  let percentAmount = 0;
+  if (state.discountMode === 'free') {
+    freeAmount = items.filter(i => i.free).reduce((s, i) => s + Number(i.course.fee), 0);
+  } else {
+    const pct = Math.min(100, Math.max(0, Number(state.percent) || 0));
+    percentAmount = Math.round(courseSubtotal * pct / 100);
+  }
+  // 할인 합계가 수강료를 넘어 최종 금액이 음수로 찍히는 일을 막는다
+  const discountable = Math.max(0, courseSubtotal - freeAmount - percentAmount);
+  const directRequested = Math.max(0, Number(state.direct) || 0);
+  const direct = Math.min(directRequested, discountable);
+  const directCapped = directRequested > direct;
+  const courseTotal = Math.max(0, discountable - direct);
+
+  const addonTotal = acpObj ? (Number(acpObj.fee) || 0) : 0;
+  const finalTotal = courseTotal + ddFee + addonTotal;
+
+  // 국민취업지원제도는 따즈아·자격증을 포함한 전체 금액에서 차감한다
+  const isKtp = state.docType === 'ktp';
+  const support = isKtp ? Math.min(KTP_MAX, finalTotal) : 0;
+  const supportCapped = isKtp && finalTotal < KTP_MAX;
+  const payable = finalTotal - support;
+
+  // 할부: 나누어떨어지지 않는 금액은 첫 달에 몰아 총액이 어긋나지 않게 한다
+  const months = Math.min(60, Math.max(0, Math.floor(Number(state.months) || 0)));
+  let monthly = 0, firstMonth = 0;
+  if (months >= 2 && payable > 0) {
+    monthly = Math.floor(payable / months);
+    firstMonth = monthly + (payable - monthly * months);
+  }
+
+  return { items, courseSubtotal, subtotal, ddFee, freeAmount, percentAmount, direct, directRequested,
+           directCapped, courseTotal, addonTotal, finalTotal, isKtp, support, supportCapped, payable,
+           months, monthly, firstMonth, ddObj, acpObj };
+}
+
+function renderPreview() {
+  const meta = {
+    student: document.getElementById('student').value,
+    contact: document.getElementById('contact').value,
+    mentor: getSelectedMentor(),
+    counselor: getSelectedCounselor(),
+    issued: document.getElementById('issued').value || new Date().toISOString().slice(0,10),
+    program: document.getElementById('program').value,
+  };
+  const r = calc();
+  const dateStr = meta.issued.replace(/-/g, '.');
+  const docNo = meta.issued.slice(0, 4) + ' — ' + meta.issued.slice(5).replace(/-/g, '');
+
+  const procSummary = getSelectedProcessSummary();
+  const autoProgram = procSummary.map(s => `${s.dept.name} ${s.proc.name}${s.proc.duration ? ' ('+s.proc.duration+')' : ''}`).join(' + ');
+  const programDisplay = meta.program || autoProgram || '—';
+
+  let rowsHtml = '';
+  const totalRows = r.items.length + (r.ddObj ? 1 : 0);
+  if (totalRows === 0) {
+    rowsHtml = `<tr><td colspan="5" style="padding:40px 0; text-align:center; color:#A8A49C; font-size:12px; border-bottom:0.5px solid #E8E3D6;">왼쪽에서 과목을 선택해 주세요</td></tr>`;
+  } else {
+    r.items.forEach((it, i) => {
+      const num = String(i+1).padStart(2,'0');
+      const isFree = state.discountMode === 'free' && it.free;
+      // 무료 지원 과목은 원래 수강료에 취소선을 긋고 그 옆에 표기한다
+      const feeCell = isFree
+        ? `<td class="fee free">${Number(it.course.fee) > 0 ? `<span class="was">${fmt(it.course.fee)}</span>` : ''}무료지원</td>`
+        : `<td class="fee">${fmt(it.course.fee)}</td>`;
+      const lastClass = (i === r.items.length-1 && !r.ddObj) ? 'last' : '';
+      const clickable = state.discountMode === 'free' ? 'clickable' : '';
+      const freeClass = isFree ? 'is-free' : '';
+      rowsHtml += `<tr class="q-row ${clickable} ${freeClass} ${lastClass}" data-sid="${it.selId}" data-idx="${i}" draggable="true"><td class="drag">⋮⋮</td><td class="no">${num}</td><td class="sub"><span class="nm">${esc(it.course.subject)}</span><span class="x-btn" data-remove="${it.selId}">×</span></td><td class="desc">${esc(it.course.desc)}</td>${feeCell}</tr>`;
+    });
+    // 따즈아는 과목처럼 표에 넣되 할인 대상에서는 빠진다
+    if (r.ddObj) {
+      const num = String(r.items.length + 1).padStart(2,'0');
+      const dd = splitAddonLabel(r.ddObj.label);
+      const ddDesc = dd.detail || '자격증 응시 및 강의 이용 지원';
+      rowsHtml += `<tr class="q-row fixed last" data-fixed="1" draggable="false"><td class="drag"></td><td class="no">${num}</td><td class="sub"><span class="nm">${esc(dd.name)}</span><span class="x-btn" data-remove-ddajua="1">×</span></td><td class="desc">${esc(ddDesc)}</td><td class="fee">${fmt(r.ddFee)}</td></tr>`;
+    }
+  }
+
+  // 적용 프로모션
+  const activePromos = state.promotions.filter(p => (p.name||'').trim() !== '');
+  let leftColHtml = '';
+  if (activePromos.length > 0) {
+    leftColHtml += `
+      <div class="q-promotions-box">
+        <div class="q-promotions-title">적용 프로모션</div>
+        ${activePromos.map(p => `
+          <div class="q-promo-item">
+            <div class="q-promo-head">
+              <span class="q-promo-name">${esc(p.name)}</span>
+              ${p.deadline ? `<span class="q-promo-deadline">유효기간 ~ ${esc(p.deadline.replace(/-/g,'.'))}</span>` : ''}
+            </div>
+            ${p.desc ? `<div class="q-promo-desc">${esc(p.desc).replace(/\n/g,'<br>')}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // 국민취업지원제도 안내
+  if (r.isKtp) {
+    leftColHtml += `
+      <div class="q-support-box">
+        <div class="q-support-title">국민취업지원제도 안내</div>
+        <div class="q-support-line"><span>월 지원금</span><span class="v">${fmt(KTP_MONTHLY)}원</span></div>
+        <div class="q-support-line"><span>지원 기간</span><span class="v">${KTP_MONTHS}개월</span></div>
+        <div class="q-support-line"><span>총 지원 한도</span><span class="v">${fmt(KTP_MAX)}원</span></div>
+        <div class="q-support-line"><span>본 견적 적용 금액</span><span class="v">${fmt(r.support)}원</span></div>
+        <div class="q-support-desc">
+          국민취업지원제도 훈련참여지원수당으로 월 ${fmt(KTP_MONTHLY)}원씩 ${KTP_MONTHS}개월간
+          최대 ${fmt(KTP_MAX)}원이 지원됩니다. 위 금액은 총 수강료에서 지원금을 뺀 자비 부담액입니다.
+          지원 대상 여부와 실제 지급액은 고용센터 심사 결과에 따라 달라질 수 있습니다.
+        </div>
+      </div>
+    `;
+  }
+
+  // 우측: 합계 + 최종 납부액 통합 박스
+  const totalDiscountSum = r.freeAmount + r.percentAmount;
+  let summaryHtml = `<div class="q-summary-box">`;
+  summaryHtml += `<div class="q-sum-row"><span class="lbl">원 수강료</span><span class="val">${fmt(r.subtotal)}</span></div>`;
+  if (totalDiscountSum > 0) {
+    summaryHtml += `<div class="q-sum-row minus"><span class="lbl">총 할인</span><span class="val">− ${fmt(totalDiscountSum)}</span></div>`;
+  }
+  if (r.direct > 0) {
+    summaryHtml += `<div class="q-sum-row minus"><span class="lbl">멘토 직권</span><span class="val">− ${fmt(r.direct)}</span></div>`;
+  }
+  if (r.ddFee > 0 && (totalDiscountSum > 0 || r.direct > 0)) {
+    summaryHtml += `<div class="q-sum-detail">할인 적용 대상 ${fmt(r.courseSubtotal)}원</div>`;
+  }
+  if (r.addonTotal > 0) {
+    summaryHtml += `<div class="q-sum-row plus"><span class="lbl">자격증 및 강의 신청</span><span class="val">+ ${fmt(r.addonTotal)}</span></div>`;
+    // 별도판매 세부내역
+    let addonDetail = [];
+    if (r.acpObj) addonDetail.push(r.acpObj.label + ' ' + fmt(r.acpObj.fee));
+    if (addonDetail.length > 0) {
+      summaryHtml += `<div class="q-sum-detail">${addonDetail.map(esc).join(' · ')}</div>`;
+    }
+  }
+  if (r.isKtp) {
+    summaryHtml += `<div class="q-sum-total"><span class="lbl">총 수강료</span><span class="val">${fmt(r.finalTotal)}</span></div>`;
+    summaryHtml += `<div class="q-sum-support"><span class="lbl">국민취업지원제도 지원</span><span class="val">− ${fmt(r.support)}</span></div>`;
+    if (r.supportCapped) {
+      summaryHtml += `<div class="q-sum-detail">지원 한도 ${fmt(KTP_MAX)}원 중 수강료만큼만 적용</div>`;
+    }
+    summaryHtml += `<div class="q-sum-final"><span class="lbl">자비 부담액</span><span class="val">${fmt(r.payable)}<span class="won">원</span></span></div>`;
+  } else {
+    summaryHtml += `<div class="q-sum-final"><span class="lbl">최종 납부액</span><span class="val">${fmt(r.finalTotal)}<span class="won">원</span></span></div>`;
+  }
+  if (r.months >= 2 && r.monthly > 0) {
+    summaryHtml += `<div class="q-sum-install"><span class="lbl">${r.months}개월 분납 시 월 ${r.isKtp ? '자비 부담액' : '납부액'}</span><span class="val">${fmt(r.monthly)}<span class="won">원</span></span></div>`;
+    if (r.firstMonth !== r.monthly) {
+      summaryHtml += `<div class="q-sum-detail">첫 달 ${fmt(r.firstMonth)}원, 이후 ${r.months - 1}개월 ${fmt(r.monthly)}원</div>`;
+    }
+  }
+  summaryHtml += `</div>`;
+
+  const bottomBlockHtml = `
+    <div class="q-bottom-section">
+      ${leftColHtml}
+      ${summaryHtml}
+    </div>
+  `;
+
+  // 안내/등록방법 데이터에서 렌더
+  const guideItems = (MASTER.policies?.guide || []).map((p, i) =>
+    `<li class="${p.warn ? 'warn' : ''}"><span class="n">${i+1}.</span>${esc(p.text)}</li>`
+  ).join('');
+  const paymentItems = (MASTER.policies?.payment || []).map((p, i) =>
+    `<li><span class="n">${i+1}.</span>${esc(p.text)}</li>`
+  ).join('');
+
+  const quotEl = document.getElementById('quotation');
+  quotEl.className = 'quotation' + (r.isKtp ? ' ktp' : '');
+  quotEl.innerHTML = `
+    <div class="q-header">
+      <div class="q-title-wrap">
+        <div class="q-title">수강 견적서<span class="sub">Quotation</span>${r.isKtp ? '<span class="q-ktp-mark">국민취업지원제도 적용시</span>' : ''}</div>
+        <div class="q-brand">SBS ACADEMY AIX — HONGDAE</div>
+      </div>
+      <div class="q-meta">
+        <div><span class="mk">NO.</span>${docNo}</div>
+        <div><span class="mk">DATE</span>${dateStr}</div>
+        <div><span class="mk">MENTOR</span>${esc(meta.mentor) || '—'}</div>
+        ${meta.counselor && meta.counselor !== meta.mentor ? `<div><span class="mk">상담자</span>${esc(meta.counselor)}</div>` : ''}
+      </div>
+    </div>
+    <div class="q-info${r.isKtp ? ' ktp' : ''}">
+      <div class="q-info-item"><div class="label">수강생</div><div class="value">${esc(meta.student) || '—'}</div></div>
+      <div class="q-info-item"><div class="label">프로그램</div><div class="value">${esc(programDisplay)}</div></div>
+      <div class="q-info-item"><div class="label">과목 수</div><div class="value">${totalRows}</div></div>
+    </div>
+    <div class="q-section"><span>수강 과목</span></div>
+    <table class="q-table">
+      <colgroup><col class="c-drag"><col class="c-no"><col class="c-sub"><col><col class="c-fee"></colgroup>
+      <thead><tr><th class="hdrag"></th><th>번호</th><th>과목명</th><th>세부 내용</th><th class="right">수강료</th></tr></thead>
+      <tbody id="qBody">${rowsHtml}</tbody>
+    </table>
+    ${bottomBlockHtml}
+    <div class="q-policies">
+      <div class="q-policy-block">
+        <div class="q-policy-title">※ 수강 안내</div>
+        <ul class="q-policy-list">${guideItems}</ul>
+      </div>
+      <div class="q-policy-block">
+        <div class="q-policy-title">※ 등록 방법</div>
+        <ul class="q-policy-list">${paymentItems}</ul>
+      </div>
+    </div>
+  `;
+
+  fitSubjectNames();
+  updateDiscountNotes(r);
+
+  // Wire up clicks + drag on quotation rows
+  let dragSrc = null;
+  document.querySelectorAll('#qBody .q-row').forEach(tr => {
+    tr.onclick = (e) => {
+      if (e.target.dataset.removeDdajua) {
+        state.ddajua = '';
+        render();
+        return;
+      }
+      if (e.target.dataset.remove) {
+        removeCourse(Number(e.target.dataset.remove));
+        return;
+      }
+      if (tr.dataset.fixed) return;
+      if (state.discountMode !== 'free') return;
+      const sid = Number(tr.dataset.sid);
+      toggleFree(sid);
+    };
+    if (tr.dataset.fixed) return;
+    tr.ondragstart = (e) => {
+      dragSrc = Number(tr.dataset.sid);
+      tr.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    };
+    tr.ondragend = () => {
+      tr.classList.remove('dragging');
+      document.querySelectorAll('#qBody .q-row').forEach(t => t.classList.remove('drag-over'));
+    };
+    tr.ondragover = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('#qBody .q-row').forEach(t => t.classList.remove('drag-over'));
+      tr.classList.add('drag-over');
+    };
+    tr.ondrop = (e) => {
+      e.preventDefault();
+      const targetSid = Number(tr.dataset.sid);
+      if (dragSrc == null || dragSrc === targetSid) return;
+      const srcIdx = state.selected.findIndex(s => s.selId === dragSrc);
+      const tgtIdx = state.selected.findIndex(s => s.selId === targetSid);
+      if (srcIdx < 0 || tgtIdx < 0) return;
+      const [moved] = state.selected.splice(srcIdx, 1);
+      state.selected.splice(tgtIdx, 0, moved);
+      dragSrc = null;
+      render();
+    };
+  });
+}
+
+// 과목명이 칸보다 길면 줄을 넘기는 대신 글자를 조금 줄인다
+function fitSubjectNames() {
+  document.querySelectorAll('#qBody td.sub .nm').forEach(el => {
+    el.style.fontSize = '';
+    el.classList.remove('wrapped');
+    const avail = el.parentElement.clientWidth - 12;
+    if (!avail || avail <= 0) return;
+    let size = 13.5;
+    while (el.scrollWidth > avail && size > 10) {
+      size -= 0.5;
+      el.style.fontSize = size + 'px';
+    }
+    // 그래도 넘치면 그때는 줄을 넘긴다
+    if (el.scrollWidth > avail) el.classList.add('wrapped');
+  });
+}
+
+function updateDiscountNotes(r) {
+  const note = document.getElementById('directNote');
+  if (note) {
+    if (r.directCapped) {
+      note.style.display = 'block';
+      note.textContent = `남은 수강료보다 커서 ${fmt(r.direct)}원까지만 적용했습니다.`;
+    } else {
+      note.style.display = 'none';
+      note.textContent = '';
+    }
+  }
+  const mNote = document.getElementById('monthsNote');
+  if (mNote) {
+    if (r.months === 1) {
+      mNote.style.display = 'block';
+      mNote.textContent = '2개월 이상부터 월 납부액이 표시됩니다.';
+    } else if (r.months >= 2 && r.monthly > 0 && r.firstMonth !== r.monthly) {
+      mNote.style.display = 'block';
+      mNote.textContent = `나누어떨어지지 않아 첫 달만 ${fmt(r.firstMonth)}원입니다.`;
+    } else {
+      mNote.style.display = 'none';
+      mNote.textContent = '';
+    }
+  }
+}
+
+function render() {
+  renderDeptTabs();
+  renderProcTabs();
+  renderCourseList();
+  renderAddons();
+  renderPromoPanel();
+  renderMentorSelects();
+  renderNameBanner();
+  showCurrentUserBadge();
+  renderPreview();
+}
+
+// ============ DISCOUNT MODE ============
+document.querySelectorAll('.mode-tab').forEach(b => {
+  b.onclick = () => {
+    state.discountMode = b.dataset.mode;
+    document.querySelectorAll('.mode-tab').forEach(x => x.classList.toggle('active', x.dataset.mode === state.discountMode));
+    updatePercentFieldUI();
+    if (state.discountMode === 'percent') {
+      state.selected.forEach(s => s.free = false);
+    }
+    render();
+  };
+});
+document.getElementById('percentInput').oninput = e => { state.percent = e.target.value; renderPreview(); };
+document.getElementById('percentInput').onchange = e => {
+  const v = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+  e.target.value = v; state.percent = v; renderPreview();
+};
+document.getElementById('directInput').oninput = e => { state.direct = e.target.value; renderPreview(); };
+document.getElementById('directInput').onchange = e => {
+  const v = Math.max(0, Number(e.target.value) || 0);
+  e.target.value = v; state.direct = v; renderPreview();
+};
+document.querySelectorAll('.doc-tab').forEach(b => {
+  b.onclick = () => {
+    state.docType = b.dataset.doc;
+    document.querySelectorAll('.doc-tab').forEach(x => x.classList.toggle('active', x === b));
+    renderPreview();
+  };
+});
+document.getElementById('monthsInput').oninput = e => { state.months = e.target.value; renderPreview(); };
+document.getElementById('monthsInput').onchange = e => {
+  const v = Math.min(60, Math.max(0, Math.floor(Number(e.target.value) || 0)));
+  e.target.value = v; state.months = v; renderPreview();
+};
+document.getElementById('ddajuaSelect').onchange = e => { state.ddajua = e.target.value; renderPreview(); };
+document.getElementById('acpSelect').onchange = e => { state.acp = e.target.value; renderPreview(); };
+['student','contact','issued','program'].forEach(id => {
+  document.getElementById(id).oninput = renderPreview;
+  document.getElementById(id).onchange = renderPreview;
+});
+['mentor','counselor'].forEach(role => {
+  const sel = document.getElementById(role + 'Select');
+  const cust = document.getElementById(role + 'Custom');
+  sel.onchange = () => {
+    cust.style.display = sel.value === '__custom__' ? 'block' : 'none';
+    if (sel.value === '__custom__') cust.focus();
+    renderPreview();
+  };
+  cust.oninput = renderPreview;
+});
+
+function resetAll() {
+  if (!confirm('모든 입력을 초기화할까요? (마스터 데이터는 유지됩니다)')) return;
+  state.editingQuoteId = null;
+  resetAllSilent();
+  updateEditingBanner();
+}
+
+// ============ MASTER EDIT ============
+function openMaster() {
+  state.masterEditDept = MASTER.departments[0]?.id || null;
+  state.masterEditProc = getMasterDept()?.processes[0]?.id || null;
+  document.getElementById('masterModal').classList.add('show');
+  switchMasterTab('courses');
+  renderMasterModal();
+}
+function closeMaster() {
+  document.getElementById('masterModal').classList.remove('show');
+  saveMaster();
+  // 마스터의 수강료 변경을 현재 견적에 반영한다 (과목 id 기준)
+  const beforeCount = state.selected.length;
+  state.selected = state.selected.map(sel => {
+    const found = findCourseDeep(sel.course.id);
+    if (found) {
+      return {
+        ...sel,
+        course: {...found.course},
+        deptId: found.dept.id,
+        procId: found.proc.id,
+      };
+    }
+    return null;
+  }).filter(Boolean);
+  const dropped = beforeCount - state.selected.length;
+  if (dropped > 0) {
+    alert(`마스터에서 삭제된 과목 ${dropped}건이 작성 중인 견적에서 함께 빠졌습니다.\n금액을 다시 확인해 주세요.`);
+  }
+  // ensure selectedDept/selectedProc still valid
+  if (!MASTER.departments.find(d => d.id === state.selectedDept)) {
+    state.selectedDept = MASTER.departments[0]?.id || null;
+  }
+  const d = getCurrentDept();
+  if (!d || !d.processes.find(p => p.id === state.selectedProc)) {
+    state.selectedProc = d?.processes[0]?.id || null;
+  }
+  renderMentorSelects();
+  render();
+}
+
+// ----- master tabs -----
+function switchMasterTab(tab) {
+  state.masterEditTab = tab;
+  document.querySelectorAll('.master-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tabCourses').style.display = tab === 'courses' ? 'block' : 'none';
+  document.getElementById('tabMentors').style.display = tab === 'mentors' ? 'block' : 'none';
+  document.getElementById('tabPolicies').style.display = tab === 'policies' ? 'block' : 'none';
+  document.getElementById('tabAddons').style.display = tab === 'addons' ? 'block' : 'none';
+  if (tab === 'mentors') renderMentorsEditor();
+  if (tab === 'policies') renderPoliciesEditor();
+  if (tab === 'addons') renderAddonsEditor();
+}
+document.querySelectorAll('.master-tab').forEach(b => {
+  b.onclick = () => switchMasterTab(b.dataset.tab);
+});
+
+// ----- mentors editor -----
+function renderMentorsEditor() {
+  const el = document.getElementById('masterMentors');
+  el.innerHTML = '';
+  (MASTER.mentors || []).forEach((m, i) => {
+    const row = document.createElement('div');
+    row.className = 'addon-row';
+    row.style.gridTemplateColumns = '1fr 1.4fr 32px';
+    row.innerHTML = `
+      <input type="text" value="${esc(m.name)}" placeholder="이름">
+      <input type="text" value="${esc(m.email)}" placeholder="로그인 이메일 (선택)">
+      <button class="del-row" title="삭제">×</button>
+    `;
+    const [nameInp, mailInp] = row.querySelectorAll('input');
+    nameInp.onchange = e => { MASTER.mentors[i].name = e.target.value.trim(); saveMaster(); render(); };
+    mailInp.onchange = e => { MASTER.mentors[i].email = e.target.value.trim().toLowerCase(); saveMaster(); render(); };
+    [nameInp, mailInp].forEach(inp => {
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } if (e.key === 'Escape') inp.blur(); };
+    });
+    row.querySelector('.del-row').onclick = () => {
+      if (!confirm(`"${m.name || '이름 없음'}"을(를) 삭제할까요?`)) return;
+      MASTER.mentors.splice(i, 1);
+      saveMaster(); renderMentorsEditor(); render();
+    };
+    el.appendChild(row);
+  });
+}
+function addMentor() {
+  MASTER.mentors = MASTER.mentors || [];
+  MASTER.mentors.push({ name: '', email: '' });
+  saveMaster();
+  renderMentorsEditor();
+  // focus the new input
+  setTimeout(() => {
+    const inputs = document.getElementById('masterMentors').querySelectorAll('input');
+    if (inputs.length > 0) inputs[inputs.length - 1].focus();
+  }, 50);
+}
+
+// ----- policies editor -----
+function renderPoliciesEditor() {
+  ['guide','payment'].forEach(kind => {
+    const el = document.getElementById(kind === 'guide' ? 'masterGuide' : 'masterPayment');
+    el.innerHTML = '';
+    const list = MASTER.policies[kind] || [];
+    list.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'policy-row';
+      const showWarnBtn = kind === 'guide';
+      row.innerHTML = `
+        <div class="idx">${i+1}</div>
+        <textarea class="${p.warn ? 'warn' : ''}" rows="2">${esc(p.text)}</textarea>
+        ${showWarnBtn ? `<button class="warn-btn ${p.warn ? 'on' : ''}" title="경고색 토글">⚠</button>` : '<div></div>'}
+        <button class="del-row" title="삭제">×</button>
+      `;
+      const ta = row.querySelector('textarea');
+      ta.oninput = e => { p.text = e.target.value; saveMaster(); };
+      if (showWarnBtn) {
+        row.querySelector('.warn-btn').onclick = () => {
+          p.warn = !p.warn;
+          saveMaster();
+          renderPoliciesEditor();
+        };
+      }
+      row.querySelector('.del-row').onclick = () => {
+        if (!confirm('이 조항을 삭제할까요?')) return;
+        list.splice(i, 1);
+        saveMaster();
+        renderPoliciesEditor();
+      };
+      el.appendChild(row);
+    });
+  });
+}
+function addPolicy(kind) {
+  MASTER.policies[kind].push({ text: '', warn: false });
+  saveMaster();
+  renderPoliciesEditor();
+}
+
+// ----- addons editor -----
+function renderAddonsEditor() {
+  ['ddajua','acp'].forEach(kind => {
+    const el = document.getElementById(kind === 'ddajua' ? 'masterDdajua' : 'masterAcp');
+    el.innerHTML = '';
+    const list = MASTER.addons[kind] || [];
+    list.forEach((o, i) => {
+      const row = document.createElement('div');
+      row.className = 'addon-row';
+      row.innerHTML = `
+        <input type="text" value="${esc(o.label)}" placeholder="옵션명">
+        <input type="number" value="${o.fee||0}" placeholder="가격">
+        <button class="del-row" title="삭제">×</button>
+      `;
+      const inputs = row.querySelectorAll('input');
+      inputs[0].onchange = e => { o.label = e.target.value; saveMaster(); };
+      inputs[1].onchange = e => { o.fee = Number(e.target.value)||0; saveMaster(); };
+      row.querySelector('.del-row').onclick = () => {
+        if (!confirm('이 옵션을 삭제할까요?')) return;
+        list.splice(i, 1);
+        saveMaster();
+        renderAddonsEditor();
+      };
+      el.appendChild(row);
+    });
+  });
+}
+function addAddon(kind) {
+  MASTER.addons[kind].push({ label: '', fee: 0 });
+  saveMaster();
+  renderAddonsEditor();
+}
+function getMasterDept() { return MASTER.departments.find(d => d.id === state.masterEditDept); }
+function getMasterProc() {
+  const d = getMasterDept();
+  return d?.processes.find(p => p.id === state.masterEditProc);
+}
+
+function renderMasterModal() {
+  // ----- DEPTS COLUMN -----
+  const depsEl = document.getElementById('masterDeps');
+  depsEl.innerHTML = '';
+  MASTER.departments.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'list-item' + (d.id === state.masterEditDept ? ' active' : '');
+    el.innerHTML = `<div class="label-wrap"><input class="rename" value="${esc(d.name)}"></div><button class="del-x" title="삭제">×</button>`;
+    el.onclick = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.classList.contains('del-x')) return;
+      state.masterEditDept = d.id;
+      state.masterEditProc = d.processes[0]?.id || null;
+      renderMasterModal();
+    };
+    el.querySelector('input').onchange = (e) => { d.name = e.target.value; saveMaster(); };
+    el.querySelector('input').onclick = (e) => e.stopPropagation();
+    el.querySelector('.del-x').onclick = (e) => {
+      e.stopPropagation();
+      if (!confirm(`"${d.name}" 학과 전체를 삭제할까요?\n(이 학과의 모든 과정·과목이 사라집니다)`)) return;
+      MASTER.departments = MASTER.departments.filter(x => x.id !== d.id);
+      if (state.masterEditDept === d.id) {
+        state.masterEditDept = MASTER.departments[0]?.id || null;
+        state.masterEditProc = getMasterDept()?.processes[0]?.id || null;
+      }
+      saveMaster(); renderMasterModal();
+    };
+    depsEl.appendChild(el);
+  });
+  const addDep = document.createElement('div');
+  addDep.className = 'list-add';
+  addDep.textContent = '+ 학과 추가';
+  addDep.onclick = () => {
+    const name = prompt('새 학과 이름:');
+    if (!name) return;
+    const newId = uid('d');
+    MASTER.departments.push({id: newId, name, processes: [{id: newId+'p0', name: '기본', duration: '', courses: []}]});
+    state.masterEditDept = newId;
+    state.masterEditProc = newId+'p0';
+    saveMaster(); renderMasterModal();
+  };
+  depsEl.appendChild(addDep);
+
+  // ----- PROCESSES COLUMN -----
+  const procsEl = document.getElementById('masterProcs');
+  procsEl.innerHTML = '';
+  const dept = getMasterDept();
+  if (!dept) {
+    procsEl.innerHTML = '<div style="padding:14px; color:#9C9890; font-size:11px;">학과를 선택하세요.</div>';
+  } else {
+    dept.processes.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'list-item' + (p.id === state.masterEditProc ? ' active' : '');
+      el.innerHTML = `
+        <div class="label-wrap">
+          <input class="rename" value="${esc(p.name)}" placeholder="과정명">
+          <input class="rename-meta" value="${esc(p.duration)}" placeholder="기간 (예: 6개월)">
+        </div>
+        <button class="del-x" title="삭제">×</button>
+      `;
+      el.onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.classList.contains('del-x')) return;
+        state.masterEditProc = p.id;
+        renderMasterModal();
+      };
+      const inputs = el.querySelectorAll('input');
+      inputs[0].onchange = (e) => { p.name = e.target.value; saveMaster(); };
+      inputs[1].onchange = (e) => { p.duration = e.target.value; saveMaster(); };
+      inputs.forEach(i => i.onclick = (e) => e.stopPropagation());
+      el.querySelector('.del-x').onclick = (e) => {
+        e.stopPropagation();
+        if (!confirm(`"${p.name}" 과정을 삭제할까요?\n(이 과정의 모든 과목이 사라집니다)`)) return;
+        dept.processes = dept.processes.filter(x => x.id !== p.id);
+        if (state.masterEditProc === p.id) state.masterEditProc = dept.processes[0]?.id || null;
+        saveMaster(); renderMasterModal();
+      };
+      procsEl.appendChild(el);
+    });
+    const addProc = document.createElement('div');
+    addProc.className = 'list-add';
+    addProc.textContent = '+ 과정 추가';
+    addProc.onclick = () => {
+      const name = prompt('새 과정 이름 (예: 정규과정 / 반정규 / 브랜딩):');
+      if (!name) return;
+      const dur = prompt('기간 (예: 6개월) - 비워도 됨:') || '';
+      const newId = uid(dept.id + 'p');
+      dept.processes.push({id: newId, name, duration: dur, courses: []});
+      state.masterEditProc = newId;
+      saveMaster(); renderMasterModal();
+    };
+    procsEl.appendChild(addProc);
+  }
+
+  // ----- COURSES COLUMN -----
+  const coursesEl = document.getElementById('masterCourses');
+  coursesEl.innerHTML = '';
+  const proc = getMasterProc();
+  if (!proc) {
+    coursesEl.innerHTML = '<p style="color:#9C9890; font-size:12px;">과정을 선택하세요.</p>';
+    return;
+  }
+
+  const header = document.createElement('div');
+  header.className = 'master-row';
+  header.style.fontSize = '10px';
+  header.style.color = '#9C9890';
+  header.style.letterSpacing = '0.5px';
+  header.innerHTML = `<div>과목명</div><div>설명</div><div>가격(원)</div><div></div>`;
+  coursesEl.appendChild(header);
+
+  proc.courses.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'master-row';
+    row.innerHTML = `
+      <input type="text" value="${esc(c.subject)}" placeholder="과목명 (입력하면 자동 채움)">
+      <input type="text" value="${esc(c.desc)}" placeholder="설명">
+      <input type="number" value="${c.fee||0}" placeholder="가격">
+      <button class="del-row" title="삭제">×</button>
+    `;
+    const inputs = row.querySelectorAll('input');
+    // Subject: autofill desc + fee when matching existing course
+    inputs[0].onchange = e => {
+      c.subject = e.target.value.trim();
+      const match = findExistingCourse(c.subject, c.id);
+      if (match && (!c.desc || !c.fee)) {
+        if (!c.desc) { c.desc = match.desc; inputs[1].value = match.desc; }
+        if (!c.fee) { c.fee = match.fee; inputs[2].value = match.fee; }
+      }
+      saveMaster();
+    };
+    inputs[1].onchange = e => { c.desc = e.target.value; saveMaster(); };
+    inputs[2].onchange = e => { c.fee = Number(e.target.value)||0; saveMaster(); };
+    // Enter to commit and move to next input / ESC to blur
+    inputs.forEach((inp, idx) => {
+      inp.onkeydown = (ev) => {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          inp.blur();
+          if (idx < inputs.length - 1) inputs[idx+1].focus();
+        } else if (ev.key === 'Escape') {
+          ev.preventDefault();
+          inp.blur();
+        }
+      };
+    });
+    row.querySelector('.del-row').onclick = () => {
+      if (!confirm(`"${c.subject}" 과목을 삭제할까요?`)) return;
+      proc.courses = proc.courses.filter(x => x.id !== c.id);
+      saveMaster(); renderMasterModal();
+    };
+    coursesEl.appendChild(row);
+  });
+
+  const addRow = document.createElement('button');
+  addRow.className = 'bulk-add';
+  addRow.style.marginTop = '8px';
+  addRow.textContent = '+ 과목 추가';
+  addRow.onclick = () => {
+    proc.courses.push({id: uid('c'), subject: '새 과목', desc: '', fee: 0});
+    saveMaster(); renderMasterModal();
+  };
+  coursesEl.appendChild(addRow);
+}
+
+function exportMaster() {
+  const blob = new Blob([JSON.stringify(MASTER, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('data.json 파일을 다운로드했습니다');
+}
+function importMaster(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const json = migrate(JSON.parse(ev.target.result));
+      if (!json.departments) throw new Error('형식 오류');
+      MASTER = json;
+      saveMaster();
+      state.masterEditDept = MASTER.departments[0]?.id || null;
+      state.masterEditProc = getMasterDept()?.processes[0]?.id || null;
+      renderMasterModal();
+      toast('마스터 데이터를 불러왔습니다');
+    } catch(err) {
+      alert('JSON 파일을 읽을 수 없습니다: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+function resetMaster() {
+  if (!confirm('마스터 데이터를 초기 상태로 되돌릴까요?\n(브라우저에 저장된 모든 수정사항이 사라집니다)')) return;
+  localStorage.removeItem('sbsMasterV3');
+  MASTER = migrate(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  state.masterEditDept = MASTER.departments[0]?.id || null;
+  state.masterEditProc = getMasterDept()?.processes[0]?.id || null;
+  renderMasterModal();
+  toast('초기 마스터로 복원되었습니다');
+}
+
+// ============ SAVED QUOTES (FIRESTORE) ============
+let HISTORY_CACHE = [];
+
+async function fetchHistory() {
+  try {
+    const snap = await db.collection('sbs_quotes').orderBy('savedAt', 'desc').limit(300).get();
+    HISTORY_CACHE = snap.docs.map(doc => {
+      const d = doc.data();
+      return { ...d, id: doc.id,
+        finalTotal: Number(d.finalTotal) || 0,
+        subtotal: Number(d.subtotal) || 0,
+        addonTotal: Number(d.addonTotal) || 0,
+        totalDiscount: Number(d.totalDiscount) || 0,
+        courseCount: Number(d.courseCount) || 0,
+      };
+    });
+    return HISTORY_CACHE;
+  } catch (e) {
+    console.warn('Firestore 견적 이력 로드 실패', e);
+    return HISTORY_CACHE;
+  }
+}
+function loadHistory() { return HISTORY_CACHE; }
+async function saveQuoteToServer(snap) {
+  const docData = JSON.parse(JSON.stringify(snap));
+  await db.collection('sbs_quotes').doc(snap.id).set(docData);
+}
+async function deleteQuoteFromServer(id) {
+  await db.collection('sbs_quotes').doc(id).delete();
+}
+
+async function generateAndUploadPDF(quoteId, studentName) {
+  try {
+    const el = document.getElementById('quotation');
+    if (!el) return null;
+    toast('PDF 생성 중...');
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', logging: false });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgW = 210, pageH = 297;
+    // 세로로 긴 견적서는 폭을 줄이는 대신 A4 여러 장으로 잘라 붙인다
+    const pxPerMm = canvas.width / imgW;
+    const slicePx = Math.floor(pageH * pxPerMm);
+    let offset = 0, page = 0;
+    while (offset < canvas.height) {
+      const h = Math.min(slicePx, canvas.height - offset);
+      const part = document.createElement('canvas');
+      part.width = canvas.width;
+      part.height = h;
+      const ctx = part.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, part.width, part.height);
+      ctx.drawImage(canvas, 0, offset, canvas.width, h, 0, 0, canvas.width, h);
+      if (page > 0) pdf.addPage();
+      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, imgW, h / pxPerMm);
+      offset += h;
+      page++;
+    }
+    const blob = pdf.output('blob');
+    const ref = storage.ref(`quotation_pdfs/${quoteId}.pdf`);
+    await ref.put(blob, { contentType: 'application/pdf' });
+    const url = await ref.getDownloadURL();
+    toast('PDF 업로드 완료');
+    return url;
+  } catch (e) {
+    console.error('PDF 생성/업로드 실패', e);
+    return null;
+  }
+}
+
+function buildQuoteSnapshot(asNew) {
+  const r = calc();
+  const meta = {
+    student: document.getElementById('student').value.trim(),
+    contact: document.getElementById('contact').value.trim(),
+    mentor: getSelectedMentor(),
+    counselor: getSelectedCounselor(),
+    issued: document.getElementById('issued').value || new Date().toISOString().slice(0,10),
+    program: document.getElementById('program').value.trim(),
+  };
+  const procSummary = getSelectedProcessSummary();
+  const autoProgram = procSummary.map(s => `${s.dept.name} ${s.proc.name}${s.proc.duration ? ' ('+s.proc.duration+')' : ''}`).join(' + ');
+  const programDisplay = meta.program || autoProgram || '';
+  const deptName = procSummary[0]?.dept.name || '';
+
+  return {
+    id: (asNew || !state.editingQuoteId) ? uid('q') : state.editingQuoteId,
+    savedAt: new Date().toISOString(),
+    student: meta.student,
+    contact: meta.contact,
+    mentor: meta.mentor,
+    counselor: meta.counselor,
+    issued: meta.issued,
+    program: programDisplay,
+    deptName,
+    courseCount: r.items.length,
+    subtotal: r.subtotal,
+    totalDiscount: r.freeAmount + r.percentAmount + r.direct,
+    addonTotal: r.addonTotal + r.ddFee,
+    finalTotal: r.finalTotal,
+    docType: state.docType,
+    support: r.support,
+    payable: r.payable,
+    months: r.months,
+    monthlyPayment: r.monthly,
+    // 풀 복원용 데이터
+    snapshot: {
+      selected: state.selected.map(s => ({
+        course: s.course,
+        free: s.free,
+        deptId: s.deptId,
+        procId: s.procId,
+      })),
+      discountMode: state.discountMode,
+      docType: state.docType,
+      percent: state.percent,
+      direct: state.direct,
+      months: state.months,
+      ddajua: state.ddajua,
+      acp: state.acp,
+      promotions: state.promotions,
+      programInput: meta.program,
+    },
+  };
+}
+
+function saveQuoteFlow() {
+  const r = calc();
+  const student = document.getElementById('student').value.trim();
+  if (!student) { alert('학생명을 입력해 주세요.'); document.getElementById('student').focus(); return; }
+  if (r.items.length === 0 && !r.ddObj) { alert('과목을 1개 이상 선택해 주세요.'); return; }
+  if (!getSelectedMentor()) { alert('담당 멘토를 선택해 주세요.'); return; }
+
+  const isEditing = !!state.editingQuoteId;
+  showSaveDialog(isEditing);
+}
+
+function showSaveDialog(isEditing) {
+  const r = calc();
+  const student = document.getElementById('student').value.trim();
+  const contact = document.getElementById('contact').value.trim();
+  const mentor = getSelectedMentor();
+  const counselor = getSelectedCounselor();
+
+  document.getElementById('saveDialogTitle').textContent = isEditing ? '견적 수정 저장' : '견적 저장';
+  document.getElementById('saveDialogMsg').textContent = isEditing
+    ? '이 견적을 어떻게 저장할까요?'
+    : '이 견적을 저장 이력에 추가합니다.';
+
+  document.getElementById('saveDialogSummary').innerHTML = `
+    <div><b>학생</b> &nbsp; ${esc(student)}${contact ? ' &nbsp;·&nbsp; ' + esc(contact) : ''}</div>
+    <div><b>담당 멘토</b> &nbsp; ${esc(mentor) || '—'}${counselor && counselor !== mentor ? ' &nbsp;(상담: ' + esc(counselor) + ')' : ''}</div>
+    <div><b>과목 수</b> &nbsp; ${r.items.length + (r.ddObj ? 1 : 0)}과목 &nbsp;·&nbsp; <b>최종 금액</b> &nbsp; ${fmt(r.finalTotal)}원</div>
+    ${r.isKtp ? `<div><b>국민취업지원제도</b> &nbsp; 지원 ${fmt(r.support)}원 &nbsp;·&nbsp; <b>자비 부담</b> &nbsp; ${fmt(r.payable)}원</div>` : ''}
+    ${r.months >= 2 && r.monthly > 0 ? `<div><b>${r.months}개월 분납</b> &nbsp; 월 ${fmt(r.monthly)}원</div>` : ''}
+  `;
+
+  const footer = document.getElementById('saveDialogFooter');
+  if (isEditing) {
+    footer.innerHTML = `
+      <button class="btn btn-secondary" style="padding:9px 14px;" onclick="closeSaveDialog()">취소</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" style="padding:9px 14px;" onclick="confirmSave('new')">새 견적으로 저장</button>
+        <button class="btn btn-primary" style="padding:9px 14px;" onclick="confirmSave('overwrite')">덮어쓰기</button>
+      </div>
+    `;
+  } else {
+    footer.innerHTML = `
+      <button class="btn btn-secondary" style="padding:9px 14px;" onclick="closeSaveDialog()">취소</button>
+      <button class="btn btn-primary" style="padding:9px 14px;" onclick="confirmSave('new')">저장</button>
+    `;
+  }
+  document.getElementById('saveDialog').classList.add('show');
+}
+function closeSaveDialog() { document.getElementById('saveDialog').classList.remove('show'); }
+
+async function confirmSave(mode) {
+  const snap = buildQuoteSnapshot(mode === 'new');
+  const btns = document.querySelectorAll('#saveDialogFooter button');
+  btns.forEach(b => b.disabled = true);
+  try {
+    // PDF 생성 + Storage 업로드
+    const pdfUrl = await generateAndUploadPDF(snap.id, snap.student);
+    if (pdfUrl) snap.pdfUrl = pdfUrl;
+    // Firestore에 저장
+    await saveQuoteToServer(snap);
+    state.editingQuoteId = snap.id;
+    HISTORY_CACHE = HISTORY_CACHE.filter(h => h.id !== snap.id);
+    HISTORY_CACHE.unshift(snap);
+    updateEditingBanner();
+    closeSaveDialog();
+    toast(mode === 'overwrite' ? '견적이 덮어쓰기 저장되었습니다' : '견적이 저장되었습니다 (전체 공유)');
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+async function openHistory() {
+  document.getElementById('historyModal').classList.add('show');
+  // 캐시된 데이터 즉시 표시
+  if (HISTORY_CACHE.length > 0) {
+    renderHistory();
+  } else {
+    document.getElementById('historyList').innerHTML = '<div class="history-empty">불러오는 중...</div>';
+  }
+  // 백그라운드로 최신 데이터 가져오기
+  try {
+    await fetchHistory();
+    renderHistory();
+  } catch(e) {
+    if (HISTORY_CACHE.length === 0) {
+      document.getElementById('historyList').innerHTML = '<div class="history-empty">서버 연결 실패</div>';
+    }
+  }
+}
+function closeHistory() { document.getElementById('historyModal').classList.remove('show'); }
+
+let historyMentorFilter = '__all__';
+
+function renderMentorTabs(hist) {
+  const wrap = document.getElementById('mentorTabs');
+  if (!wrap) return;
+  // 저장된 견적에서 멘토 목록 추출 (마스터 명단 순서 우선, 명단에 없는 멘토는 뒤에)
+  const counts = {};
+  hist.forEach(h => {
+    const m = h.mentor || '(미지정)';
+    counts[m] = (counts[m] || 0) + 1;
+  });
+  const roster = mentorNames();
+  const inRoster = roster.filter(m => counts[m]);
+  const extra = Object.keys(counts).filter(m => !roster.includes(m)).sort();
+  const mentors = [...inRoster, ...extra];
+  // 현재 필터가 사라졌으면 전체로 복귀
+  if (historyMentorFilter !== '__all__' && !counts[historyMentorFilter]) historyMentorFilter = '__all__';
+
+  wrap.innerHTML = '';
+  const mkTab = (label, value, cnt) => {
+    const btn = document.createElement('button');
+    btn.className = 'mentor-tab' + (historyMentorFilter === value ? ' active' : '');
+    btn.innerHTML = `${esc(label)}<span class="cnt">${cnt}</span>`;
+    btn.onclick = () => { historyMentorFilter = value; renderHistory(); };
+    wrap.appendChild(btn);
+  };
+  mkTab('전체', '__all__', hist.length);
+  mentors.forEach(m => mkTab(m, m, counts[m]));
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const all = loadHistory();
+  renderMentorTabs(all);
+  const hist = historyMentorFilter === '__all__'
+    ? all
+    : all.filter(h => (h.mentor || '(미지정)') === historyMentorFilter);
+  list.innerHTML = '';
+  if (hist.length === 0) {
+    list.innerHTML = '<div class="history-empty">저장된 견적이 없습니다.</div>';
+    return;
+  }
+  const header = document.createElement('div');
+  header.className = 'history-header';
+  header.innerHTML = `<div>발행일</div><div>학생</div><div>연락처</div><div>담당멘토 (상담)</div><div style="text-align:right;">최종 금액</div><div></div>`;
+  list.appendChild(header);
+
+  hist.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    // 날짜: ISO 타임스탬프·Date 객체·문자열 모두 처리 → "26.04.15"
+    const shortDate = toShortDate(h.issued || h.savedAt);
+    // 멘토(상담) 합치기
+    let mentorStr = h.mentor || '—';
+    if (h.counselor && h.counselor !== h.mentor) mentorStr += ` (${h.counselor})`;
+    // 금액: 시트에서 문자열로 올 수 있으므로 Number 변환
+    const isKtp = h.docType === 'ktp';
+    const amount = isKtp ? (Number(h.payable) || 0) : (Number(h.finalTotal) || 0);
+    const pdfHref = safeUrl(h.pdfUrl);
+    row.innerHTML = `
+      <div class="col-date">${esc(shortDate)}</div>
+      <div class="col-student">${esc(h.student) || '—'}</div>
+      <div class="col-contact">${esc(h.contact) || '—'}</div>
+      <div class="col-mentor">${esc(mentorStr)}</div>
+      <div class="col-amount">${fmt(amount)}${isKtp ? '<span class="ktp-tag">국취</span>' : ''}</div>
+      <div class="col-actions">
+        ${pdfHref ? `<a href="${esc(pdfHref)}" target="_blank" rel="noopener noreferrer" class="hist-btn" title="PDF 열기" onclick="event.stopPropagation()">📄</a>` : ''}
+        <button class="hist-btn del" data-del="${esc(h.id)}" title="삭제">×</button>
+      </div>
+    `;
+    row.onclick = async (e) => {
+      if (e.target.dataset.del) {
+        if (confirm(`"${h.student}" 견적을 삭제할까요? (전체 공유 데이터에서 삭제됩니다)`)) {
+          try {
+            await deleteQuoteFromServer(h.id);
+            HISTORY_CACHE = HISTORY_CACHE.filter(x => x.id !== h.id);
+            renderHistory();
+            toast('견적이 삭제되었습니다');
+          } catch (err) {
+            alert('삭제 실패: ' + err.message);
+          }
+        }
+        return;
+      }
+      restoreQuote(h);
+      closeHistory();
+    };
+    list.appendChild(row);
+  });
+}
+
+function restoreQuote(h) {
+  const snap = h.snapshot;
+  if (!snap) { alert('이 견적은 복원할 수 없는 형식입니다.'); return; }
+  // 복원
+  state.selected = (snap.selected || []).map(s => ({
+    selId: nextSelId++,
+    course: s.course,
+    free: s.free,
+    deptId: s.deptId,
+    procId: s.procId,
+  }));
+  state.discountMode = snap.discountMode || 'free';
+  state.percent = snap.percent || 0;
+  state.direct = snap.direct || 0;
+  state.months = snap.months || 0;
+  state.docType = snap.docType === 'ktp' ? 'ktp' : 'normal';
+  state.ddajua = snap.ddajua || '';
+  state.acp = snap.acp || '';
+  state.promotions = snap.promotions || [];
+  state.editingQuoteId = h.id;
+  // input fields
+  document.getElementById('student').value = h.student || '';
+  document.getElementById('contact').value = h.contact || '';
+  document.getElementById('issued').value = h.issued || '';
+  document.getElementById('program').value = snap.programInput || '';
+  document.getElementById('percentInput').value = snap.percent || 0;
+  document.getElementById('directInput').value = snap.direct || 0;
+  document.getElementById('monthsInput').value = snap.months || 0;
+  applyDocTabs();
+  // mode tabs
+  document.querySelectorAll('.mode-tab').forEach(x => x.classList.toggle('active', x.dataset.mode === state.discountMode));
+  updatePercentFieldUI();
+  // mentor / counselor selects
+  setMentorSelect('mentor', h.mentor);
+  setMentorSelect('counselor', h.counselor);
+  updateEditingBanner();
+  render();
+  toast(`"${h.student}" 견적을 불러왔습니다`);
+}
+
+function setMentorSelect(role, name) {
+  if (!name) return;
+  const sel = document.getElementById(role + 'Select');
+  const cust = document.getElementById(role + 'Custom');
+  if ([...sel.options].some(o => o.value === name)) {
+    sel.value = name;
+    cust.style.display = 'none';
+    cust.value = '';
+  } else {
+    sel.value = '__custom__';
+    cust.style.display = 'block';
+    cust.value = name;
+  }
+}
+
+function cancelEditing() {
+  if (!confirm('수정 모드를 종료하고 새 견적으로 시작할까요? (현재 작성 중인 내용은 사라집니다)')) return;
+  state.editingQuoteId = null;
+  resetAllSilent();
+  updateEditingBanner();
+}
+function resetAllSilent() {
+  state.selected = [];
+  state.percent = 0; state.direct = 0; state.months = 0;
+  state.docType = 'normal';
+  state.ddajua = ''; state.acp = '';
+  state.discountMode = 'free';
+  state.promotions = [];
+  document.getElementById('student').value = '';
+  document.getElementById('contact').value = '';
+  document.getElementById('program').value = '';
+  document.getElementById('percentInput').value = 0;
+  document.getElementById('directInput').value = 0;
+  document.getElementById('monthsInput').value = 0;
+  applyDocTabs();
+  document.getElementById('mentorCustom').value = '';
+  document.getElementById('counselorCustom').value = '';
+  document.getElementById('mentorCustom').style.display = 'none';
+  document.getElementById('counselorCustom').style.display = 'none';
+  document.querySelectorAll('.mode-tab').forEach(x => x.classList.toggle('active', x.dataset.mode === 'free'));
+  updatePercentFieldUI();
+  render();
+  applyStaffDefaultSelects();
+}
+
+function updateEditingBanner() {
+  const banner = document.getElementById('editingBanner');
+  const text = document.getElementById('editingBannerText');
+  if (state.editingQuoteId) {
+    const h = HISTORY_CACHE.find(x => x.id === state.editingQuoteId);
+    if (h) {
+      banner.style.display = 'flex';
+      text.textContent = `📝 수정 중: ${h.student} (${(h.issued||'').replace(/-/g,'.')})`;
+      return;
+    }
+  }
+  banner.style.display = 'none';
+}
+
+function exportHistory() {
+  const hist = loadHistory();
+  if (hist.length === 0) { alert('저장된 견적이 없습니다.'); return; }
+  const blob = new Blob([JSON.stringify(hist, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sbs_quotes_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('견적 이력을 내보냈습니다');
+}
+function importHistory(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const json = JSON.parse(ev.target.result);
+      if (!Array.isArray(json)) throw new Error('형식 오류');
+      if (!confirm(`${json.length}개의 견적을 서버에 업로드합니다. 계속할까요?\n(같은 ID가 있으면 덮어씌워집니다)`)) return;
+      let success = 0;
+      const CHUNK = 300;
+      for (let i = 0; i < json.length; i += CHUNK) {
+        const slice = json.slice(i, i + CHUNK).filter(q => q && q.id);
+        if (slice.length === 0) continue;
+        const batch = db.batch();
+        slice.forEach(q => {
+          batch.set(db.collection('sbs_quotes').doc(String(q.id)), JSON.parse(JSON.stringify(q)));
+        });
+        try { await batch.commit(); success += slice.length; }
+        catch (err) { console.error('업로드 실패', err); }
+      }
+      await fetchHistory();
+      renderHistory();
+      toast(`${success}/${json.length}개 업로드 완료`);
+    } catch(err) {
+      alert('파일을 읽을 수 없습니다: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ============ PRINT ============
+let printRequested = false;
+function printQuotation() {
+  const r = calc();
+  if (r.items.length === 0 && !r.ddObj) { alert('과목을 1개 이상 선택해 주세요.'); return; }
+  printRequested = true;
+  window.print();
+}
+// 인쇄 버튼을 눌러 대화상자를 닫은 경우에만 저장을 권유한다
+window.addEventListener('afterprint', () => {
+  if (!printRequested) return;
+  printRequested = false;
+  setTimeout(() => {
+    const r = calc();
+    if (r.items.length === 0 && !r.ddObj) return;
+    if (!document.getElementById('student').value.trim()) return;
+    if (confirm('이 견적을 저장 이력에 추가할까요?')) saveQuoteFlow();
+  }, 300);
+});
+
+// ============ INIT ============
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('masterModal');
+    if (modal.classList.contains('show') && !e.target.matches('input, textarea')) {
+      closeMaster();
+    }
+  }
+});
+function showCurrentUserBadge() {
+  const who = document.getElementById('fabWho');
+  if (!who) return;
+  const me = resolveStaffName();
+  if (CURRENT_USER && CURRENT_USER.email) {
+    who.textContent = me ? `${me} 님` : CURRENT_USER.email;
+    who.title = CURRENT_USER.email;
+    who.style.display = 'block';
+  } else {
+    who.style.display = 'none';
+  }
+}
+
+async function initApp() {
+  try {
+    await loadMaster();
+  } catch (e) {
+    console.error('마스터 로드 실패', e);
+    MASTER = migrate(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+    masterOffline = true;
+    toast('마스터를 불러오지 못해 기본값으로 시작합니다');
+  }
+  state.selectedDept = MASTER.departments[0]?.id || null;
+  state.selectedProc = getCurrentDept()?.processes[0]?.id || null;
+  document.getElementById('issued').value = new Date().toISOString().slice(0,10);
+  render();
+  showCurrentUserBadge();
+  applyStaffDefaultSelects();
+  // 백그라운드로 이력 미리 로드
+  fetchHistory().catch(()=>{});
+}
+</script>
+</body>
+</html>
