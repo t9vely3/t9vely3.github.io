@@ -562,8 +562,10 @@ function source(id){ return APP_FILES[id] || ""; }
    화면마다 한 번만 적용하고, 그 뒤 사용자가 직접 바꾼 값은 건드리지 않는다. */
 var IDENT = {
   // 수강생 관리파일: 담당 멘토 필터를 로그인한 사람으로
-  manage: function(nm){ return 'typeof MENTORS!=="undefined" && MENTORS.indexOf(' + nm + ')>=0 ' +
-    '? (currentSelectedMentor=' + nm + ', renderAllMentorUIs(), filterList(), true) : false'; },
+  manage: function(nm, admin){ return '(function(){ if(typeof MENTORS==="undefined") return false;' +
+    (admin ? 'isAuthenticatedAdmin=true;' : '') +   // 관리자는 화면 안의 관리 비밀번호를 다시 묻지 않음
+    'if(MENTORS.indexOf(' + nm + ')<0) return ' + (admin ? 'true' : 'false') + ';' +
+    'currentSelectedMentor=' + nm + '; renderAllMentorUIs(); filterList(); return true; })()'; },
   // 수강생 대시보드: 수강생 목록의 멘토 탭을 로그인한 사람으로 눌러 준다
   schedule: function(nm){ return '(function(){ var nm=' + nm + ';' +
     'var hit=function(sel){ return [].slice.call(document.querySelectorAll(sel)).filter(function(x){' +
@@ -581,7 +583,8 @@ var IDENT = {
 function applyIdent(id, f){
   var mk = IDENT[id], nm = SSO && SSO.profile && SSO.profile.name;
   if(!mk || !nm || f._ident) return;
-  var code = mk(JSON.stringify(nm)), tries = 0;
+  var isAdmin = !!(SSO.profile && SSO.profile.role === "admin");
+  var code = mk(JSON.stringify(nm), isAdmin), tries = 0;
   var tick = function(){
     if(f._ident || tries++ > 14) return;
     var ok = false;

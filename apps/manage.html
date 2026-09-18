@@ -680,6 +680,12 @@ button { outline: none; cursor: pointer; }
 .search-kbd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: 700; color: var(--text-soft); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
 
 .sidebar-mentors { padding: 4px 14px 10px; }
+.cat-rows { display: flex; flex-direction: column; gap: 6px; max-height: 44vh; overflow: auto; }
+.cat-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto auto auto; gap: 6px; align-items: center; }
+.cat-row.is-del input { text-decoration: line-through; opacity: .5; }
+.cat-cnt { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+.cat-add { display: flex; gap: 6px; }
+.cat-hint { font-size: 12px; color: var(--text-tertiary); line-height: 1.6; margin-top: 10px; background: var(--bg-soft); border-radius: 8px; padding: 10px 12px; }
 .mentor-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .mentor-manage-btn { width: 18px; height: 18px; border: 0; background: transparent; color: var(--text-soft); display: inline-flex; align-items: center; justify-content: center; padding: 0; border-radius: 4px; transition: all .15s; }
 .mentor-manage-btn:hover { color: var(--brand); background: var(--brand-soft); transform: rotate(45deg); }
@@ -2475,7 +2481,7 @@ body.layout-editing .panel-card .panel-ctrl select { pointer-events: auto; }
             <div class="palette-container" id="paletteContainer">
               <div class="palette-actions">
                 <button class="btn btn-outline btn-sm" onclick="openPdfMappingModal()" title="PDF 과목명 매핑 관리">PDF 매핑</button>
-                <button class="btn btn-outline btn-sm" onclick="requireManageAuth('addCat')">+ 탭</button>
+                <button class="btn btn-outline btn-sm" onclick="requireManageAuth('cats')">학과 탭 관리</button>
                 <button class="btn btn-outline btn-sm" onclick="requireManageAuth('delete')">삭제 모드</button>
                 <button class="btn btn-brand btn-sm" onclick="requireManageAuth('add')">+ 과목</button>
               </div>
@@ -4059,6 +4065,7 @@ function executeManageAction(action) {
   if (action === 'trash') openTrashModal();
   else if (action === 'add') openSubjectAddModal();
   else if (action === 'addCat') openCategoryAddModal();
+  else if (action === 'cats') openCategoryManageModal();
   else if (action === 'mentor') openMentorManageModal();
   else if (action === 'delete') {
     isDeleteMode = !isDeleteMode;
@@ -5253,6 +5260,78 @@ function saveCustomCategory() {
   currentPaletteTab = name;
   renderPalette();
   showToast('카테고리 추가됨', 'success');
+}
+
+/* ============ 학과 탭 관리: 이름 수정 · 순서 · 삭제 ============ */
+let CAT_EDIT = null;
+function openCategoryManageModal() {
+  CAT_EDIT = Object.keys(COURSE_SUBJECTS).map(c => ({ orig: c, name: c, del: false }));
+  document.getElementById('subjectManageTitle').innerText = '학과 탭 관리';
+  renderCategoryManage();
+  document.getElementById('subjectManageModal').classList.add('show');
+}
+function catSync() {
+  document.querySelectorAll('#catRows [data-ci]').forEach(row => {
+    CAT_EDIT[+row.dataset.ci].name = row.querySelector('input').value;
+  });
+}
+function renderCategoryManage() {
+  const rows = CAT_EDIT.map((c, i) => {
+    const cnt = c.orig ? (COURSE_SUBJECTS[c.orig] || []).length : 0;
+    return `<div class="cat-row ${c.del ? 'is-del' : ''}" data-ci="${i}">
+      <input type="text" class="form-control" value="${escapeHTML(c.name)}" ${c.del ? 'disabled' : ''}>
+      <span class="cat-cnt">과목 ${cnt}</span>
+      <button type="button" class="btn btn-outline btn-sm" onclick="catMove(${i},-1)" ${i ? '' : 'disabled'} title="위로">▲</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="catMove(${i},1)" ${i < CAT_EDIT.length - 1 ? '' : 'disabled'} title="아래로">▼</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="catToggleDel(${i})">${c.del ? '되돌리기' : '삭제'}</button>
+    </div>`;
+  }).join('');
+  document.getElementById('subjectManageBody').innerHTML = `
+    <div class="cat-rows" id="catRows">${rows || '<div class="cat-cnt">학과 탭이 없습니다.</div>'}</div>
+    <div class="form-group" style="margin-top:12px;"><label class="form-label">새 학과 탭 추가</label>
+      <div class="cat-add"><input type="text" class="form-control" id="newCatName2" placeholder="예: 바이브(자연어)">
+      <button type="button" class="btn btn-outline btn-sm" onclick="catAdd()">추가</button></div>
+    </div>
+    <div class="cat-hint">이름을 고치면 그 탭에 들어 있던 과목이 그대로 따라옵니다. 탭을 삭제하면 그 탭의 과목 목록만 사라지고, 이미 학생 일정에 배정해 둔 과목은 그대로 남습니다.</div>
+    <div class="modal-actions"><button class="btn btn-brand" onclick="saveCategoryManage()">저장</button></div>`;
+}
+function catMove(i, d) {
+  catSync();
+  const j = i + d; if (j < 0 || j >= CAT_EDIT.length) return;
+  const tmp = CAT_EDIT[i]; CAT_EDIT[i] = CAT_EDIT[j]; CAT_EDIT[j] = tmp;
+  renderCategoryManage();
+}
+function catToggleDel(i) { catSync(); CAT_EDIT[i].del = !CAT_EDIT[i].del; renderCategoryManage(); }
+function catAdd() {
+  catSync();
+  const v = (document.getElementById('newCatName2').value || '').trim();
+  if (!v) return;
+  if (CAT_EDIT.some(c => !c.del && c.name.trim() === v)) { customAlert('이미 있는 학과 탭입니다.'); return; }
+  CAT_EDIT.push({ orig: null, name: v, del: false });
+  renderCategoryManage();
+}
+function saveCategoryManage() {
+  catSync();
+  const keep = CAT_EDIT.filter(c => !c.del);
+  const names = keep.map(c => c.name.trim());
+  if (names.some(n => !n)) { customAlert('빈 이름이 있습니다.'); return; }
+  if (new Set(names).size !== names.length) { customAlert('같은 이름의 탭이 두 개 있습니다.'); return; }
+  const dels = CAT_EDIT.filter(c => c.del);
+  const apply = () => {
+    const next = {};
+    keep.forEach(c => { next[c.name.trim()] = c.orig ? (COURSE_SUBJECTS[c.orig] || []) : []; });
+    COURSE_SUBJECTS = next;
+    saveSubjectsToStorage();
+    syncSubjectsToFirestore();
+    if (!COURSE_SUBJECTS[currentPaletteTab]) currentPaletteTab = Object.keys(COURSE_SUBJECTS)[0] || '';
+    document.getElementById('subjectManageModal').classList.remove('show');
+    renderPalette();
+    showToast('학과 탭을 저장했습니다', 'success');
+  };
+  if (dels.length) {
+    const sum = dels.map(c => `'${c.name.trim()}'(과목 ${(COURSE_SUBJECTS[c.orig] || []).length}개)`).join(', ');
+    customConfirm(`${sum} 탭을 삭제할까요? 그 탭의 과목 목록도 함께 사라집니다.`, ok => { if (ok) apply(); });
+  } else apply();
 }
 
 function checkStudentSelected(e) {
