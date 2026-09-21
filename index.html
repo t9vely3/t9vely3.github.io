@@ -751,8 +751,14 @@ function renderTop(){
 }
 /* 새 공지 배지: NEWS[업무] = 안 읽은 공지 수 */
 function newsOf(src){ return (typeof NEWS !== "undefined" && NEWS[src]) || 0; }
-function nb(src){ var n = newsOf(src); return n ? '<b class="nbadge" title="확인하지 않은 공지 '+n+'건">N</b>' : ''; }
-function nbGroup(list){ return list.some(function(a){ return newsOf(a.src); }) ? '<b class="nbadge" title="새 공지">N</b>' : ''; }
+function freshOf(src){ return (typeof FRESH !== "undefined" && FRESH[src]) || 0; }
+function hasNew(src){ return newsOf(src) > 0 || freshOf(src) > 0; }
+function nb(src){
+  if(!hasNew(src)) return '';
+  var tip = newsOf(src) ? '확인하지 않은 공지 ' + newsOf(src) + '건' : '24시간 안에 올라온 새 공지 ' + freshOf(src) + '건';
+  return '<b class="nbadge" title="' + tip + '">N</b>';
+}
+function nbGroup(list){ return list.some(function(a){ return hasNew(a.src); }) ? '<b class="nbadge" title="새 공지">N</b>' : ''; }
 function renderNews(){
   var el = $("#newsBar"); if(!el) return;
   var src = Object.keys(typeof NEWS !== "undefined" ? NEWS : {}).filter(function(k){ return NEWS[k] && appOf(k) && !appOf(k).hidden; })[0];
@@ -763,7 +769,7 @@ function renderNews(){
   }
   document.querySelectorAll('#groups .tile2[data-a], #recent .rc[data-a]').forEach(function(b){
     var old = b.querySelector(".nbadge"); if(old) old.remove();
-    if(newsOf(b.dataset.a)){ var t = b.querySelector("b"); if(t) t.insertAdjacentHTML("beforeend", nb(b.dataset.a)); }
+    if(hasNew(b.dataset.a)){ var t = b.querySelector("b"); if(t) t.insertAdjacentHTML("beforeend", nb(b.dataset.a)); }
   });
   document.querySelectorAll('#groups .hs').forEach(function(s){
     var h = s.querySelector(".hs-h h2"), old = h && h.querySelector(".nbadge"); if(old) old.remove();
@@ -1547,7 +1553,8 @@ function syncNames(){
   });
 }
 /* ---------- 새 공지 알림(N): 내가 아직 열어 보지 않은 공지 수 ---------- */
-var NEWS = {}, newsUnsub = null;
+var NEWS = {}, FRESH = {}, newsUnsub = null;
+var FRESH_MS = 24 * 60 * 60 * 1000;   // 올라온 지 24시간 안이면 '새 글'
 function watchNews(){
   stopNews();
   var m = master(), h = HP(m.key);
@@ -1556,10 +1563,12 @@ function watchNews(){
     if(!list) return;
     var me = SSO.profile && SSO.profile.name;
     NEWS[m.app] = me ? list.filter(function(n){ return !(n.read && n.read[me]); }).length : 0;
+    var now = Date.now();
+    FRESH[m.app] = list.filter(function(n){ return n.createdAt && now - n.createdAt < FRESH_MS; }).length;
     renderTop(); renderSub(); renderNews();
   });
 }
-function stopNews(){ if(newsUnsub){ try{ newsUnsub(); }catch(e){} newsUnsub = null; } NEWS = {}; }
+function stopNews(){ if(newsUnsub){ try{ newsUnsub(); }catch(e){} newsUnsub = null; } NEWS = {}; FRESH = {}; }
 function enter(){
   SSO._pw = null;   // 비밀번호는 연결이 끝나면 바로 지움
   syncNames();
