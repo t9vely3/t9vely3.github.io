@@ -220,6 +220,21 @@ svg{flex:none}
   .u-act{grid-column:1 / -1;justify-content:flex-start}
 }
 
+/* ================= 새 공지 N 배지 ================= */
+.nbadge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-left:6px;border-radius:99px;
+  background:#ff4d5e;color:#fff;font-size:10px;font-weight:800;font-style:normal;letter-spacing:0;line-height:1;vertical-align:1px;
+  box-shadow:0 0 0 2px color-mix(in srgb,#ff4d5e 25%,transparent);animation:nbpulse 2.4s ease-in-out infinite}
+@keyframes nbpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,#ff4d5e 0%,transparent)}}
+@media (prefers-reduced-motion: reduce){ .nbadge{animation:none} }
+.gnb .sub button .nbadge{margin-left:5px}
+.newsbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 16px;border-radius:var(--radius);
+  background:color-mix(in srgb,#ff4d5e 12%,var(--panel));border:1px solid color-mix(in srgb,#ff4d5e 40%,var(--line))}
+.newsbtn .nbadge{margin:0}
+.newsbtn span b{display:block;font-size:14px}
+.newsbtn small{display:block;font-size:12px;color:var(--muted)}
+.newsbtn .arr{margin-left:auto;color:var(--faint)}
+.newsbtn:hover .arr{color:var(--ink)}
+
 /* ================= 공통 입력·버튼·모달 ================= */
 .f{border:1px solid var(--line2);border-radius:calc(var(--radius) - 4px);padding:8px 10px;font-size:13px;background:var(--panel);min-width:0;width:100%;transition:border-color .15s,box-shadow .15s}
 .f:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
@@ -319,6 +334,7 @@ input[type=color].f{padding:2px;height:34px;cursor:pointer}
             <div><div class="dt" id="helloD"></div><h1 id="helloT">오늘도 수고 많으십니다</h1><p>업무를 골라 들어가세요. 들어간 뒤에도 메뉴에서 바로 다른 업무로 넘어갈 수 있습니다.</p></div>
             <div class="kbd"><span>Alt+0 홈</span><span>Alt+1~9 분류</span></div>
           </div>
+          <div id="newsBar" hidden></div>
           <div id="recentWrap" hidden><div class="sec-t">최근 사용</div></div>
           <div class="recent" id="recent" hidden></div>
           <div class="sec-t">전체 업무</div>
@@ -351,6 +367,7 @@ input[type=color].f{padding:2px;height:34px;cursor:pointer}
    "app": "notice",
    "profiles": "noticeboard_users",
    "members": "noticeboard_meta/members",
+   "news": "noticeboard_notices",
    "cfg": {
     "apiKey": "AIzaSyCQix_uMdvMdGKvo3ZSe7KgIoD7HJEXp0g",
     "authDomain": "noticecheck-80980.firebaseapp.com",
@@ -587,6 +604,30 @@ var IDENT = {
     'var on=b.classList.contains("on") || (b.closest(".mwrap")||{classList:{contains:function(){return false}}}).classList.contains("on");' +
     'if(!on) b.click();' +
     'return true; })()'; },
+  // 3-1팀 퇴근보고: 로그인 계정을 같은 이름의 멘토와 연결.
+  // 인트라넷 관리자면 그 화면의 '팀장' 권한까지 줘서 팀 전체 데이터를 보게 한다.
+  report: function(nm, admin){ return '(function(){ var nm=' + nm + ', admin=' + (admin ? 'true' : 'false') + ';' +
+    'if(typeof S==="undefined"||!S.mentors||typeof Cloud==="undefined") return false;' +
+    'if(!Cloud.on||!Cloud.user) return false;' +
+    'var em=(Cloud.user.email||"").toLowerCase(); if(!em) return false;' +
+    'if(!Array.isArray(S.leaders)) S.leaders=[];' +
+    'if(!S.accounts) S.accounts={};' +
+    'var ch=false;' +
+    'if(admin){' +
+      'if(S.mentors.indexOf(nm)<0){ S.mentors.push(nm); ch=true; }' +
+      'if(S.accounts[em]!==nm){ S.accounts[em]=nm; ch=true; }' +
+      'if(S.leaders.indexOf(em)<0){ S.leaders.push(em); ch=true; }' +
+    '} else {' +
+      'if(!S.accounts[em]){' +
+        'if(S.mentors.indexOf(nm)<0) return false;' +
+        'S.accounts[em]=nm; ch=true;' +
+      '}' +
+    '}' +
+    'if(S.accounts[em]) S.me=S.accounts[em];' +
+    'var ov=document.getElementById("linkOvl"); if(ov) ov.classList.remove("on");' +
+    'if(ch && typeof save==="function") save();' +
+    'syncMentorSelects(); applyPerms(); renderSet();' +
+    'return true; })()'; },
   // 견적서: 담당 멘토·상담자를 로그인한 사람으로
   quote: function(nm){ return '(function(){ if(typeof CURRENT_USER==="undefined"||!CURRENT_USER) return false;' +
     'if(!CURRENT_USER.displayName) CURRENT_USER.displayName=' + nm + ';' +
@@ -645,12 +686,29 @@ function renderTop(){
     '<div class="grp"><button class="g'+(!S.group?' on':'')+'" data-g="" style="--c:var(--faint)">'+svg("home")+'<span>홈</span></button></div>' +
     visGroups().map(function(g){
       var list = appsIn(g.id);
-      return '<div class="grp"><button class="g'+(S.group===g.id?' on':'')+'" data-g="'+g.id+'" data-dd="'+g.id+'" style="--c:'+g.color+'"><i class="d"></i><span>'+esc(g.name)+'</span><span class="cnt">'+list.length+'</span></button>' +
+      return '<div class="grp"><button class="g'+(S.group===g.id?' on':'')+'" data-g="'+g.id+'" data-dd="'+g.id+'" style="--c:'+g.color+'"><i class="d"></i><span>'+esc(g.name)+'</span>'+nbGroup(list)+'<span class="cnt">'+list.length+'</span></button>' +
         '<div class="sub">' + list.map(function(a){
-          return '<button data-a="'+a.src+'" class="'+(S.app===a.src?'on':'')+'" title="'+esc(a.desc)+'">'+esc(a.name)+'</button>';
+          return '<button data-a="'+a.src+'" class="'+(S.app===a.src?'on':'')+'" title="'+esc(a.desc)+'">'+esc(a.name)+nb(a.src)+'</button>';
         }).join("") + '</div></div>';
     }).join("");
   document.querySelectorAll("#skinSeg button").forEach(function(b){ b.classList.toggle("on", b.dataset.skin === SKIN); });
+}
+/* 새 공지 배지: NEWS[업무] = 안 읽은 공지 수 */
+function newsOf(src){ return (typeof NEWS !== "undefined" && NEWS[src]) || 0; }
+function nb(src){ var n = newsOf(src); return n ? '<b class="nbadge" title="확인하지 않은 공지 '+n+'건">N</b>' : ''; }
+function nbGroup(list){ return list.some(function(a){ return newsOf(a.src); }) ? '<b class="nbadge" title="새 공지">N</b>' : ''; }
+function renderNews(){
+  var el = $("#newsBar"); if(!el) return;
+  var src = Object.keys(typeof NEWS !== "undefined" ? NEWS : {}).filter(function(k){ return NEWS[k] && appOf(k) && !appOf(k).hidden; })[0];
+  el.hidden = !src;
+  if(src){
+    var a = appOf(src);
+    el.innerHTML = '<button class="newsbtn" data-a="'+src+'"><b class="nbadge">N</b><span><b>확인하지 않은 공지 '+NEWS[src]+'건</b><small>'+esc(a.name)+'에서 확인하기</small></span><span class="arr">›</span></button>';
+  }
+  document.querySelectorAll('#groups .item[data-a]').forEach(function(b){
+    var old = b.querySelector(".nbadge"); if(old) old.remove();
+    if(newsOf(b.dataset.a)){ var t = b.querySelector("b"); if(t) t.insertAdjacentHTML("beforeend", nb(b.dataset.a)); }
+  });
 }
 function renderSub(){
   var g = groupOf(S.group), el = $("#subtabs");
@@ -661,6 +719,7 @@ function renderSub(){
   }).join("");
 }
 function renderHome(){
+  setTimeout(renderNews, 0);
   var d = new Date(), h = d.getHours();
   $("#helloD").textContent = (d.getMonth()+1) + "월 " + d.getDate() + "일 " + "일월화수목금토"[d.getDay()] + "요일";
   var nm = SSO && SSO.profile && SSO.profile.name ? SSO.profile.name + "님, " : "";
@@ -669,7 +728,7 @@ function renderHome(){
     var list = appsIn(g.id);
     return '<section class="card group" style="--c:'+g.color+'"><div class="group-h"><h2><i></i>'+esc(g.name)+'</h2><button data-g="'+g.id+'">'+list.length+'개 열기 ›</button></div><div>' +
       list.map(function(a){
-        return '<button class="item" data-a="'+a.src+'"><span class="ico">'+svg(a.icon)+'</span><div><b>'+esc(a.name)+'</b><small>'+esc(a.desc)+'</small>'+(a.login?'<em>'+esc(a.login)+'</em>':'')+'</div><span class="arr">›</span></button>';
+        return '<button class="item" data-a="'+a.src+'"><span class="ico">'+svg(a.icon)+'</span><div><b>'+esc(a.name)+nb(a.src)+'</b><small>'+esc(a.desc)+'</small>'+(a.login?'<em>'+esc(a.login)+'</em>':'')+'</div><span class="arr">›</span></button>';
       }).join("") + '</div></section>';
   }).join("") || '<div class="empty-g">표시할 메뉴가 없습니다. 메뉴 편집에서 숨김을 풀어 주세요.</div>';
   var rec = (lsGet("intra_recent") || []).map(appOf).filter(function(a){ return a && !a.hidden; }).slice(0,4);
@@ -833,7 +892,6 @@ function bakeFile(cfg){
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
 }
 $("#modalRoot").addEventListener("click", function(e){
-  if(e.target.id === "mw") return closeEditor();
   var b = e.target.closest("[data-x]"); if(!b) return;
   var x = b.dataset.x, i = +b.dataset.i;
   if(x === "close") return closeEditor();
@@ -939,6 +997,8 @@ var APP_SKIN = {
   quote:      { native:"light", brand:[217], keep:/\.quotation|\.q-|\.x-btn/, keepEl:".quotation" },
   viral:      { native:"dark",  brand:[258,262],
                 css:".login-wrap{background:var(--bg)!important}.logout-btn{display:none!important}" },
+  report:     { native:"light", brand:[239,215], css:"#btnOut{display:none!important}" },
+  sales:      { native:"light", brand:[], css:"#userChip{display:none!important}" },
   kukadmin:   { native:"light", brand:[], css:"button[onclick^='logout']{display:none!important}" },
   notice:     { native:"light", brand:[228], attr:["data-theme","light"], drop:/data-theme=["']?dark/,
                 css:"#themeBtn,#logoutBtn{display:none!important}" },
@@ -1253,6 +1313,7 @@ function helperDoc(p){
       'name:function(){var u=auth.currentUser;return u?(u.displayName||""):""},' +
       'get:function(path){return db.doc(path).get().then(plain)},' +
       'set:function(path,data,merge){return db.doc(path).set(data,merge?{merge:true}:{})},' +
+      'watch:function(col,cb){return db.collection(col).onSnapshot(function(s){cb(s.docs.map(function(d){var o=d.data()||{};return {id:d.id,read:o.read||{},title:o.title||"",createdAt:o.createdAt||0,date:o.date||""}}))},function(e){cb(null,e)})},' +
       'list:function(col){return db.collection(col).get().then(function(s){return s.docs.map(function(d){var o=JSON.parse(JSON.stringify(d.data()));o._id=d.id;return o})})}' +
     '};}catch(e){window.H={error:String(e&&e.message||e)}}' +
     'try{parent.__ssoHelper(' + JSON.stringify(p.key) + ')}catch(e){}})()<\/script>';
@@ -1403,9 +1464,24 @@ function syncNames(){
     try{ if(h.name() !== nm) h.setName(nm).catch(function(){}); }catch(e){}
   });
 }
+/* ---------- 새 공지 알림(N): 내가 아직 열어 보지 않은 공지 수 ---------- */
+var NEWS = {}, newsUnsub = null;
+function watchNews(){
+  stopNews();
+  var m = master(), h = HP(m.key);
+  if(!h || !h.watch || !m.news || !m.app) return;
+  newsUnsub = h.watch(m.news, function(list){
+    if(!list) return;
+    var me = SSO.profile && SSO.profile.name;
+    NEWS[m.app] = me ? list.filter(function(n){ return !(n.read && n.read[me]); }).length : 0;
+    renderTop(); renderSub(); renderNews();
+  });
+}
+function stopNews(){ if(newsUnsub){ try{ newsUnsub(); }catch(e){} newsUnsub = null; } NEWS = {}; }
 function enter(){
   SSO._pw = null;   // 비밀번호는 연결이 끝나면 바로 지움
   syncNames();
+  watchNews();
   SSO.ready = true;
   $("#sso").hidden = true;
   renderUserChip();
@@ -1417,6 +1493,7 @@ async function ssoLogout(){
   await Promise.all(SSO_CFG.projects.map(function(p){ var h = HP(p.key); return h ? h.signOut().catch(function(){}) : null; }));
   Object.keys(frames).forEach(function(k){ frames[k].remove(); delete frames[k]; });
   go(null, null, true);
+  stopNews();
   SSO.ready = false; SSO.profile = null;
   $("#userChip").innerHTML = "";
   lgShow("login");
@@ -1516,7 +1593,6 @@ async function userAct(id, act, btn){
   }
 }
 document.addEventListener("click", function(e){
-  if(e.target.id === "uw") return closeUsers();
   var b = e.target.closest("[data-u]"); if(!b) return;
   if(b.dataset.u === "close") return closeUsers();
   var row = b.closest("[data-id]"); if(!row) return;

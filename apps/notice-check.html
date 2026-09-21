@@ -208,6 +208,23 @@ table.mx{width:100%;border-collapse:collapse}
 .dr-b{padding:16px 20px;overflow:auto;flex:1}
 .dr-f{padding:10px 20px;border-top:1px solid var(--line);display:flex;gap:6px}
 .body{white-space:pre-wrap;word-break:break-word;line-height:1.75;font-size:13px}
+/* 첨부 */
+.att{display:flex;flex-direction:column;gap:6px}
+.att-h{font-size:12px;color:var(--muted);font-weight:600}
+.att-h small{font-weight:400;color:var(--faint);margin-left:4px}
+.att-list{display:flex;flex-direction:column;gap:4px}
+.att-it,.frow{display:flex;align-items:center;gap:8px;font-size:12.5px;min-width:0}
+.att-it{padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
+.att-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att-it small,.frow small{color:var(--faint);white-space:nowrap}
+.att-empty{font-size:12px;color:var(--faint)}
+.att-add{align-self:flex-start;cursor:pointer}
+.att-k{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:5px;white-space:nowrap;background:var(--panel2);color:var(--muted)}
+.att-k.img{background:#eef2ff;color:#3b5bdb}.att-k.xls{background:#e9f7f0;color:#2f9e6b}.att-k.pdf{background:#fdeeee;color:#e03e3e}
+.files{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.file{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel)}
+.thumb{margin-bottom:8px;border-radius:6px;overflow:hidden;background:var(--panel2);min-height:60px;display:grid;place-items:center;color:var(--faint);font-size:12px}
+.thumb img{display:block;max-width:100%;max-height:360px;object-fit:contain}
 .links{margin-top:10px;display:flex;flex-direction:column;gap:3px;font-size:12px;padding:8px 10px;background:var(--panel2);border-radius:6px}
 .sec{margin-top:20px}
 .sec-t{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px}
@@ -412,6 +429,7 @@ const catColor = name => (catList().find(c=>c.name===name) || {}).color || "#8a9
 const cs = name => `style="--cc:${esc(catColor(name))}"`;
 // 설정에 없는 분류를 쓰는 공지가 있으면 메뉴에도 보이게
 const navCats = () => { const L = CATS(); Store.notices.forEach(n => { if(n.cat && !L.includes(n.cat)) L.push(n.cat); }); return L; };
+const DEMO_FILES = {};   // 체험 모드에서만 쓰는 첨부 보관소
 const FIELDS = {cat:"분류",date:"게시일",title:"제목",body:"내용",links:"링크",important:"중요",needAction:"처리 필요",due:"처리 기한"};
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -638,6 +656,8 @@ const Store = (() => {
       const changes = Object.keys(FIELDS)
         .filter(k => String(prev[k] ?? "") !== String(data[k] ?? ""))
         .map(k => ({f:k, from:clip(prev[k]), to:clip(data[k])}));
+      const fl = a => (a||[]).map(x=>x.name).join(", ");
+      if(data.files && fl(prev.files) !== fl(data.files)) changes.push({f:"첨부", from:clip(fl(prev.files)||"(없음)"), to:clip(fl(data.files)||"(없음)")});
       if(!changes.length) return 0;
       const upd = {...data, updatedAt:Date.now(), updatedBy:by||""};
       if(api.live) await col("notices").doc(id).update(upd);
@@ -646,8 +666,49 @@ const Store = (() => {
       if(!api.live){ saveDemo(); emit(); }
       return changes.length;
     },
+    /* 첨부 파일: Firestore에 조각(700KB)으로 나눠 저장 — 별도 Storage 요금제 없이 동작 */
+    async uploadFile(file, by, onProgress){
+      const b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result).split(",")[1] || "");
+        r.onerror = () => rej(r.error || new Error("파일을 읽지 못했습니다"));
+        r.readAsDataURL(file);
+      });
+      const CH = 700000, parts = Math.max(1, Math.ceil(b64.length / CH));
+      const meta = {name:file.name, type:file.type||"", size:file.size, parts, by:by||"", at:Date.now()};
+      if(api.live){
+        const ref = col("files").doc();
+        await ref.set(meta);
+        for(let i=0;i<parts;i++){
+          await ref.collection("parts").doc(String(i)).set({d: b64.slice(i*CH, (i+1)*CH)});
+          if(onProgress) onProgress(i+1, parts);
+        }
+        return {id:ref.id, name:meta.name, type:meta.type, size:meta.size};
+      }
+      const id = uid(); DEMO_FILES[id] = b64;
+      return {id, name:meta.name, type:meta.type, size:meta.size};
+    },
+    async fileBlob(f){
+      let b64 = "";
+      if(api.live){
+        const s = await col("files").doc(f.id).collection("parts").get();
+        b64 = s.docs.map(d => [+d.id, d.data().d || ""]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]).join("");
+      } else b64 = DEMO_FILES[f.id] || "";
+      const bin = atob(b64), u8 = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+      return new Blob([u8], {type: f.type || "application/octet-stream"});
+    },
+    async deleteFile(id){
+      if(!api.live){ delete DEMO_FILES[id]; return; }
+      try{
+        const ref = col("files").doc(id), s = await ref.collection("parts").get();
+        await Promise.all(s.docs.map(d => d.ref.delete()));
+        await ref.delete();
+      }catch(e){ console.warn("첨부 삭제 실패", e); }
+    },
     async deleteNotice(id, by){
       const n = notices.find(x=>x.id===id);
+      (n && n.files || []).forEach(f => api.deleteFile(f.id));
       if(api.live) await col("notices").doc(id).delete();
       else notices = notices.filter(x=>x.id!==id);
       await writeLog(logOf("delete", n, by, {snapshot:{body:clip(n.body,2000), date:n.date}}));
@@ -1196,6 +1257,32 @@ function renderLog(){
 }
 
 /* --- 상세 패널 --- */
+const BLOBS = {};   // 첨부 id → 내려받은 파일(Blob URL)
+async function blobUrl(f){
+  if(!BLOBS[f.id]) BLOBS[f.id] = Store.fileBlob(f).then(b => URL.createObjectURL(b));
+  return BLOBS[f.id];
+}
+function loadThumbs(n){
+  (n.files||[]).forEach(f => {
+    if(fkind(f) !== "img") return;
+    blobUrl(f).then(u => {
+      const el = document.querySelector(`[data-thumb="${CSS.escape(f.id)}"]`);
+      if(el) el.innerHTML = `<img src="${u}" alt="${esc(f.name)}">`;
+    }).catch(() => {
+      const el = document.querySelector(`[data-thumb="${CSS.escape(f.id)}"]`);
+      if(el) el.innerHTML = `<span>미리보기를 불러오지 못했습니다</span>`;
+    });
+  });
+}
+async function fileAction(nid, i, open){
+  const n = Store.notices.find(x=>x.id===nid); const f = n && (n.files||[])[+i]; if(!f) return;
+  try{
+    toast(open ? "여는 중…" : "내려받는 중…");
+    const u = await blobUrl(f);
+    if(open){ window.open(u, "_blank"); return; }
+    const a = document.createElement("a"); a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+  }catch(e){ fail(e); }
+}
 function openDrawer(){ $("#drawer").classList.add("on"); $("#scrim").classList.add("on"); }
 function closeDrawer(){ $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); S.openId=null; }
 function renderDrawer(id, refresh){
@@ -1233,6 +1320,14 @@ function renderDrawer(id, refresh){
     <div class="dr-b">
       <div class="body">${esc(n.body||"(내용 없음)")}</div>
       ${links?`<div class="links">${links}</div>`:""}
+      ${(n.files||[]).length ? `<div class="files">${n.files.map((f,i)=>`
+        <div class="file ${fkind(f)}" data-fi="${i}" data-nid="${n.id}">
+          ${fkind(f)==="img" ? `<div class="thumb" data-thumb="${esc(f.id)}"><span>불러오는 중…</span></div>` : ""}
+          <div class="frow"><span class="att-k ${fkind(f)}">${FICON[fkind(f)]}</span><span class="att-n" title="${esc(f.name)}">${esc(f.name)}</span>
+            <small>${fsize(f.size||0)}</small>
+            ${fkind(f)==="img" ? `<button class="btn sm" data-fopen="${i}" data-nid="${n.id}">크게 보기</button>` : ""}
+            <button class="btn sm" data-fdown="${i}" data-nid="${n.id}">내려받기</button></div>
+        </div>`).join("")}</div>` : ""}
 
       <div class="sec"><div class="sec-t">확인 · 체크 현황 <span style="font-weight:400;color:var(--faint)">확인 = 열어 봄 · 체크 = 인지함</span></div>
         <div class="split three">${box("no","미확인",unread)}${box("r","확인만",seenOnly,n.read)}${box("a","체크",acked,n.ack)}</div></div>
@@ -1255,6 +1350,7 @@ function renderDrawer(id, refresh){
       <button class="btn sm" data-edit="${n.id}">수정</button>
       <button class="btn sm quiet danger" data-del="${n.id}">삭제</button>
     </div>`;
+  loadThumbs(n);
   if(draft) $("#cmIn").value = draft;
   if(scroll) $(".dr-b").scrollTop = scroll;
   if(!refresh){
@@ -1278,6 +1374,11 @@ function renderForm(id){
       <label class="full">제목<input class="field" name="title" value="${esc(n.title)}" required placeholder="공지 제목"></label>
       <label class="full">내용<textarea class="field" name="body" placeholder="원문 공지를 그대로 붙여넣어도 됩니다">${esc(n.body)}</textarea></label>
       <label class="full">링크 · 첨부 위치 (한 줄에 하나)<textarea class="field" name="links" style="min-height:64px" placeholder="https://…   또는   공유드라이브 › 9월 › 시간표.xlsx">${esc(n.links)}</textarea></label>
+      <div class="full att">
+        <div class="att-h">첨부 파일 <small>이미지·엑셀·PDF 등 · 파일당 10MB까지</small></div>
+        <div class="att-list" id="attList"></div>
+        <label class="btn sm att-add">＋ 파일 추가<input type="file" id="attIn" multiple hidden></label>
+      </div>
       <label class="tog"><input type="checkbox" name="important" ${n.important?"checked":""}> 중요 공지</label>
       <label class="tog"><input type="checkbox" name="needAction" id="naChk" ${n.needAction?"checked":""}> 처리(조치)가 필요한 공지</label>
       <label class="full" id="dueWrap" style="${n.needAction?"":"display:none"}">처리 기한<input class="field" type="date" name="due" value="${esc(n.due)}"></label>
@@ -1285,7 +1386,29 @@ function renderForm(id){
     ${id?`<p class="note">수정하면 바뀐 항목이 '변경 이력'에 수정 전·후로 기록됩니다.</p>`:""}</div>
     <div class="mf"><button class="btn quiet" data-mclose>취소</button><button class="btn primary" id="saveBtn" data-id="${id||""}">${id?"수정 저장":"등록"}</button></div>`);
   $("#naChk").onchange = e => $("#dueWrap").style.display = e.target.checked ? "" : "none";
+  FORM_FILES = (n.files || []).map(f => ({...f}));
+  renderAtt();
+  $("#attIn").onchange = e => {
+    [...e.target.files].forEach(file => {
+      if(file.size > 10*1024*1024){ toast(`${file.name}: 10MB를 넘는 파일은 올릴 수 없습니다`); return; }
+      FORM_FILES.push({tmp:uid(), name:file.name, type:file.type, size:file.size, file});
+    });
+    e.target.value = ""; renderAtt();
+  };
   setTimeout(()=>$("#nf [name=title]").focus(),30);
+}
+/* 첨부 목록 (등록·수정 창) */
+let FORM_FILES = [];
+const fsize = b => b >= 1048576 ? (b/1048576).toFixed(1)+"MB" : Math.max(1, Math.round(b/1024))+"KB";
+const fkind = f => /^image\//.test(f.type||"") || /\.(png|jpe?g|gif|webp|bmp)$/i.test(f.name) ? "img"
+  : /\.(xlsx?|csv)$/i.test(f.name) ? "xls" : /\.pdf$/i.test(f.name) ? "pdf" : "etc";
+const FICON = {img:"이미지", xls:"엑셀", pdf:"PDF", etc:"파일"};
+function renderAtt(){
+  const el = $("#attList"); if(!el) return;
+  el.innerHTML = FORM_FILES.length ? FORM_FILES.map((f,i) =>
+    `<div class="att-it"><span class="att-k ${fkind(f)}">${FICON[fkind(f)]}</span><span class="att-n" title="${esc(f.name)}">${esc(f.name)}</span>
+     <small>${fsize(f.size||0)}${f.tmp?" · 새 파일":""}</small><button type="button" class="x" data-attrm="${i}" title="빼기">×</button></div>`).join("")
+    : `<div class="att-empty">첨부한 파일이 없습니다</div>`;
 }
 async function submitForm(id){
   const f = $("#nf");
@@ -1298,6 +1421,17 @@ async function submitForm(id){
   };
   const btn = $("#saveBtn"); btn.disabled = true;
   try{
+    // 새 첨부부터 올리고, 빠진 첨부는 지운다
+    const prevFiles = id ? ((Store.notices.find(x=>x.id===id)||{}).files || []) : [];
+    const pending = FORM_FILES.filter(f => f.tmp);
+    const done = [];
+    for(let i=0;i<pending.length;i++){
+      btn.textContent = `첨부 올리는 중 ${i+1}/${pending.length}`;
+      done.push(await Store.uploadFile(pending[i].file, S.me));
+    }
+    data.files = FORM_FILES.filter(f => !f.tmp).map(({id,name,type,size}) => ({id,name,type,size})).concat(done);
+    prevFiles.filter(p => !data.files.some(f => f.id === p.id)).forEach(p => Store.deleteFile(p.id));
+    btn.textContent = id ? "수정 저장" : "등록";
     if(id){ const k = await Store.updateNotice(id, data, S.me); toast(k ? `${k}개 항목을 수정했습니다` : "바뀐 내용이 없습니다"); }
     else { await Store.createNotice(data, S.me); toast("등록했습니다"); }
     closeModal();
@@ -1512,8 +1646,13 @@ async function addMember(){
    ========================================================= */
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-close],[data-mclose],[data-open],[data-view],[data-cat],[data-state],[data-logtype],[data-mark],[data-cmt],[data-edit],[data-del],[data-mup],[data-mdel],[data-cup],[data-cdn],[data-cdel],[data-sw],[data-uact],button");
-  if(e.target.id==="scrim") return closeDrawer();
-  if(e.target.id==="mw") return closeModal();
+  // 창 바깥(어두운 배경)을 눌러도 닫히지 않음 — × 또는 취소로만 닫기
+  if(e.target.id==="scrim" || e.target.id==="mw") return;
+  const fb = e.target.closest("[data-attrm],[data-fopen],[data-fdown]");
+  if(fb){
+    if(fb.dataset.attrm != null){ FORM_FILES.splice(+fb.dataset.attrm, 1); renderAtt(); return; }
+    return fileAction(fb.dataset.nid, fb.dataset.fopen != null ? fb.dataset.fopen : fb.dataset.fdown, fb.dataset.fopen != null);
+  }
   if(!el) return;
   const D = el.dataset;
   if("close" in D) return closeDrawer();
@@ -1584,7 +1723,7 @@ document.addEventListener("click", async e => {
   }
 });
 document.addEventListener("keydown", e => {
-  if(e.key==="Escape"){ if($("#mw").classList.contains("on")) closeModal(); else closeDrawer(); }
+  if(e.key==="Escape"){ if(!$("#mw").classList.contains("on")) closeDrawer(); }
   if(e.key==="Enter" && !e.isComposing){
     if(e.target.id==="memIn") addMember();
     if(e.target.id==="catNew") catAdd();

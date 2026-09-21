@@ -4039,7 +4039,7 @@ function closeCustomConfirm(result) {
   if (confirmCallback) confirmCallback(result);
   confirmCallback = null;
 }
-function closeModalIfBg(event, id) { if (event.target.id === id) document.getElementById(id).classList.remove('show'); }
+function closeModalIfBg(event, id) { /* 창 바깥을 눌러도 닫히지 않음 — 닫기 버튼으로만 닫기 */ }
 function showToast(msg, type = 'brand') {
   const t = document.getElementById('toast');
   t.innerHTML = msg;
