@@ -1088,7 +1088,7 @@ var APP_SKIN = {
   report:     { native:"light", brand:[239,215], css:"#btnOut{display:none!important}" },
   sales:      { native:"light", brand:[], css:"#userChip{display:none!important}" },
   kukadmin:   { native:"light", brand:[], css:"button[onclick^='logout']{display:none!important}" },
-  notice:     { native:"light", brand:[228], attr:["data-theme","light"], drop:/data-theme=["']?dark/,
+  notice:     { native:"light", brand:[228], keep:/\.lb\b|\.lb-/, keepEl:"#lb", attr:["data-theme","light"], drop:/data-theme=["']?dark/,
                 css:"#themeBtn,#logoutBtn{display:none!important}" },
   guideadmin: { native:"light", brand:[213], css:".sidebar-footer-link{display:none!important}" }
 };

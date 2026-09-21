@@ -197,7 +197,7 @@ table.mx{width:100%;border-collapse:collapse}
 
 .scrim{position:fixed;inset:0;background:rgba(16,18,24,.28);opacity:0;pointer-events:none;transition:.18s;z-index:40}
 .scrim.on{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow-l);transform:translateX(102%);transition:transform .22s cubic-bezier(.2,.8,.2,1);z-index:45;display:flex;flex-direction:column}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(max(480px,50vw),100%);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow-l);transform:translateX(102%);transition:transform .22s cubic-bezier(.2,.8,.2,1);z-index:45;display:flex;flex-direction:column}
 .drawer.on{transform:none}
 .dr-h{padding:16px 20px 14px;border-bottom:1px solid var(--line)}
 .dr-h .top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -224,7 +224,14 @@ table.mx{width:100%;border-collapse:collapse}
 .files{margin-top:10px;display:flex;flex-direction:column;gap:8px}
 .file{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel)}
 .thumb{margin-bottom:8px;border-radius:6px;overflow:hidden;background:var(--panel2);min-height:60px;display:grid;place-items:center;color:var(--faint);font-size:12px}
-.thumb img{display:block;max-width:100%;max-height:360px;object-fit:contain}
+.thumb img{display:block;max-width:100%;max-height:520px;object-fit:contain;cursor:zoom-in}
+.lb{position:fixed;inset:0;z-index:90;background:rgba(8,10,16,.82);display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px 24px}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:calc(100vh - 110px);object-fit:contain;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.45);background:#fff}
+.lb-bar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:10px 14px;color:#e8ecf5;font-size:13px}
+.lb-bar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-bar button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 10px;font-size:12.5px;cursor:pointer}
+.lb-bar button:hover{background:rgba(255,255,255,.22)}
 .links{margin-top:10px;display:flex;flex-direction:column;gap:3px;font-size:12px;padding:8px 10px;background:var(--panel2);border-radius:6px}
 .sec{margin-top:20px}
 .sec-t{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px}
@@ -398,6 +405,7 @@ table.mx{width:100%;border-collapse:collapse}
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"></aside>
+<div class="lb" id="lb"><div class="lb-bar"><span id="lbName"></span><button type="button" id="lbDown">내려받기</button><button type="button" id="lbX">닫기 (Esc)</button></div><img id="lbImg" alt=""></div>
 <div class="modal-wrap" id="mw"><div class="modal" id="modal"></div></div>
 <div class="login" id="login" hidden><div class="login-card" id="loginCard"></div></div>
 <div class="toast" id="toast"></div>
@@ -1279,10 +1287,15 @@ async function fileAction(nid, i, open){
   try{
     toast(open ? "여는 중…" : "내려받는 중…");
     const u = await blobUrl(f);
+    if(open && fkind(f)==="img"){ openLB(u, f); return; }
     if(open){ window.open(u, "_blank"); return; }
     const a = document.createElement("a"); a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
   }catch(e){ fail(e); }
 }
+let LB_FILE = null;
+function openLB(u, f){ LB_FILE = f; $("#lbImg").src = u; $("#lbName").textContent = f.name || ""; $("#lb").classList.add("on"); }
+function closeLB(){ $("#lb").classList.remove("on"); $("#lbImg").removeAttribute("src"); LB_FILE = null; }
+function lbOpen(){ return $("#lb").classList.contains("on"); }
 function openDrawer(){ $("#drawer").classList.add("on"); $("#scrim").classList.add("on"); }
 function closeDrawer(){ $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); S.openId=null; }
 function renderDrawer(id, refresh){
@@ -1648,6 +1661,13 @@ document.addEventListener("click", async e => {
   const el = e.target.closest("[data-close],[data-mclose],[data-open],[data-view],[data-cat],[data-state],[data-logtype],[data-mark],[data-cmt],[data-edit],[data-del],[data-mup],[data-mdel],[data-cup],[data-cdn],[data-cdel],[data-sw],[data-uact],button");
   // 창 바깥(어두운 배경)을 눌러도 닫히지 않음 — × 또는 취소로만 닫기
   if(e.target.id==="scrim" || e.target.id==="mw") return;
+  if(e.target.closest("#lb")){
+    if(e.target.id==="lbX" || e.target.id==="lb") closeLB();
+    else if(e.target.id==="lbDown" && LB_FILE){ const a=document.createElement("a"); a.href=$("#lbImg").src; a.download=LB_FILE.name; document.body.appendChild(a); a.click(); a.remove(); }
+    return;
+  }
+  const th = e.target.closest(".thumb img");
+  if(th){ const fe = th.closest("[data-fi]"); if(fe) return fileAction(fe.dataset.nid, fe.dataset.fi, true); }
   const fb = e.target.closest("[data-attrm],[data-fopen],[data-fdown]");
   if(fb){
     if(fb.dataset.attrm != null){ FORM_FILES.splice(+fb.dataset.attrm, 1); renderAtt(); return; }
@@ -1722,6 +1742,9 @@ document.addEventListener("click", async e => {
     case "themeBtn": return setTheme(document.documentElement.dataset.theme==="dark" ? "light" : "dark");
   }
 });
+document.addEventListener("keydown", e => {
+  if(e.key==="Escape" && lbOpen()){ e.preventDefault(); e.stopImmediatePropagation(); closeLB(); }
+}, true);
 document.addEventListener("keydown", e => {
   if(e.key==="Escape"){ if(!$("#mw").classList.contains("on")) closeDrawer(); }
   if(e.key==="Enter" && !e.isComposing){
