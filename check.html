@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>수강생 관리파일 점검 · 복구</title>
+<style>
+:root{--bg:#161c2b;--panel:#1e2537;--panel2:#252d42;--line:#333d56;--tx:#e7ebf5;--mut:#9aa5bd;--acc:#7b93d9;--ok:#4fbf8b;--warn:#e0a23c;--bad:#e06a6a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.65 "Pretendard","Malgun Gothic",system-ui,sans-serif;padding:28px 18px 60px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:20px;margin:0 0 6px}
+h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}
+label{display:block;font-size:12.5px;color:var(--mut);margin:0 0 5px}
+input{width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);font-size:14px}
+.row{display:flex;gap:10px;margin-bottom:12px}
+.row>div{flex:1}
+button{background:var(--acc);color:#111827;border:0;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;margin-right:6px}
+button.ghost{background:transparent;color:var(--tx);border:1px solid var(--line);font-weight:500}
+button.warn{background:var(--warn);color:#1b1206}
+button:disabled{opacity:.5;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:12px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11.5px;font-weight:700}
+.tag.ok{background:rgba(79,191,139,.16);color:var(--ok)}
+.tag.bad{background:rgba(224,106,106,.16);color:var(--bad)}
+.tag.warn{background:rgba(224,162,60,.16);color:var(--warn)}
+.note{font-size:12.5px;color:var(--mut);margin-top:12px;line-height:1.75}
+.err{color:var(--bad);font-size:13px;margin-top:10px;white-space:pre-wrap}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;max-height:240px;font-size:12px;margin:8px 0 0}
+.badge{font-size:11.5px;color:var(--mut);font-weight:400}
+.big{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:6px}
+.st{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.st .l{font-size:11.5px;color:var(--mut)}
+.scroll{max-height:420px;overflow:auto}
+.diff{color:var(--warn);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>수강생 관리파일 점검 · 복구</h1>
+  <div class="sub">student-f3e8a에 저장된 내용과 이 브라우저에 남아 있는 사본을 비교합니다. 점검은 읽기만 하고, 복구는 버튼을 누를 때만 진행합니다.</div>
+
+  <div class="card" id="loginCard">
+    <div class="row">
+      <div><label>이메일</label><input id="em" type="email" autocomplete="username" placeholder="로그인에 쓰는 이메일"></div>
+      <div><label>비밀번호</label><input id="pw" type="password" autocomplete="current-password" placeholder="비밀번호"></div>
+    </div>
+    <button id="go">점검 시작</button>
+    <div class="err" id="err"></div>
+    <div class="note">예전에 수강생 관리파일을 쓰던 그 브라우저에서 열어야 사본까지 함께 비교됩니다. 계정은 기존 계정이든 인트라넷 통합 계정이든 상관없습니다.</div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+var CFG = {
+  apiKey: "AIzaSyCb6Evq51skrbDw_cbz9_S9LsjcY1fy9hA",
+  authDomain: "student-f3e8a.firebaseapp.com",
+  projectId: "student-f3e8a",
+  storageBucket: "student-f3e8a.firebasestorage.app"
+};
+firebase.initializeApp(CFG);
+var auth = firebase.auth(), db = firebase.firestore();
+var $ = function(s){ return document.querySelector(s); };
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
+function when(v){
+  if(!v) return "-";
+  var d = v.toDate ? v.toDate() : new Date(v);
+  if(isNaN(d)) return "-";
+  var p = function(n){ return (n < 10 ? "0" : "") + n; };
+  return d.getFullYear() + "." + p(d.getMonth()+1) + "." + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function ls(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function acOf(s){ return Array.isArray(s && s.assignedClasses) ? s.assignedClasses : []; }
+function key(a){ return [a.year || "", a.month || "", a.time || "", a.subject || ""].join("|"); }
+function sum(list){
+  var t = { stu:list.length, withAc:0, ac:0, ok:0 };
+  list.forEach(function(s){ var a = acOf(s); if(a.length) t.withAc++; t.ac += a.length; t.ok += a.filter(function(x){ return x.confirmed === true || x.isConfirmed === true; }).length; });
+  return t;
+}
+function idOf(s){ return s.id || ((s.name || "") + "/" + (s.birth || s.birthday || "")); }
+var CLOUD = { students:[], conf:{} }, LOCAL = { students:[], conf:{} }, PLAN = null;
+
+var CONF = [
+  { id:"subjects",        lsk:"studentMgmt_v3_subjects",        name:"학과 탭 · 과목 목록", field:"data", kind:"map",
+    n:function(o){ var k = Object.keys(o||{}); return k.length + "개 탭 / 과목 " + k.reduce(function(a,c){ return a + ((o[c]||[]).length); },0) + "개"; } },
+  { id:"pdf_subject_map", lsk:"studentMgmt_v3_pdf_subject_map", name:"배정과목 설정", field:"map", kind:"map",
+    n:function(o){ return Object.keys(o||{}).length + "건"; } },
+  { id:"mentors",         lsk:"studentMgmt_v3_mentors",         name:"멘토 목록", field:"list", kind:"list",
+    n:function(o){ return (o||[]).length + "명"; } },
+  { id:"mentor_depts",    lsk:"studentMgmt_v3_mentor_depts",    name:"멘토 → 부서 배정", field:"map", kind:"map",
+    n:function(o){ return Object.keys(o||{}).length + "건"; } },
+  { id:"departments",     lsk:"studentMgmt_v3_departments",     name:"부서 목록", field:"list", kind:"list",
+    n:function(o){ return (o||[]).length + "개"; } }
+];
+
+async function run(){
+  $("#err").textContent = ""; $("#go").disabled = true; $("#go").textContent = "점검 중…";
+  $("#out").innerHTML = "";
+  try{
+    await auth.signInWithEmailAndPassword($("#em").value.trim(), $("#pw").value);
+  }catch(e){
+    $("#err").textContent = "로그인 실패: " + (e.code || "") + " " + e.message;
+    $("#go").disabled = false; $("#go").textContent = "점검 시작"; return;
+  }
+  CLOUD = { students:[], conf:{}, last:null, by:"" }; LOCAL = { students:ls("studentMgmt_v3_students") || [], conf:{} };
+  var fail = [], rows = "";
+  try{
+    var snap = await db.collection("students").get();
+    snap.forEach(function(d){
+      var x = d.data();
+      var tm = x._updatedAt && x._updatedAt.toMillis ? x._updatedAt.toMillis() : 0;
+      if(tm && tm > (CLOUD.lastMs || 0)){ CLOUD.lastMs = tm; CLOUD.last = x._updatedAt; CLOUD.by = x._updatedBy || ""; }
+      CLOUD.students.push(x);
+    });
+  }catch(e){ fail.push("students (" + (e.code || "error") + ")"); }
+  for(var j = 0; j < CONF.length; j++){
+    var c = CONF[j];
+    LOCAL.conf[c.id] = ls(c.lsk);
+    try{
+      var doc = await db.collection("config").doc(c.id).get();
+      CLOUD.conf[c.id] = doc.exists ? { val: doc.data()[c.field], at: doc.data()._updatedAt, by: doc.data()._updatedBy || "" } : null;
+    }catch(e){ fail.push("config/" + c.id + " (" + (e.code || "error") + ")"); CLOUD.conf[c.id] = null; }
+  }
+  var cs = sum(CLOUD.students), lsm = sum(LOCAL.students);
+  rows += "<tr><td>수강생</td><td class=\"n\">" + cs.stu + "명</td><td class=\"n\">" + lsm.stu + "명</td><td class=\"n\">" + dv(lsm.stu - cs.stu) + "</td></tr>";
+  rows += "<tr><td>배정된 과목</td><td class=\"n\">" + cs.ac + "개</td><td class=\"n\">" + lsm.ac + "개</td><td class=\"n\">" + dv(lsm.ac - cs.ac) + "</td></tr>";
+  rows += "<tr><td>확정 체크</td><td class=\"n\">" + cs.ok + "개</td><td class=\"n\">" + lsm.ok + "개</td><td class=\"n\">" + dv(lsm.ok - cs.ok) + "</td></tr>";
+  rows += "<tr><td>배정이 있는 학생</td><td class=\"n\">" + cs.withAc + "명</td><td class=\"n\">" + lsm.withAc + "명</td><td class=\"n\">" + dv(lsm.withAc - cs.withAc) + "</td></tr>";
+  CONF.forEach(function(c){
+    var cv = CLOUD.conf[c.id], lv = LOCAL.conf[c.id];
+    rows += "<tr><td>" + esc(c.name) + "</td><td class=\"n\">" + (cv ? esc(c.n(cv.val)) : '<span class="tag warn">없음</span>') + "</td><td class=\"n\">" + (lv ? esc(c.n(lv)) : "-") + "</td><td class=\"n\">-</td></tr>";
+  });
+  PLAN = plan();
+  var head = '<div class="card"><h2>' + esc(auth.currentUser.email) + ' 계정으로 본 비교</h2>' +
+    '<table><thead><tr><th>항목</th><th class="n">클라우드(공유본)</th><th class="n">이 브라우저 사본</th><th class="n">차이</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="note">클라우드가 모두가 함께 보는 원본이고, 사본은 이 브라우저에만 남아 있는 예전 기록입니다. 사본 쪽 숫자가 크면 그만큼이 클라우드에서 빠진 것입니다.' +
+    (CLOUD.last ? ' 클라우드 최근 저장은 ' + esc(when(CLOUD.last)) + ' · ' + esc(CLOUD.by) + ' 입니다.' : '') + '</div>' +
+    (fail.length ? '<div class="note"><b style="color:var(--bad)">읽기 실패: ' + esc(fail.join(", ")) + '</b> — 이 계정에 권한이 없다는 뜻입니다. 자료가 지워진 것이 아니므로 보안 규칙부터 확인하세요.</div>' : "") +
+    '<div style="margin-top:14px"><button class="ghost" onclick="dl()">백업 내려받기</button></div></div>';
+  $("#out").innerHTML = head + planCard();
+  $("#go").disabled = false; $("#go").textContent = "다시 점검";
+}
+function dv(n){ return n > 0 ? '<span class="diff">+' + n + '</span>' : String(n); }
+
+/* ---- 복구 계획: 사본 → 클라우드 (더하기만, 지우지 않음) ---- */
+function plan(){
+  var byId = {};
+  CLOUD.students.forEach(function(s){ byId[idOf(s)] = s; });
+  var add = [], merge = [];
+  LOCAL.students.forEach(function(l){
+    var c = byId[idOf(l)];
+    if(!c){ if(l && (l.name || l.id)) add.push(l); return; }
+    var cac = acOf(c).map(function(a){ return Object.assign({}, a); });
+    var idx = {}; cac.forEach(function(a, i){ idx[key(a)] = i; });
+    var newAc = 0, newOk = 0;
+    acOf(l).forEach(function(a){
+      var k = key(a), at = idx[k];
+      if(at == null){ cac.push(Object.assign({}, a)); idx[k] = cac.length - 1; newAc++; if(a.confirmed || a.isConfirmed) newOk++; }
+      else if((a.confirmed === true || a.isConfirmed === true) && cac[at].confirmed !== true){ cac[at].confirmed = true; newOk++; }
+    });
+    if(newAc || newOk) merge.push({ id:c.id, name:c.name || l.name, ac:cac, newAc:newAc, newOk:newOk });
+  });
+  var conf = [];
+  CONF.forEach(function(c){
+    var cv = CLOUD.conf[c.id] ? CLOUD.conf[c.id].val : null, lv = LOCAL.conf[c.id];
+    if(!lv) return;
+    if(c.kind === "map"){
+      var next = Object.assign({}, cv || {}), n = 0;
+      Object.keys(lv).forEach(function(k){ if(next[k] === undefined){ next[k] = lv[k]; n++; } });
+      if(n) conf.push({ id:c.id, name:c.name, field:c.field, val:next, n:n });
+    }else{
+      var list = (cv || []).slice(), m = 0;
+      (lv || []).forEach(function(v){ if(list.indexOf(v) < 0){ list.push(v); m++; } });
+      if(m) conf.push({ id:c.id, name:c.name, field:c.field, val:list, n:m });
+    }
+  });
+  return { add:add, merge:merge, conf:conf };
+}
+function planCard(){
+  if(!LOCAL.students.length && !Object.keys(LOCAL.conf).some(function(k){ return LOCAL.conf[k]; }))
+    return '<div class="card"><h2>복구할 사본이 없습니다</h2><div class="note">이 브라우저에는 예전 기록이 남아 있지 않습니다. 예전에 이 파일을 쓰던 컴퓨터·브라우저에서 같은 주소로 이 페이지를 열어 보세요.</div></div>';
+  var p = PLAN, none = !p.add.length && !p.merge.length && !p.conf.length;
+  var list = p.merge.slice(0, 200).map(function(m){
+    return "<tr><td>" + esc(m.name || m.id) + "</td><td class=\"n\">" + (m.newAc ? "+" + m.newAc : "-") + "</td><td class=\"n\">" + (m.newOk ? "+" + m.newOk : "-") + "</td></tr>";
+  }).join("");
+  return '<div class="card"><h2>사본에만 있는 내용</h2>' +
+    '<div class="stats">' +
+    '<div class="st"><div class="l">새로 올릴 학생</div><div class="big">' + p.add.length + '</div></div>' +
+    '<div class="st"><div class="l">배정이 채워질 학생</div><div class="big">' + p.merge.length + '</div></div>' +
+    '<div class="st"><div class="l">되살릴 배정 과목</div><div class="big">' + p.merge.reduce(function(a,m){ return a + m.newAc; }, 0) + '</div></div>' +
+    '<div class="st"><div class="l">되살릴 확정 체크</div><div class="big">' + p.merge.reduce(function(a,m){ return a + m.newOk; }, 0) + '</div></div>' +
+    '<div class="st"><div class="l">보충할 설정</div><div class="big">' + p.conf.reduce(function(a,c){ return a + c.n; }, 0) + '</div></div>' +
+    '</div>' +
+    (none
+      ? '<div class="note">클라우드에 이미 다 들어 있습니다. 되살릴 것이 없습니다.</div>'
+      : '<div class="scroll">' + (list ? '<table><thead><tr><th>학생</th><th class="n">배정 추가</th><th class="n">확정 추가</th></tr></thead><tbody>' + list + '</tbody></table>' : "") + '</div>' +
+        (p.conf.length ? '<div class="note">설정 보충: ' + esc(p.conf.map(function(c){ return c.name + " " + c.n + "건"; }).join(" · ")) + '</div>' : "") +
+        '<div style="margin-top:14px"><button class="warn" onclick="restore()">이 내용을 클라우드에 올리기</button><button class="ghost" onclick="dl()">먼저 백업 내려받기</button></div>' +
+        '<div class="note">더하기만 합니다. 클라우드에 이미 있는 학생·배정·확정은 지우거나 바꾸지 않고, 사본에만 있던 것을 채워 넣습니다. 올리기 전에 백업을 한 번 받아 두시길 권합니다.</div>') +
+    '</div>';
+}
+async function restore(){
+  var p = PLAN; if(!p) return;
+  if(!confirm("학생 " + p.add.length + "명 추가, " + p.merge.length + "명 배정 보충, 설정 " + p.conf.length + "건을 클라우드에 올립니다. 진행할까요?")) return;
+  var btn = event.target; btn.disabled = true; btn.textContent = "올리는 중…";
+  var me = (auth.currentUser && auth.currentUser.email) || "", done = 0, errs = [];
+  var stamp = function(){ return firebase.firestore.FieldValue.serverTimestamp(); };
+  for(var i = 0; i < p.add.length; i++){
+    var s = p.add[i];
+    try{ await db.collection("students").doc(String(s.id || idOf(s))).set(Object.assign({}, s, { id:String(s.id || idOf(s)), _updatedAt:stamp(), _updatedBy:me })); done++; }
+    catch(e){ errs.push((s.name || s.id) + ": " + (e.code || "error")); }
+  }
+  for(var k = 0; k < p.merge.length; k++){
+    var m = p.merge[k];
+    try{ await db.collection("students").doc(String(m.id)).set({ assignedClasses:m.ac, _updatedAt:stamp(), _updatedBy:me }, { merge:true }); done++; }
+    catch(e){ errs.push((m.name || m.id) + ": " + (e.code || "error")); }
+  }
+  for(var c = 0; c < p.conf.length; c++){
+    var cc = p.conf[c], body = { _updatedAt:stamp(), _updatedBy:me };
+    body[cc.field] = cc.val;
+    try{ await db.collection("config").doc(cc.id).set(body, { merge:true }); done++; }
+    catch(e){ errs.push(cc.name + ": " + (e.code || "error")); }
+  }
+  alert("올리기 완료: " + done + "건" + (errs.length ? "\n실패 " + errs.length + "건\n" + errs.slice(0, 5).join("\n") : ""));
+  run();
+}
+function dl(){
+  var data = { at:new Date().toISOString(), account:(auth.currentUser||{}).email || "",
+    cloud:{ students:CLOUD.students, config:CLOUD.conf },
+    local:{ students:LOCAL.students, config:LOCAL.conf } };
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type:"application/json" }));
+  a.download = "수강생백업_" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+$("#go").addEventListener("click", run);
+$("#pw").addEventListener("keydown", function(e){ if(e.key === "Enter") run(); });
+</script>
+</body>
+</html>
