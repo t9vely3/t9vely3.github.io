@@ -52,6 +52,9 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padd
       <div><label>비밀번호</label><input id="pw" type="password" autocomplete="current-password" placeholder="비밀번호"></div>
     </div>
     <button id="go">점검 시작</button>
+    <button class="ghost" onclick="dumpLocal()">로그인 없이 이 브라우저 사본만 내려받기</button>
+    <label class="ghost" style="display:inline-block;border:1px solid var(--line);border-radius:8px;padding:9px 16px;cursor:pointer;font-size:14px;margin:0">
+      다른 PC 백업 불러오기<input type="file" id="impFile" accept="application/json,.json" style="display:none"></label>
     <div class="err" id="err"></div>
     <div class="note">예전에 수강생 관리파일을 쓰던 그 브라우저에서 열어야 사본까지 함께 비교됩니다. 계정은 기존 계정이든 인트라넷 통합 계정이든 상관없습니다.</div>
   </div>
@@ -89,6 +92,35 @@ function sum(list){
   return t;
 }
 function idOf(s){ return s.id || ((s.name || "") + "/" + (s.birth || s.birthday || "")); }
+function memoN(v){
+  if(!v) return 0;
+  try{ var a = typeof v === "string" ? JSON.parse(v) : v; return Array.isArray(a) ? a.length : (String(v).trim() ? 1 : 0); }
+  catch(e){ return String(v).trim() ? 1 : 0; }
+}
+function memoArr(v){
+  if(!v) return [];
+  try{ var a = typeof v === "string" ? JSON.parse(v) : v; return Array.isArray(a) ? a : []; }catch(e){ return []; }
+}
+// 메모 한 건에서 '내용'으로 쓸 수 있는 값 찾기 (text 가 비었을 때 다른 칸에 남아 있는지)
+function memoText(m){
+  if(!m || typeof m !== "object") return typeof m === "string" ? m : "";
+  if(typeof m.text === "string" && m.text.trim()) return m.text;
+  var keys = Object.keys(m);
+  for(var i = 0; i < keys.length; i++){
+    var k = keys[i];
+    if(k === "id" || k === "date" || k === "text") continue;
+    if(typeof m[k] === "string" && m[k].trim()) return m[k];
+  }
+  return "";
+}
+function emptyMemoN(v){ return memoArr(v).filter(function(m){ return !(typeof m.text === "string" && m.text.trim()); }).length; }
+function blank(v){
+  if(v === undefined || v === null) return true;
+  if(typeof v === "string"){ var t = v.trim(); return t === "" || t === "[]" || t === "{}"; }
+  if(Array.isArray(v)) return v.length === 0;
+  return false;
+}
+var SKIP = { id:1, assignedClasses:1, _updatedAt:1, _updatedBy:1 };
 var CLOUD = { students:[], conf:{} }, LOCAL = { students:[], conf:{} }, PLAN = null;
 
 var CONF = [
@@ -132,10 +164,23 @@ async function run(){
       CLOUD.conf[c.id] = doc.exists ? { val: doc.data()[c.field], at: doc.data()._updatedAt, by: doc.data()._updatedBy || "" } : null;
     }catch(e){ fail.push("config/" + c.id + " (" + (e.code || "error") + ")"); CLOUD.conf[c.id] = null; }
   }
+  FAIL = fail;
+  renderAll();
+  $("#go").disabled = false; $("#go").textContent = "다시 점검";
+}
+var FAIL = [];
+function renderAll(){
+  var fail = FAIL, rows = "";
   var cs = sum(CLOUD.students), lsm = sum(LOCAL.students);
   rows += "<tr><td>수강생</td><td class=\"n\">" + cs.stu + "명</td><td class=\"n\">" + lsm.stu + "명</td><td class=\"n\">" + dv(lsm.stu - cs.stu) + "</td></tr>";
   rows += "<tr><td>배정된 과목</td><td class=\"n\">" + cs.ac + "개</td><td class=\"n\">" + lsm.ac + "개</td><td class=\"n\">" + dv(lsm.ac - cs.ac) + "</td></tr>";
   rows += "<tr><td>확정 체크</td><td class=\"n\">" + cs.ok + "개</td><td class=\"n\">" + lsm.ok + "개</td><td class=\"n\">" + dv(lsm.ok - cs.ok) + "</td></tr>";
+  var cm = CLOUD.students.reduce(function(a,s){ return a + memoN(s.memo); }, 0);
+  var lm = LOCAL.students.reduce(function(a,s){ return a + memoN(s.memo); }, 0);
+  rows += "<tr><td>특이사항 메모</td><td class=\"n\">" + cm + "건</td><td class=\"n\">" + lm + "건</td><td class=\"n\">" + dv(lm - cm) + "</td></tr>";
+  var ce = CLOUD.students.reduce(function(a,s){ return a + emptyMemoN(s.memo); }, 0);
+  var le = LOCAL.students.reduce(function(a,s){ return a + emptyMemoN(s.memo); }, 0);
+  rows += "<tr><td>└ 내용이 빈 메모</td><td class=\"n\">" + ce + "건</td><td class=\"n\">" + le + "건</td><td class=\"n\">-</td></tr>";
   rows += "<tr><td>배정이 있는 학생</td><td class=\"n\">" + cs.withAc + "명</td><td class=\"n\">" + lsm.withAc + "명</td><td class=\"n\">" + dv(lsm.withAc - cs.withAc) + "</td></tr>";
   CONF.forEach(function(c){
     var cv = CLOUD.conf[c.id], lv = LOCAL.conf[c.id];
@@ -143,13 +188,35 @@ async function run(){
   });
   PLAN = plan();
   var head = '<div class="card"><h2>' + esc(auth.currentUser.email) + ' 계정으로 본 비교</h2>' +
-    '<table><thead><tr><th>항목</th><th class="n">클라우드(공유본)</th><th class="n">이 브라우저 사본</th><th class="n">차이</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-    '<div class="note">클라우드가 모두가 함께 보는 원본이고, 사본은 이 브라우저에만 남아 있는 예전 기록입니다. 사본 쪽 숫자가 크면 그만큼이 클라우드에서 빠진 것입니다.' +
+    '<table><thead><tr><th>항목</th><th class="n">클라우드(공유본)</th><th class="n">' + (LOCAL.from ? "불러온 백업" : "이 브라우저 사본") + '</th><th class="n">차이</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="note">' + (LOCAL.from ? "오른쪽 칸은 불러온 백업 파일(" + esc(String(LOCAL.from).slice(0,10)) + ")의 내용입니다. " : "클라우드가 모두가 함께 보는 원본이고, 사본은 이 브라우저에만 남아 있는 예전 기록입니다. ") + "사본 쪽 숫자가 크면 그만큼이 클라우드에서 빠진 것입니다." +
     (CLOUD.last ? ' 클라우드 최근 저장은 ' + esc(when(CLOUD.last)) + ' · ' + esc(CLOUD.by) + ' 입니다.' : '') + '</div>' +
     (fail.length ? '<div class="note"><b style="color:var(--bad)">읽기 실패: ' + esc(fail.join(", ")) + '</b> — 이 계정에 권한이 없다는 뜻입니다. 자료가 지워진 것이 아니므로 보안 규칙부터 확인하세요.</div>' : "") +
     '<div style="margin-top:14px"><button class="ghost" onclick="dl()">백업 내려받기</button></div></div>';
-  $("#out").innerHTML = head + planCard();
-  $("#go").disabled = false; $("#go").textContent = "다시 점검";
+  var memoStu = CLOUD.students.map(function(s){ return { n:s.name || s.id, c:memoN(s.memo) }; })
+    .filter(function(x){ return x.c; }).sort(function(a,b){ return b.c - a.c; });
+  var memoCard = '<div class="card"><h2>클라우드에 특이사항이 남아 있는 학생 <span class="badge">' + memoStu.length + '명</span></h2>' +
+    (memoStu.length
+      ? '<div class="scroll"><table><thead><tr><th>학생</th><th class="n">메모</th></tr></thead><tbody>' +
+        memoStu.map(function(x){ return "<tr><td>" + esc(x.n) + "</td><td class=\"n\">" + x.c + "건</td></tr>"; }).join("") + '</tbody></table></div>' +
+        '<div class="note">여기 이름이 있는 학생은 메모가 살아 있습니다. 그 학생을 열었는데 화면에 안 보이면 자료가 아니라 화면 쪽 문제이니 알려주세요.</div>'
+      : '<div class="note">클라우드에 남아 있는 특이사항이 없습니다.</div>') + '</div>';
+  var raws = [];
+  CLOUD.students.forEach(function(s){
+    if(raws.length >= 8) return;
+    if(emptyMemoN(s.memo)) raws.push({ n:s.name || s.id, raw:typeof s.memo === "string" ? s.memo : JSON.stringify(s.memo) });
+  });
+  var fix = memoFixPlan();
+  var rawCard = '<div class="card"><h2>메모 원본 들여다보기</h2>' +
+    (raws.length
+      ? '<div class="note">내용이 비어 보이는 메모의 저장된 원본입니다. 날짜 말고 다른 칸에 글이 남아 있는지 확인용입니다.</div>' +
+        raws.map(function(r){ return '<div class="badge" style="margin-top:8px">' + esc(r.n) + '</div><pre>' + esc(r.raw) + '</pre>'; }).join("") +
+        (fix.n
+          ? '<div class="note"><b style="color:var(--ok)">다른 칸에 글이 남아 있습니다.</b> 메모 ' + fix.n + '건(학생 ' + fix.stu.length + '명)을 내용 칸으로 옮겨 되살릴 수 있습니다.</div>' +
+            '<div style="margin-top:10px"><button class="warn" onclick="fixMemos()">메모 내용 되살리기</button></div>'
+          : '<div class="note">원본에도 글이 남아 있지 않습니다. 이 메모들은 내용이 지워진 상태라, 예전 기록이 있는 다른 PC의 백업을 불러와야 되살릴 수 있습니다.</div>')
+      : '<div class="note">내용이 빈 메모가 없습니다.</div>') + '</div>';
+  $("#out").innerHTML = head + planCard() + memoCard + rawCard;
 }
 function dv(n){ return n > 0 ? '<span class="diff">+' + n + '</span>' : String(n); }
 
@@ -169,7 +236,15 @@ function plan(){
       if(at == null){ cac.push(Object.assign({}, a)); idx[k] = cac.length - 1; newAc++; if(a.confirmed || a.isConfirmed) newOk++; }
       else if((a.confirmed === true || a.isConfirmed === true) && cac[at].confirmed !== true){ cac[at].confirmed = true; newOk++; }
     });
-    if(newAc || newOk) merge.push({ id:c.id, name:c.name || l.name, ac:cac, newAc:newAc, newOk:newOk });
+    var fill = {}, fillN = 0, memoAdd = 0;
+    Object.keys(l).forEach(function(k){
+      if(SKIP[k] || k.charAt(0) === "_") return;
+      if(blank(l[k])) return;
+      if(!blank(c[k])) return;
+      fill[k] = l[k]; fillN++;
+      if(k === "memo") memoAdd = memoN(l[k]);
+    });
+    if(newAc || newOk || fillN) merge.push({ id:c.id, name:c.name || l.name, ac:cac, newAc:newAc, newOk:newOk, fill:fill, fillN:fillN, memoAdd:memoAdd, acChanged:!!(newAc || newOk) });
   });
   var conf = [];
   CONF.forEach(function(c){
@@ -188,11 +263,12 @@ function plan(){
   return { add:add, merge:merge, conf:conf };
 }
 function planCard(){
+  PLAN = plan();
   if(!LOCAL.students.length && !Object.keys(LOCAL.conf).some(function(k){ return LOCAL.conf[k]; }))
     return '<div class="card"><h2>복구할 사본이 없습니다</h2><div class="note">이 브라우저에는 예전 기록이 남아 있지 않습니다. 예전에 이 파일을 쓰던 컴퓨터·브라우저에서 같은 주소로 이 페이지를 열어 보세요.</div></div>';
   var p = PLAN, none = !p.add.length && !p.merge.length && !p.conf.length;
   var list = p.merge.slice(0, 200).map(function(m){
-    return "<tr><td>" + esc(m.name || m.id) + "</td><td class=\"n\">" + (m.newAc ? "+" + m.newAc : "-") + "</td><td class=\"n\">" + (m.newOk ? "+" + m.newOk : "-") + "</td></tr>";
+    return "<tr><td>" + esc(m.name || m.id) + "</td><td class=\"n\">" + (m.newAc ? "+" + m.newAc : "-") + "</td><td class=\"n\">" + (m.newOk ? "+" + m.newOk : "-") + "</td><td class=\"n\">" + (m.memoAdd ? "+" + m.memoAdd : "-") + "</td><td class=\"n\">" + (m.fillN ? "+" + m.fillN : "-") + "</td></tr>";
   }).join("");
   return '<div class="card"><h2>사본에만 있는 내용</h2>' +
     '<div class="stats">' +
@@ -200,19 +276,50 @@ function planCard(){
     '<div class="st"><div class="l">배정이 채워질 학생</div><div class="big">' + p.merge.length + '</div></div>' +
     '<div class="st"><div class="l">되살릴 배정 과목</div><div class="big">' + p.merge.reduce(function(a,m){ return a + m.newAc; }, 0) + '</div></div>' +
     '<div class="st"><div class="l">되살릴 확정 체크</div><div class="big">' + p.merge.reduce(function(a,m){ return a + m.newOk; }, 0) + '</div></div>' +
+    '<div class="st"><div class="l">되살릴 특이사항</div><div class="big">' + p.merge.reduce(function(a,m){ return a + (m.memoAdd || 0); }, 0) + '</div></div>' +
+    '<div class="st"><div class="l">채울 빈 칸</div><div class="big">' + p.merge.reduce(function(a,m){ return a + (m.fillN || 0); }, 0) + '</div></div>' +
     '<div class="st"><div class="l">보충할 설정</div><div class="big">' + p.conf.reduce(function(a,c){ return a + c.n; }, 0) + '</div></div>' +
     '</div>' +
     (none
       ? '<div class="note">클라우드에 이미 다 들어 있습니다. 되살릴 것이 없습니다.</div>'
-      : '<div class="scroll">' + (list ? '<table><thead><tr><th>학생</th><th class="n">배정 추가</th><th class="n">확정 추가</th></tr></thead><tbody>' + list + '</tbody></table>' : "") + '</div>' +
+      : '<div class="scroll">' + (list ? '<table><thead><tr><th>학생</th><th class="n">배정 추가</th><th class="n">확정 추가</th><th class="n">특이사항</th><th class="n">빈 칸</th></tr></thead><tbody>' + list + '</tbody></table>' : "") + '</div>' +
         (p.conf.length ? '<div class="note">설정 보충: ' + esc(p.conf.map(function(c){ return c.name + " " + c.n + "건"; }).join(" · ")) + '</div>' : "") +
         '<div style="margin-top:14px"><button class="warn" onclick="restore()">이 내용을 클라우드에 올리기</button><button class="ghost" onclick="dl()">먼저 백업 내려받기</button></div>' +
-        '<div class="note">더하기만 합니다. 클라우드에 이미 있는 학생·배정·확정은 지우거나 바꾸지 않고, 사본에만 있던 것을 채워 넣습니다. 올리기 전에 백업을 한 번 받아 두시길 권합니다.</div>') +
+        '<div class="note">더하기만 합니다. 클라우드에 이미 있는 학생·배정·확정·특이사항은 지우거나 바꾸지 않고, 비어 있는 칸에만 사본 내용을 채워 넣습니다. 올리기 전에 백업을 한 번 받아 두시길 권합니다.</div>') +
     '</div>';
+}
+function memoFixPlan(){
+  var stu = [], n = 0;
+  CLOUD.students.forEach(function(s){
+    var arr = memoArr(s.memo), hit = 0;
+    var next = arr.map(function(m){
+      if(typeof m.text === "string" && m.text.trim()) return m;
+      var t = memoText(m);
+      if(!t) return m;
+      hit++;
+      return { id:m.id || Date.now() + Math.floor(Math.random()*1000), date:m.date || "", text:t };
+    });
+    if(hit){ stu.push({ id:s.id, name:s.name || s.id, memo:JSON.stringify(next), n:hit }); n += hit; }
+  });
+  return { stu:stu, n:n };
+}
+async function fixMemos(){
+  var f = memoFixPlan();
+  if(!f.n) return;
+  if(!confirm("학생 " + f.stu.length + "명의 메모 " + f.n + "건을 되살립니다. 진행할까요?")) return;
+  var me = (auth.currentUser && auth.currentUser.email) || "", done = 0, errs = [];
+  for(var i = 0; i < f.stu.length; i++){
+    try{
+      await db.collection("students").doc(String(f.stu[i].id)).set({ memo:f.stu[i].memo, _updatedAt:firebase.firestore.FieldValue.serverTimestamp(), _updatedBy:me }, { merge:true });
+      done++;
+    }catch(e){ errs.push(f.stu[i].name + ": " + (e.code || "error")); }
+  }
+  alert("되살리기 완료: 학생 " + done + "명" + (errs.length ? "\n실패 " + errs.length + "건" : ""));
+  run();
 }
 async function restore(){
   var p = PLAN; if(!p) return;
-  if(!confirm("학생 " + p.add.length + "명 추가, " + p.merge.length + "명 배정 보충, 설정 " + p.conf.length + "건을 클라우드에 올립니다. 진행할까요?")) return;
+  if(!confirm("학생 " + p.add.length + "명 추가, " + p.merge.length + "명 보충(배정 · 확정 체크 · 특이사항), 설정 " + p.conf.length + "건을 클라우드에 올립니다. 진행할까요?")) return;
   var btn = event.target; btn.disabled = true; btn.textContent = "올리는 중…";
   var me = (auth.currentUser && auth.currentUser.email) || "", done = 0, errs = [];
   var stamp = function(){ return firebase.firestore.FieldValue.serverTimestamp(); };
@@ -223,7 +330,9 @@ async function restore(){
   }
   for(var k = 0; k < p.merge.length; k++){
     var m = p.merge[k];
-    try{ await db.collection("students").doc(String(m.id)).set({ assignedClasses:m.ac, _updatedAt:stamp(), _updatedBy:me }, { merge:true }); done++; }
+    var body = Object.assign({}, m.fill || {}, { _updatedAt:stamp(), _updatedBy:me });
+    if(m.acChanged) body.assignedClasses = m.ac;
+    try{ await db.collection("students").doc(String(m.id)).set(body, { merge:true }); done++; }
     catch(e){ errs.push((m.name || m.id) + ": " + (e.code || "error")); }
   }
   for(var c = 0; c < p.conf.length; c++){
@@ -235,6 +344,45 @@ async function restore(){
   alert("올리기 완료: " + done + "건" + (errs.length ? "\n실패 " + errs.length + "건\n" + errs.slice(0, 5).join("\n") : ""));
   run();
 }
+function collectLocal(){
+  var o = { at:new Date().toISOString(), where:location.href, students: ls("studentMgmt_v3_students") || [], config:{} };
+  CONF.forEach(function(c){ o.config[c.id] = ls(c.lsk); });
+  o.trash = ls("studentMgmt_v3_trash") || [];
+  return o;
+}
+function save(obj, name){
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type:"application/json" }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function dumpLocal(){
+  var o = collectLocal();
+  if(!o.students.length && !Object.keys(o.config).some(function(k){ return o.config[k]; })){
+    alert("이 브라우저에는 수강생 관리파일 기록이 없습니다."); return;
+  }
+  var memo = o.students.reduce(function(a,s){ return a + memoN(s.memo); }, 0);
+  var okc = o.students.reduce(function(a,s){ return a + acOf(s).filter(function(x){ return x.confirmed === true || x.isConfirmed === true; }).length; }, 0);
+  save(o, "사본백업_" + new Date().toISOString().slice(0,10) + ".json");
+  alert("내려받았습니다.\n수강생 " + o.students.length + "명 · 특이사항 " + memo + "건 · 확정 체크 " + okc + "개");
+}
+function loadBackup(file){
+  var r = new FileReader();
+  r.onload = function(){
+    var d;
+    try{ d = JSON.parse(r.result); }catch(e){ alert("백업 파일을 읽지 못했습니다."); return; }
+    var src = d.local && d.local.students && d.local.students.length ? d.local
+            : (d.students ? d : (d.cloud || null));
+    if(!src || !src.students){ alert("이 파일에는 수강생 기록이 없습니다."); return; }
+    var conf = {};
+    var raw = src.config || {};
+    Object.keys(raw).forEach(function(k){ var v = raw[k]; conf[k] = (v && typeof v === "object" && v.val !== undefined) ? v.val : v; });
+    LOCAL = { students:src.students, conf:conf, from:(d.at || "") };
+    if(!auth.currentUser){ alert("불러왔습니다. 이제 로그인해서 점검 시작을 누르세요."); return; }
+    renderAll();
+    alert("불러온 백업으로 비교했습니다. 아래 표에서 되살릴 내용을 확인하세요.");
+  };
+  r.readAsText(file);
+}
 function dl(){
   var data = { at:new Date().toISOString(), account:(auth.currentUser||{}).email || "",
     cloud:{ students:CLOUD.students, config:CLOUD.conf },
@@ -244,6 +392,7 @@ function dl(){
   a.download = "수강생백업_" + new Date().toISOString().slice(0,10) + ".json";
   document.body.appendChild(a); a.click(); a.remove();
 }
+$("#impFile").addEventListener("change", function(e){ if(e.target.files[0]) loadBackup(e.target.files[0]); e.target.value = ""; });
 $("#go").addEventListener("click", run);
 $("#pw").addEventListener("keydown", function(e){ if(e.key === "Enter") run(); });
 </script>
