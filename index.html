@@ -7,9 +7,10 @@
 <title>AIX 3부서 인트라넷</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script>try{var s=JSON.parse(localStorage.getItem("intra_skin"));
-if(!localStorage.getItem("intra_skin_v6")){s="studio";localStorage.setItem("intra_skin",'"studio"');localStorage.setItem("intra_skin_v6","1");}
-if(s!=="mono"&&s!=="navy"&&s!=="studio")s="studio";
-document.documentElement.setAttribute("data-skin",s);}catch(e){document.documentElement.setAttribute("data-skin","studio");}</script>
+if(!localStorage.getItem("intra_skin_v7")){s="slate";localStorage.setItem("intra_skin",'"slate"');localStorage.setItem("intra_skin_v7","1");}
+if(s!=="slate"&&s!=="paper")s="slate";
+document.documentElement.setAttribute("data-skin",s);document.documentElement.className+=" t2";}
+catch(e){document.documentElement.setAttribute("data-skin","slate");document.documentElement.className+=" t2";}</script>
 <style>
 /* ================= 디자인 토큰: 네이비(B) / 모노(C) ================= */
 :root{
@@ -26,15 +27,27 @@ document.documentElement.setAttribute("data-skin",s);}catch(e){document.document
   --nav:#20283a; --nav-ink:#b0b8ca; --nav-hover:#2e374d; --nav-sel:#39435c; --nav-on:#fff; --nav-line:#313a50; --nav-acc:#8fa8e6;
   --brand-ink:#fff; --radius:12px; --shadow:0 18px 50px rgba(0,0,0,.3);
 }
-:root[data-skin="studio"]{
+:root[data-skin="slate"]{
   color-scheme:dark;
-  --bg:#07080B; --panel:#12151B; --sunk:#171B22; --line:#1F242C; --line2:#2A313B;
-  --ink:#EAECEF; --muted:#98A1B0; --faint:#6A7382;
-  --acc:#C9FF57; --acc-soft:#1E2416; --acc-ink:#0B0D10;
-  --ok:#5BE3B4; --ok-soft:#102620; --warn:#FFC46B; --warn-soft:#2A2113; --bad:#FF568A; --bad-soft:#2A141C;
-  --nav:transparent; --nav-ink:rgba(255,255,255,.64); --nav-hover:rgba(255,255,255,.08); --nav-sel:rgba(255,255,255,.13);
-  --nav-on:#fff; --nav-line:rgba(255,255,255,.12); --nav-acc:#C9FF57;
-  --brand-ink:#fff; --radius:14px; --shadow:0 26px 60px rgba(0,0,0,.6);
+  /* 소프트 다크 슬레이트 — 형광 없이 대비를 낮춘 청회색 */
+  --bg:#1A1F27; --panel:#232A34; --sunk:#1F252E; --line:#343D4A; --line2:#404A59;
+  --ink:#DFE5EE; --muted:#A3AEBE; --faint:#7C8798;
+  --acc:#7FA8DF; --acc-soft:#28333F; --acc-ink:#111721;
+  --ok:#7FC4A3; --ok-soft:#24332E; --warn:#D7A273; --warn-soft:#332D26; --bad:#DB9090; --bad-soft:#352B2C;
+  --nav:#232A34; --nav-ink:#A9B4C3; --nav-hover:#2B3340; --nav-sel:#313B49; --nav-on:#F0F4F9; --nav-line:#343D4A; --nav-acc:#7FA8DF;
+  --bad-ink:#1A1F27; --hero:linear-gradient(180deg,#273039,#1F262F);
+  --brand-ink:#F0F4F9; --radius:12px; --shadow:0 10px 30px -14px rgba(0,0,0,.6);
+}
+:root[data-skin="paper"]{
+  color-scheme:light;
+  /* 아이보리 · 웜그레이 — 종이 같은 바탕에 딥그린 포인트 */
+  --bg:#F5F3EF; --panel:#FFFEFC; --sunk:#F7F4EF; --line:#E5E0D7; --line2:#D9D3C8;
+  --ink:#232019; --muted:#625B50; --faint:#938B7E;
+  --acc:#2F6B52; --acc-soft:#E7F1EB; --acc-ink:#FFFFFF;
+  --ok:#2F6B52; --ok-soft:#E7F1EB; --warn:#95591F; --warn-soft:#F6EDE1; --bad:#A3452F; --bad-soft:#F7E9E4;
+  --nav:#FFFEFC; --nav-ink:#574F44; --nav-hover:#F2EFE8; --nav-sel:#EDE9E1; --nav-on:#1D1A14; --nav-line:#E5E0D7; --nav-acc:#2F6B52;
+  --bad-ink:#FFFFFF; --hero:linear-gradient(180deg,#FFFEFC,#F3F0EA);
+  --brand-ink:#1D1A14; --radius:12px; --shadow:0 4px 16px -8px rgba(60,50,30,.22);
 }
 :root[data-skin="mono"]{
   color-scheme:light;
@@ -96,96 +109,82 @@ svg{flex:none}
 [data-skin] .tools{flex-direction:column;align-items:stretch;gap:1px;border-top:1px solid var(--nav-line);padding-top:10px;margin-top:10px}
 [data-skin] .tools .seg{margin:0 10px 6px;align-self:flex-start}
 [data-skin] .tools .lbl{font-size:11px;color:var(--faint);padding:2px 10px 4px}
-/* 화면 테마는 스튜디오로 고정 — 고르는 자리는 숨긴다 (Alt+T로만 전환) */
-#skinSeg,[data-skin] .tools .lbl{display:none!important}
+[data-skin] .tools .lbl{display:none}
 
-/* ===== 스튜디오: 홈페이지형 (상단 떠 있는 메뉴 + 가운데 정렬) ===== */
-[data-skin="studio"] .shell{grid-template-columns:minmax(0,1fr)}
-[data-skin="studio"] .top{position:fixed;top:14px;left:50%;transform:translateX(-50%);
-  width:calc(100vw - 32px);max-width:1280px;
-  flex-direction:row;align-items:center;flex-wrap:nowrap;gap:6px;padding:7px 10px 7px 7px;
-  border-radius:999px;overflow:visible;
-  background:rgba(18,20,26,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 50px rgba(0,0,0,.5);z-index:60}
-[data-skin="studio"] .brand{flex:none;padding:0 10px 0 5px;font-size:14px}
-[data-skin="studio"] .brand small{display:none}
-[data-skin="studio"] .brand .mk{width:24px;height:24px;border-radius:7px;font-size:9px}
-[data-skin="studio"] .gnb{flex-direction:row;gap:1px;overflow:visible;flex:0 1 auto;min-width:0;margin:0 auto;padding:0}
-[data-skin="studio"] .gnb .grp{position:relative;flex:none}
-[data-skin="studio"] .gnb .g{padding:7px 12px;border-radius:999px;font-size:13px;gap:7px}
-[data-skin="studio"] .gnb .g.on{background:rgba(255,255,255,.13)}
-[data-skin="studio"] .gnb .g.on::before{display:none}
-[data-skin="studio"] .gnb .g .cnt,[data-skin="studio"] .gnb .g i.d{display:none}
-[data-skin="studio"] .gnb .sub{display:none}
-[data-skin="studio"] .tools{position:static;flex:none;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;
-  margin:0;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
-[data-skin="studio"] .tools .lbl{display:none}
-[data-skin="studio"] .tools .seg{flex:none;margin:0 6px 0 2px;align-self:center;border-radius:999px;padding:2px;
-  border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.04)}
-[data-skin="studio"] .tools .seg button{white-space:nowrap;padding:4px 9px;font-size:11px;border-radius:999px}
-[data-skin="studio"] .seg button.on{background:var(--acc);color:var(--acc-ink)}
-[data-skin="studio"] .tb{padding:7px 8px;border-radius:999px}
-[data-skin="studio"] .tb span{display:none}
-[data-skin="studio"] .uchip{flex:none;flex-wrap:nowrap;margin:0 0 0 4px;padding:3px 11px 3px 4px;border:0;border-radius:999px;
-  background:var(--acc);color:var(--acc-ink);align-items:center}
-[data-skin="studio"] .uchip .uc-name{flex:none;font-size:12.5px;font-weight:800;color:var(--acc-ink);padding:0 2px;max-width:92px}
-[data-skin="studio"] .uchip .uc-name small{display:none}
-[data-skin="studio"] .uchip button{display:none}
-[data-skin="studio"] .uchip .av{width:22px;height:22px;background:#0B0D10;color:var(--acc);font-size:10px}
-[data-skin="studio"] .tools .tb.opt{display:flex}
+/* ===== 공통 레이아웃: 상단 가로 메뉴 + 가운데 정렬 (종이 / 다크 공용) ===== */
+.t2 .shell{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+.t2 .top{position:relative;z-index:40;height:56px;padding:0 22px;gap:6px;flex-direction:row;align-items:center;flex-wrap:nowrap;
+  background:var(--nav);border-bottom:1px solid var(--nav-line)}
+.t2 .brand{flex:none;padding:0 16px 0 0;font-size:14.5px}
+.t2 .brand small{display:none}
+.t2 .brand .mk{width:26px;height:26px;border-radius:7px;font-size:9px}
+.t2 .gnb{flex-direction:row;gap:2px;overflow:visible;flex:0 1 auto;min-width:0;margin:0;padding:0}
+.t2 .gnb .grp{position:relative;flex:none}
+.t2 .gnb .g{padding:7px 13px;border-radius:8px;font-size:13.5px;gap:6px}
+.t2 .gnb .g.on{background:var(--acc-soft);color:var(--acc)}
+.t2 .gnb .g.on::before{display:none}
+.t2 .gnb .g .cnt,.t2 .gnb .g i.d{display:none}
+.t2 .gnb .sub{display:none}
+.t2 .tools{position:static;flex:none;margin-left:auto;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;
+  margin-top:0;padding:0;border:0;background:none;box-shadow:none}
+.t2 .tools .lbl{display:none}
+.t2 .tools .seg{flex:none;margin:0 8px 0 2px;align-self:center;border-radius:9px;padding:2px;border-color:var(--line)}
+.t2 .tools .seg button{white-space:nowrap;padding:5px 11px;font-size:11.5px;border-radius:7px}
+.t2 .seg button.on{background:var(--acc);color:var(--acc-ink)}
+.t2 .tb{width:32px;height:32px;padding:0;justify-content:center;border-radius:8px}
+.t2 .tb span{display:none}
+.t2 .uchip{flex:none;flex-wrap:nowrap;margin:0 0 0 6px;padding:4px 13px 4px 4px;border:1px solid var(--line);border-radius:999px;
+  background:var(--acc-soft);align-items:center}
+.t2 .uchip .uc-name{flex:none;font-size:13px;font-weight:700;color:var(--acc);padding:0 2px;max-width:98px}
+.t2 .uchip .uc-name small{display:none}
+.t2 .uchip button{display:none}
+.t2 .uchip .av{width:26px;height:26px;background:var(--acc);color:var(--acc-ink);font-size:10px}
+.t2 .tools .tb.opt{display:flex}
+
 /* 홈 */
-[data-skin="studio"] .home{padding:118px 24px 90px;
-  background:radial-gradient(760px 420px at 50% 0%,rgba(201,255,87,.13),transparent 66%),
-             radial-gradient(820px 520px at 12% 22%,rgba(88,120,255,.17),transparent 62%),
-             radial-gradient(700px 440px at 90% 18%,rgba(255,86,138,.12),transparent 62%),#07080B}
-[data-skin="studio"] .home-in{max-width:1100px;gap:46px}
-[data-skin="studio"] .hx{display:block;text-align:center;background:none;border:0;padding:12px 0 0;overflow:visible}
-[data-skin="studio"] .hx::after{display:none}
-[data-skin="studio"] .hx-k{justify-content:center;display:inline-flex;gap:8px;padding:7px 14px;border-radius:999px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#CBD3E1;font-size:12.5px}
-[data-skin="studio"] .hx h1{font-size:54px;letter-spacing:-.045em;line-height:1.08;margin:24px 0 0;font-weight:800}
-[data-skin="studio"] .hx h1 b{background:linear-gradient(100deg,#fff,#C9FF57 72%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
-[data-skin="studio"] .hx p{font-size:16px;max-width:560px;margin:18px auto 0;color:rgba(255,255,255,.66)}
-[data-skin="studio"] .hx-r{justify-content:center;margin-top:30px}
-[data-skin="studio"] .hx-s{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;min-width:132px}
-[data-skin="studio"] .hs-h{justify-content:center;text-align:center;flex-direction:column;gap:6px}
-[data-skin="studio"] .hs-h h2{font-size:30px;letter-spacing:-.03em}
-[data-skin="studio"] .hs-h h2 i{display:none}
-[data-skin="studio"] .hs-h .hs-d{font-size:14px;color:rgba(255,255,255,.6)}
-[data-skin="studio"] .tiles2{gap:14px}
-[data-skin="studio"] .tile2{border-radius:18px;padding:22px 20px 18px;min-height:150px;
-  background:linear-gradient(170deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border-color:rgba(255,255,255,.09)}
-[data-skin="studio"] .tile2::before{display:none}
-[data-skin="studio"] .tile2:hover{transform:translateY(-4px);border-color:rgba(201,255,87,.35);box-shadow:0 26px 60px -30px rgba(0,0,0,.9)}
-[data-skin="studio"] .t-ico{background:rgba(201,255,87,.14);border:1px solid rgba(201,255,87,.3);color:#C9FF57}
-[data-skin="studio"] .t-grp{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7)}
-[data-skin="studio"] .t-go{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
-[data-skin="studio"] .tile2:hover .t-go{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-[data-skin="studio"] .rc{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}
-[data-skin="studio"] .subtabs{background:rgba(10,12,16,.9);border-bottom:1px solid var(--line)}
-/* 앱을 열면 떠 있는 메뉴가 화면을 가리지 않도록 아래로 밀어 준다 */
-[data-skin="studio"] .stage:has(#home[hidden]){padding-top:84px}
-[data-skin="studio"] .note{margin-top:14px;padding:26px 0 6px;text-align:center;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.44);font-size:12.5px;line-height:1.9}
-[data-skin="studio"] .note b{color:rgba(255,255,255,.72)}
-[data-skin="studio"] .dd{border-radius:16px;padding:7px;background:rgba(20,23,30,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 26px 60px rgba(0,0,0,.6);z-index:62}
-[data-skin="studio"] .dd button{border-radius:11px;gap:2px}
-[data-skin="studio"] .dd button:hover,[data-skin="studio"] .dd button.on{background:rgba(201,255,87,.14)}
-[data-skin="studio"] .view iframe{background:var(--bg)}
-@media (max-width:1360px){
-  [data-skin="studio"] .brand > span:last-child{display:none}
-  [data-skin="studio"] .brand{padding:0 4px 0 3px}
-  [data-skin="studio"] .gnb .g{padding:7px 10px;font-size:12.5px}
+.t2 .home{padding:26px 24px 46px;background:var(--bg)}
+.t2 .home-in{max-width:1160px;gap:24px}
+.t2 .hx{display:flex;align-items:center;justify-content:flex-start;gap:26px;padding:26px 28px;color:var(--ink);
+  background:var(--hero);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:calc(var(--radius) + 2px)}
+.t2 .hx::after{display:none}
+.t2 .hx-k{color:var(--faint)}
+.t2 .hx-dot{background:var(--faint)}
+.t2 .hx h1{font-size:26px;letter-spacing:-.035em;margin:9px 0 0}
+.t2 .hx p{font-size:14px;color:var(--muted);margin:7px 0 0}
+.t2 .hx-r{margin-left:auto}
+.t2 .st{min-width:132px;padding:13px 16px;border-radius:11px;background:var(--panel);border:1px solid var(--line);color:var(--ink);backdrop-filter:none}
+.t2 button.st:hover{background:var(--sunk)}
+.t2 .st small{color:var(--faint)}
+.t2 .st b{font-size:21px}
+.t2 .st b em{color:var(--muted)}
+.t2 .st.hot{background:var(--bad-soft);border-color:var(--bad)}
+.t2 .st.hot b{color:var(--bad)}
+.t2 .hs-h h2 i{background:var(--acc)}
+.t2 .tile2{border-radius:calc(var(--radius) + 2px)}
+.t2 .tile2::before{background:var(--acc)}
+.t2 .t-ico{background:var(--acc-soft);color:var(--acc)}
+.t2 .ico{background:var(--acc-soft);color:var(--acc)}
+.t2 .t-grp{color:var(--faint);background:var(--sunk);border:1px solid var(--line2)}
+.t2 .t-go{background:var(--acc-soft);border-color:transparent;color:var(--acc)}
+.t2 .tile2:hover .t-go{background:var(--acc);color:var(--acc-ink)}
+.t2 .subtabs{background:var(--panel);border-bottom:1px solid var(--line)}
+.t2 .dd{border-radius:12px;padding:6px;background:var(--panel);border:1px solid var(--line2);box-shadow:var(--shadow);z-index:62}
+.t2 .dd button{border-radius:9px;gap:2px}
+.t2 .dd button:hover,.t2 .dd button.on{background:var(--acc-soft)}
+
+@media (max-width:1240px){
+  .t2 .brand > span:last-child{display:none}
+  .t2 .brand{padding:0 8px 0 0}
+  .t2 .gnb .g{padding:7px 10px;font-size:13px}
+  .t2 .tools .seg button{padding:5px 9px;font-size:11px}
 }
-@media (max-width:1180px){
-  [data-skin="studio"] .shell{grid-template-rows:auto minmax(0,1fr)}
-  [data-skin="studio"] .top{position:static;transform:none;width:auto;max-width:none;border-radius:0;margin:0;flex-wrap:wrap;
-    background:rgba(12,14,19,.96);border-left:0;border-right:0;border-top:0}
-  [data-skin="studio"] .brand > span:last-child{display:block}
-  [data-skin="studio"] .gnb{margin:0}
-  [data-skin="studio"] .tools{position:static;border:0;background:none;box-shadow:none;backdrop-filter:none;padding:0}
-  [data-skin="studio"] .home{padding-top:40px}
-  [data-skin="studio"] .stage:has(#home[hidden]){padding-top:0}
-  [data-skin="studio"] .hx h1{font-size:38px}
+@media (max-width:1040px){
+  .t2 .top{height:auto;padding:8px 14px;flex-wrap:wrap}
+  .t2 .brand > span:last-child{display:block}
+  .t2 .tools{margin-left:auto}
+  .t2 .home{padding:18px 14px 40px}
+  .t2 .hx{flex-wrap:wrap;gap:16px}
+  .t2 .hx-r{margin-left:0}
 }
 
 /* 모노: 대분류에 마우스를 올리면 뜨는 하위 목록 */
@@ -378,13 +377,13 @@ button.st:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}
 
 /* ================= 새 공지 N 배지 ================= */
 .nbadge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-left:6px;border-radius:99px;
-  background:#ff4d5e;color:#fff;font-size:10px;font-weight:800;font-style:normal;letter-spacing:0;line-height:1;vertical-align:1px;
-  box-shadow:0 0 0 2px color-mix(in srgb,#ff4d5e 25%,transparent);animation:nbpulse 2.4s ease-in-out infinite}
-@keyframes nbpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,#ff4d5e 0%,transparent)}}
+  background:var(--bad);color:var(--bad-ink,#fff);font-size:10px;font-weight:800;font-style:normal;letter-spacing:0;line-height:1;vertical-align:1px;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 22%,transparent);animation:nbpulse 2.4s ease-in-out infinite}
+@keyframes nbpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--bad) 0%,transparent)}}
 @media (prefers-reduced-motion: reduce){ .nbadge{animation:none} }
 .gnb .sub button .nbadge{margin-left:5px}
 .newsbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 16px;border-radius:var(--radius);
-  background:color-mix(in srgb,#ff4d5e 12%,var(--panel));border:1px solid color-mix(in srgb,#ff4d5e 40%,var(--line))}
+  background:var(--bad-soft);border:1px solid color-mix(in srgb,var(--bad) 32%,var(--line))}
 .newsbtn .nbadge{margin:0}
 .newsbtn span b{display:block;font-size:14px}
 .newsbtn small{display:block;font-size:12px;color:var(--muted)}
@@ -470,7 +469,7 @@ input[type=color].f{padding:2px;height:34px;cursor:pointer}
     <div class="tools">
       <div class="lbl">화면 테마</div>
       <div class="seg" id="skinSeg" role="group" aria-label="화면 테마">
-        <button data-skin="navy">네이비</button><button data-skin="mono">모노</button><button data-skin="studio">스튜디오</button>
+        <button data-skin="slate">다크</button><button data-skin="paper">밝게</button>
       </div>
       <button class="tb opt" id="reloadBtn" title="지금 화면만 다시 불러오기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg><span>새로고침</span></button>
       <button class="tb opt" id="printBtn" title="지금 화면만 인쇄 (Ctrl+P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg><span>인쇄</span></button>
@@ -839,7 +838,7 @@ function makeFrame(id){
 
 /* ---------- 화면 그리기 ---------- */
 var S = { group:null, app:null, lastApp: lsGet("intra_last") || {} };
-var SKIN = document.documentElement.getAttribute("data-skin") || "studio";
+var SKIN = document.documentElement.getAttribute("data-skin") || "slate";
 
 function renderTop(){
   $("#gnb").innerHTML =
@@ -975,7 +974,7 @@ function openDD(btn){
   clearTimeout(ddTimer);
   // 네이비·모노는 왼쪽 메뉴에 하위 목록이 펼쳐져 있어 사용하지 않고, 스튜디오에서만 펼침 메뉴를 쓴다
   var gid = btn.dataset.dd;
-  if(!gid || document.documentElement.getAttribute("data-skin") !== "studio") return closeDD();
+  if(!gid) return closeDD();
   var list = appsIn(gid); if(!list.length) return closeDD();
   var r = btn.getBoundingClientRect(), dd = $("#dd");
   ddFor = gid;
@@ -1168,7 +1167,7 @@ function hotkey(e){
   if(e.key === "Escape"){ closeDD(); if(E) closeEditor(); if($("#userRoot").innerHTML) closeUsers(); }
   if(!e.altKey || e.ctrlKey || e.metaKey) return;
   if(e.key === "t" || e.key === "T"){   /* 숨은 기능: 예전 테마로 잠깐 돌려 보기 */
-    e.preventDefault(); var order = ["studio","navy","mono"]; setSkin(order[(order.indexOf(SKIN)+1) % order.length]); return;
+    e.preventDefault(); var order = ["slate","paper"]; setSkin(order[(order.indexOf(SKIN)+1) % order.length]); return;
   }
   if(e.key === "0"){ e.preventDefault(); go(null, null); return; }
   var n = parseInt(e.key, 10), vg = visGroups();
@@ -1180,7 +1179,7 @@ function fromHash(){ go(null, location.hash.replace(/^#/, "") || null, true); }
 window.addEventListener("popstate", fromHash);
 
 /* =========================================================
-   화면 테마 엔진 — 각 업무 화면(iframe)의 색을 인트라넷 테마(네이비/모노)에 맞춰 바꿈
+   화면 테마 엔진 — 각 업무 화면(iframe)의 색을 인트라넷 테마(다크/밝게)에 맞춰 바꿈
    · 업무 화면 원본 코드는 건드리지 않고, 열릴 때 CSS 색만 바꿔 입힘
    · 인쇄·이미지 저장(html2canvas) 때는 원래 색으로 잠시 되돌림
    ========================================================= */
@@ -1206,26 +1205,19 @@ var APP_SKIN = {
 var h2r = function(h){ h = h.replace("#",""); if(h.length < 6) h = h.split("").map(function(c){ return c + c; }).join(""); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; };
 var stops = function(o){ return Object.keys(o).map(function(k){ return [parseFloat(k), h2r(o[k])]; }).sort(function(a,b){ return a[0]-b[0]; }); };
 var PALETTE = {
-  navy: {   // 전체 네이비 톤, 포인트는 차분한 블루
-    dark:true,
-    light: stops({"0":"#f0f2f8",".15":"#e4e7ef",".3":"#ced3df",".45":"#b0b8ca",".62":"#848da4",".75":"#636d86",".86":"#4a5570",".92":"#3e4861",".96":"#353f57",".985":"#262e42","1":"#2e374d"}),
-    darkN: stops({"0":"#20283a",".065":"#262e42",".09":"#2e374d",".12":"#353f57",".14":"#39435c",".17":"#3e4861",".2":"#4a5570",".26":"#56617c",".35":"#848da4",".5":"#b0b8ca",".65":"#c9cedb",".8":"#e4e7ef","1":"#f5f7fb"}),
-    solid: stops({"0":"#465170",".3":"#56617c"}),
-    acc:h2r("#7b93d9"), accSoft:h2r("#3a4766"), soft:true
+  slate: {   // 소프트 다크 슬레이트 — 형광 없이 대비를 낮춘 청회색
+    dark:true, soft:true, sMax:.34, tintBase:"#232A34",
+    light: stops({"0":"#F2F5F9",".15":"#E2E7EE",".3":"#CBD2DC",".45":"#AAB4C1",".62":"#848F9E",".75":"#67717F",".86":"#4B5564",".92":"#3D4653",".96":"#2F3741",".985":"#232A34","1":"#1E242C"}),
+    darkN: stops({"0":"#161A20",".065":"#1A1F27",".09":"#1F252E",".12":"#232A34",".14":"#272F3A",".17":"#2C3540",".2":"#343D4A",".26":"#3E4854",".35":"#5C6775",".5":"#8A95A4",".65":"#AEB8C5",".8":"#D3DAE3","1":"#EFF3F8"}),
+    solid: stops({"0":"#2B333D",".3":"#39434F"}),
+    acc:h2r("#7FA8DF"), accSoft:h2r("#28333F")
   },
-  studio: {   // 짙은 먹색 + 라임 포인트
-    dark:true,
-    light: stops({"0":"#f2f3f5",".15":"#e6e8ea",".3":"#d2d5d9",".45":"#b4b9bf",".62":"#888e96",".75":"#676d75",".86":"#4b5159",".92":"#3c424a",".96":"#2f343b",".985":"#1e2227","1":"#15181d"}),
-    darkN: stops({"0":"#15181d",".065":"#1b1f25",".09":"#20242a",".12":"#272c33",".14":"#2b3038",".17":"#31373f",".2":"#3b414a",".26":"#474e58",".35":"#6b7280",".5":"#9aa1ab",".65":"#c2c7cd",".8":"#e2e5e8","1":"#f6f7f8"}),
-    solid: stops({"0":"#3a4049",".3":"#474e58"}),
-    acc:h2r("#c9ff57"), accSoft:h2r("#2a3318"), soft:true
-  },
-  mono: {
-    dark:false,
-    light: stops({"0":"#0f1115",".15":"#1e2126",".3":"#3a3e45",".45":"#5b616b",".62":"#9ba1aa",".75":"#b3b8bf",".86":"#d2d6dc",".92":"#e4e7eb",".96":"#eff0f3",".985":"#f5f6f8","1":"#ffffff"}),
-    darkN: stops({"0":"#e6e9ed",".065":"#eceef1",".09":"#ffffff",".12":"#f5f6f8",".14":"#e4e7eb",".17":"#e1e4e8",".2":"#d2d6dc",".26":"#c3c8cf",".35":"#9ba1aa",".5":"#6b717a",".65":"#4a4f57",".8":"#2a2d33","1":"#0f1115"}),
+  paper: {   // 아이보리 · 웜그레이 — 종이 같은 바탕에 딥그린 포인트
+    dark:false, sMax:.40, tintBase:"#FFFEFC",
+    light: stops({"0":"#231F18",".15":"#332E25",".3":"#4D4639",".45":"#6B6354",".62":"#938B7E",".75":"#B3AB9D",".86":"#D9D3C8",".92":"#E5E0D7",".96":"#F2EEE8",".985":"#F8F5F0","1":"#FFFEFB"}),
+    darkN: stops({"0":"#F5F3EF",".065":"#FAF8F4",".09":"#FFFEFC",".12":"#F7F4EF",".14":"#F0ECE5",".17":"#EBE6DD",".2":"#E5E0D7",".26":"#D9D3C8",".35":"#938B7E",".5":"#6B6354",".65":"#4D4639",".8":"#332E25","1":"#231F18"}),
     solid: null,
-    acc:h2r("#0f1115"), accSoft:h2r("#e8eaee")
+    acc:h2r("#2F6B52"), accSoft:h2r("#E7F1EB")
   }
 };
 var COLOR_RE = /#[0-9a-fA-F]{3,8}\b|rgba?\([^()]*\)|hsla?\([^()]*\)|\b(?:white|black)\b(?!-)/gi;
@@ -1300,19 +1292,24 @@ function mapColor(c, ctx, prop, literal){
     if(literal && !dn && P.solid && I.l < .3 && /background/.test(prop) && c.a > .5) return fmt(ramp(P.solid, I.l), c.a);
     return fmt(ramp(dn ? P.darkN : P.light, I.l), c.a);
   }
-  // 상태색(초록·주황·빨강 등): 색상은 유지하고 밝기만 테마에 맞춤
+  // 상태색(초록·주황·빨강 등): 색상각은 살리되 채도를 눌러 눈이 편하게
+  var sMax = P.sMax == null ? .55 : P.sMax;
   if(P.dark && !dn){
-    if(I.l >= .8){   // 옅은 색 배경 → 네이비에 살짝만 물든 배경
-      var tint = hsl2rgb(I.h, Math.min(I.s,.35), .45), base = h2r("#2e374d");
-      return fmt([base[0]+(tint[0]-base[0])*.22, base[1]+(tint[1]-base[1])*.22, base[2]+(tint[2]-base[2])*.22], c.a);
+    if(I.l >= .8){   // 옅은 색 배경 → 바탕색에 살짝만 물든 배경
+      var tint = hsl2rgb(I.h, Math.min(I.s, sMax), .45), base = h2r(P.tintBase || "#2e374d");
+      return fmt([base[0]+(tint[0]-base[0])*.2, base[1]+(tint[1]-base[1])*.2, base[2]+(tint[2]-base[2])*.2], c.a);
     }
-    return fmt(hsl2rgb(I.h, Math.min(I.s,.55), Math.max(.66, Math.min(I.l + .22, .74))), c.a);
+    return fmt(hsl2rgb(I.h, Math.min(I.s, sMax), Math.max(.62, Math.min(I.l + .2, .74))), c.a);
   }
   if(!P.dark && dn){
-    if(I.l <= .3) return fmt(hsl2rgb(I.h, Math.min(I.s,.55), .92), c.a);
-    return fmt(hsl2rgb(I.h, I.s, Math.min(I.l, .42)), c.a);
+    if(I.l <= .3) return fmt(hsl2rgb(I.h, Math.min(I.s, sMax), .92), c.a);
+    return fmt(hsl2rgb(I.h, Math.min(I.s, sMax), Math.min(I.l, .42)), c.a);
   }
-  if(!P.dark && !dn) return null;
+  if(!P.dark && !dn){
+    if(I.s <= sMax) return null;                       // 이미 차분한 색은 그대로
+    if(I.l >= .82) return fmt(hsl2rgb(I.h, Math.min(I.s, sMax * .7), Math.max(I.l, .92)), c.a);
+    return fmt(hsl2rgb(I.h, sMax, Math.min(I.l, .44)), c.a);
+  }
   return null;
 }
 function mapValue(val, ctx, prop, literal){
@@ -1695,7 +1692,7 @@ function enter(){
   $("#sso").hidden = true;
   renderUserChip();
   renderHome();
-  fromHash();
+  go(null, null, true);   // 접속하면 언제나 홈 화면부터 (주소에 남아 있던 업무는 무시)
 }
 async function ssoLogout(){
   if(SSO.ready && !confirm("모든 업무에서 로그아웃할까요?")) return;
