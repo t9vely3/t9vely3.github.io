@@ -735,6 +735,33 @@ function normalize(c){
 var CFG = normalize(lsGet("intra_menu") || FILE_CFG);
 var LOCAL_EDIT = !!lsGet("intra_menu");
 
+/* 저장해 둔 메뉴에서 바이럴 관리가 공지사항 쪽에 묶여 있으면 제자리(마케팅)로 한 번 되돌린다.
+   다른 메뉴 편집 내용은 그대로 두고, 아래 목록만 손본다. */
+(function fixGroups(){
+  if(!LOCAL_EDIT) return;
+  try{ if(localStorage.getItem("intra_menu_fix1")) return; }catch(e){ return; }
+  var WANT = { viral:"marketing" };                   // 업무 → 있어야 할 분류
+  var moved = false;
+  var find = function(src){ return CFG.apps.filter(function(x){ return x.src === src; })[0]; };
+  var has  = function(gid){ return CFG.groups.some(function(x){ return x.id === gid; }); };
+  Object.keys(WANT).forEach(function(src){
+    var a = find(src), want = WANT[src]; if(!a || a.group === want) return;
+    if(!has(want)){                                    // 분류가 지워졌으면 파일 기본값에서 되살린다
+      var g = FILE_CFG.groups.filter(function(x){ return x.id === want; })[0];
+      if(!g) return;
+      var at = FILE_CFG.groups.indexOf(g), pos = CFG.groups.length;   // 파일 기본값과 같은 자리에 끼워 넣는다
+      for(var i=0;i<CFG.groups.length;i++){
+        var k = FILE_CFG.groups.map(function(x){ return x.id; }).indexOf(CFG.groups[i].id);
+        if(k > at){ pos = i; break; }
+      }
+      CFG.groups.splice(pos, 0, JSON.parse(JSON.stringify(g)));
+    }
+    a.group = want; moved = true;
+  });
+  try{ localStorage.setItem("intra_menu_fix1","1"); }catch(e){}
+  if(moved) lsSet("intra_menu", CFG);
+})();
+
 var groupOf = function(id){ return CFG.groups.filter(function(g){ return g.id===id; })[0]; };
 var appOf = function(src){ return CFG.apps.filter(function(a){ return a.src===src; })[0]; };
 var appsIn = function(gid){ return CFG.apps.filter(function(a){ return a.group===gid && !a.hidden; }); };
