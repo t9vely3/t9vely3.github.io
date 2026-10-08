@@ -6,8 +6,9 @@
 <meta name="robots" content="noindex, nofollow">
 <title>AIX 3부서 인트라넷</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script>try{var s=JSON.parse(localStorage.getItem("intra_skin"));
-if(!localStorage.getItem("intra_skin_v7")){s="slate";localStorage.setItem("intra_skin",'"slate"');localStorage.setItem("intra_skin_v7","1");}
+<script>try{var SITE="aix",K=function(k){return k+"::"+SITE;};
+var s=JSON.parse(localStorage.getItem(K("intra_skin")));
+if(!localStorage.getItem(K("intra_skin_v7"))){s="slate";localStorage.setItem(K("intra_skin"),'"slate"');localStorage.setItem(K("intra_skin_v7"),"1");}
 if(s!=="slate"&&s!=="paper")s="slate";
 document.documentElement.setAttribute("data-skin",s);document.documentElement.className+=" t2";}
 catch(e){document.documentElement.setAttribute("data-skin","slate");document.documentElement.className+=" t2";}</script>
@@ -710,8 +711,25 @@ var ICON_NAMES = {users:"사람", chart:"대시보드", doc:"문서", check:"체
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); };
-function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
-function lsSet(k,v){ try{ if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+/* 저장 키는 사이트별로 따로 쓴다.
+   3부서·3-1팀 인트라넷이 같은 주소(github.io)를 쓰기 때문에, 키를 나누지 않으면
+   한쪽에서 바꾼 메뉴·테마가 다른 쪽에 그대로 넘어간다. */
+var SITE = "aix";
+var SKEY = function(k){ return k + "::" + SITE; };
+(function moveOldKeys(){
+  try{
+    if(localStorage.getItem(SKEY("intra_moved"))) return;
+    var keys = ["intra_recent","intra_last","intra_skin","intra_skin_v7","intra_menu_fix1"];
+    if(SITE === "aix") keys.push("intra_menu");       // 예전 공용 메뉴 설정은 3부서 것이었다
+    keys.forEach(function(k){
+      var v = localStorage.getItem(k);
+      if(v != null && localStorage.getItem(SKEY(k)) == null) localStorage.setItem(SKEY(k), v);
+    });
+    localStorage.setItem(SKEY("intra_moved"), "1");
+  }catch(e){}
+})();
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(SKEY(k))); }catch(e){ return null; } }
+function lsSet(k,v){ try{ if(v === null) localStorage.removeItem(SKEY(k)); else localStorage.setItem(SKEY(k), JSON.stringify(v)); }catch(e){} }
 var uid = function(){ return "g" + Math.random().toString(36).slice(2,8); };
 function toast(m){
   var t = document.createElement("div"); t.className = "toast"; t.textContent = m;
@@ -739,7 +757,7 @@ var LOCAL_EDIT = !!lsGet("intra_menu");
    다른 메뉴 편집 내용은 그대로 두고, 아래 목록만 손본다. */
 (function fixGroups(){
   if(!LOCAL_EDIT) return;
-  try{ if(localStorage.getItem("intra_menu_fix1")) return; }catch(e){ return; }
+  try{ if(localStorage.getItem(SKEY("intra_menu_fix1"))) return; }catch(e){ return; }
   var WANT = { viral:"marketing" };                   // 업무 → 있어야 할 분류
   var moved = false;
   var find = function(src){ return CFG.apps.filter(function(x){ return x.src === src; })[0]; };
@@ -758,7 +776,7 @@ var LOCAL_EDIT = !!lsGet("intra_menu");
     }
     a.group = want; moved = true;
   });
-  try{ localStorage.setItem("intra_menu_fix1","1"); }catch(e){}
+  try{ localStorage.setItem(SKEY("intra_menu_fix1"),"1"); }catch(e){}
   if(moved) lsSet("intra_menu", CFG);
 })();
 
