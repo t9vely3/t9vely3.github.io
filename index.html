@@ -35,7 +35,7 @@ catch(e){document.documentElement.setAttribute("data-skin","slate");document.doc
   --acc:#7FA8DF; --acc-soft:#28333F; --acc-ink:#111721;
   --ok:#7FC4A3; --ok-soft:#24332E; --warn:#D7A273; --warn-soft:#332D26; --bad:#DB9090; --bad-soft:#352B2C;
   --nav:#232A34; --nav-ink:#A9B4C3; --nav-hover:#2B3340; --nav-sel:#313B49; --nav-on:#F0F4F9; --nav-line:#343D4A; --nav-acc:#7FA8DF;
-  --bad-ink:#1A1F27; --hero:linear-gradient(180deg,#273039,#1F262F);
+  --bad-ink:#1A1F27; --new:#E8565B; --new-ink:#fff; --hero:linear-gradient(180deg,#273039,#1F262F);
   --brand-ink:#F0F4F9; --radius:12px; --shadow:0 10px 30px -14px rgba(0,0,0,.6);
 }
 :root[data-skin="paper"]{
@@ -46,7 +46,7 @@ catch(e){document.documentElement.setAttribute("data-skin","slate");document.doc
   --acc:#2F6B52; --acc-soft:#E7F1EB; --acc-ink:#FFFFFF;
   --ok:#2F6B52; --ok-soft:#E7F1EB; --warn:#95591F; --warn-soft:#F6EDE1; --bad:#A3452F; --bad-soft:#F7E9E4;
   --nav:#FFFEFC; --nav-ink:#574F44; --nav-hover:#F2EFE8; --nav-sel:#EDE9E1; --nav-on:#1D1A14; --nav-line:#E5E0D7; --nav-acc:#2F6B52;
-  --bad-ink:#FFFFFF; --hero:linear-gradient(180deg,#FFFEFC,#F3F0EA);
+  --bad-ink:#FFFFFF; --new:#CE3B3F; --new-ink:#fff; --hero:linear-gradient(180deg,#FFFEFC,#F3F0EA);
   --brand-ink:#1D1A14; --radius:12px; --shadow:0 4px 16px -8px rgba(60,50,30,.22);
 }
 :root[data-skin="mono"]{
@@ -377,13 +377,14 @@ button.st:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}
 
 /* ================= 새 공지 N 배지 ================= */
 .nbadge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-left:6px;border-radius:99px;
-  background:var(--bad);color:var(--bad-ink,#fff);font-size:10px;font-weight:800;font-style:normal;letter-spacing:0;line-height:1;vertical-align:1px;
-  box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 22%,transparent);animation:nbpulse 2.4s ease-in-out infinite}
-@keyframes nbpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--bad) 0%,transparent)}}
+  background:var(--new);color:var(--new-ink);font-size:10px;font-weight:800;font-style:normal;letter-spacing:0;line-height:1;vertical-align:1px;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--new) 28%,transparent);animation:nbpulse 2.4s ease-in-out infinite}
+@keyframes nbpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--new) 0%,transparent)}}
+.nbadge.wide{min-width:0;height:18px;padding:0 7px;font-size:9.5px;letter-spacing:.06em;border-radius:6px}
 @media (prefers-reduced-motion: reduce){ .nbadge{animation:none} }
 .gnb .sub button .nbadge{margin-left:5px}
 .newsbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 16px;border-radius:var(--radius);
-  background:var(--bad-soft);border:1px solid color-mix(in srgb,var(--bad) 32%,var(--line))}
+  background:color-mix(in srgb,var(--new) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--new) 38%,var(--line))}
 .newsbtn .nbadge{margin:0}
 .newsbtn span b{display:block;font-size:14px}
 .newsbtn small{display:block;font-size:12px;color:var(--muted)}
@@ -856,10 +857,10 @@ function renderTop(){
 function newsOf(src){ return (typeof NEWS !== "undefined" && NEWS[src]) || 0; }
 function freshOf(src){ return (typeof FRESH !== "undefined" && FRESH[src]) || 0; }
 function hasNew(src){ return newsOf(src) > 0 || freshOf(src) > 0; }
-function nb(src){
+function nb(src, wide){
   if(!hasNew(src)) return '';
   var tip = newsOf(src) ? '확인하지 않은 공지 ' + newsOf(src) + '건' : '24시간 안에 올라온 새 공지 ' + freshOf(src) + '건';
-  return '<b class="nbadge" title="' + tip + '">N</b>';
+  return '<b class="nbadge' + (wide ? ' wide' : '') + '" title="' + tip + '">' + (wide ? 'NEW' : 'N') + '</b>';
 }
 function nbGroup(list){ return list.some(function(a){ return hasNew(a.src); }) ? '<b class="nbadge" title="새 공지">N</b>' : ''; }
 function renderNews(){
@@ -872,7 +873,7 @@ function renderNews(){
   }
   document.querySelectorAll('#groups .tile2[data-a], #recent .rc[data-a]').forEach(function(b){
     var old = b.querySelector(".nbadge"); if(old) old.remove();
-    if(hasNew(b.dataset.a)){ var t = b.querySelector("b"); if(t) t.insertAdjacentHTML("beforeend", nb(b.dataset.a)); }
+    if(hasNew(b.dataset.a)){ var t = b.querySelector("b"); if(t) t.insertAdjacentHTML("beforeend", nb(b.dataset.a, true)); }
   });
   document.querySelectorAll('#groups .hs').forEach(function(s){
     var h = s.querySelector(".hs-h h2"), old = h && h.querySelector(".nbadge"); if(old) old.remove();
