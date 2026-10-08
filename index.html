@@ -6,7 +6,10 @@
 <meta name="robots" content="noindex, nofollow">
 <title>AIX 3부서 인트라넷</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script>try{var s=JSON.parse(localStorage.getItem("intra_skin"));if(s==="mono"||s==="navy")document.documentElement.setAttribute("data-skin",s);}catch(e){}</script>
+<script>try{var s=JSON.parse(localStorage.getItem("intra_skin"));
+if(!localStorage.getItem("intra_skin_v6")){s="studio";localStorage.setItem("intra_skin",'"studio"');localStorage.setItem("intra_skin_v6","1");}
+if(s!=="mono"&&s!=="navy"&&s!=="studio")s="studio";
+document.documentElement.setAttribute("data-skin",s);}catch(e){document.documentElement.setAttribute("data-skin","studio");}</script>
 <style>
 /* ================= 디자인 토큰: 네이비(B) / 모노(C) ================= */
 :root{
@@ -22,6 +25,16 @@
   --ok:#7fcfaa; --ok-soft:#2f4a48; --warn:#e6b877; --warn-soft:#4a4336; --bad:#e98a8a; --bad-soft:#4f3a44;
   --nav:#20283a; --nav-ink:#b0b8ca; --nav-hover:#2e374d; --nav-sel:#39435c; --nav-on:#fff; --nav-line:#313a50; --nav-acc:#8fa8e6;
   --brand-ink:#fff; --radius:12px; --shadow:0 18px 50px rgba(0,0,0,.3);
+}
+:root[data-skin="studio"]{
+  color-scheme:dark;
+  --bg:#07080B; --panel:#12151B; --sunk:#171B22; --line:#1F242C; --line2:#2A313B;
+  --ink:#EAECEF; --muted:#98A1B0; --faint:#6A7382;
+  --acc:#C9FF57; --acc-soft:#1E2416; --acc-ink:#0B0D10;
+  --ok:#5BE3B4; --ok-soft:#102620; --warn:#FFC46B; --warn-soft:#2A2113; --bad:#FF568A; --bad-soft:#2A141C;
+  --nav:transparent; --nav-ink:rgba(255,255,255,.64); --nav-hover:rgba(255,255,255,.08); --nav-sel:rgba(255,255,255,.13);
+  --nav-on:#fff; --nav-line:rgba(255,255,255,.12); --nav-acc:#C9FF57;
+  --brand-ink:#fff; --radius:14px; --shadow:0 26px 60px rgba(0,0,0,.6);
 }
 :root[data-skin="mono"]{
   color-scheme:light;
@@ -83,6 +96,97 @@ svg{flex:none}
 [data-skin] .tools{flex-direction:column;align-items:stretch;gap:1px;border-top:1px solid var(--nav-line);padding-top:10px;margin-top:10px}
 [data-skin] .tools .seg{margin:0 10px 6px;align-self:flex-start}
 [data-skin] .tools .lbl{font-size:11px;color:var(--faint);padding:2px 10px 4px}
+/* 화면 테마는 스튜디오로 고정 — 고르는 자리는 숨긴다 (Alt+T로만 전환) */
+#skinSeg,[data-skin] .tools .lbl{display:none!important}
+
+/* ===== 스튜디오: 홈페이지형 (상단 떠 있는 메뉴 + 가운데 정렬) ===== */
+[data-skin="studio"] .shell{grid-template-columns:minmax(0,1fr)}
+[data-skin="studio"] .top{position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  width:calc(100vw - 32px);max-width:1280px;
+  flex-direction:row;align-items:center;flex-wrap:nowrap;gap:6px;padding:7px 10px 7px 7px;
+  border-radius:999px;overflow:visible;
+  background:rgba(18,20,26,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 50px rgba(0,0,0,.5);z-index:60}
+[data-skin="studio"] .brand{flex:none;padding:0 10px 0 5px;font-size:14px}
+[data-skin="studio"] .brand small{display:none}
+[data-skin="studio"] .brand .mk{width:24px;height:24px;border-radius:7px;font-size:9px}
+[data-skin="studio"] .gnb{flex-direction:row;gap:1px;overflow:visible;flex:0 1 auto;min-width:0;margin:0 auto;padding:0}
+[data-skin="studio"] .gnb .grp{position:relative;flex:none}
+[data-skin="studio"] .gnb .g{padding:7px 12px;border-radius:999px;font-size:13px;gap:7px}
+[data-skin="studio"] .gnb .g.on{background:rgba(255,255,255,.13)}
+[data-skin="studio"] .gnb .g.on::before{display:none}
+[data-skin="studio"] .gnb .g .cnt,[data-skin="studio"] .gnb .g i.d{display:none}
+[data-skin="studio"] .gnb .sub{display:none}
+[data-skin="studio"] .tools{position:static;flex:none;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;
+  margin:0;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
+[data-skin="studio"] .tools .lbl{display:none}
+[data-skin="studio"] .tools .seg{flex:none;margin:0 6px 0 2px;align-self:center;border-radius:999px;padding:2px;
+  border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.04)}
+[data-skin="studio"] .tools .seg button{white-space:nowrap;padding:4px 9px;font-size:11px;border-radius:999px}
+[data-skin="studio"] .seg button.on{background:var(--acc);color:var(--acc-ink)}
+[data-skin="studio"] .tb{padding:7px 8px;border-radius:999px}
+[data-skin="studio"] .tb span{display:none}
+[data-skin="studio"] .uchip{flex:none;flex-wrap:nowrap;margin:0 0 0 4px;padding:3px 11px 3px 4px;border:0;border-radius:999px;
+  background:var(--acc);color:var(--acc-ink);align-items:center}
+[data-skin="studio"] .uchip .uc-name{flex:none;font-size:12.5px;font-weight:800;color:var(--acc-ink);padding:0 2px;max-width:92px}
+[data-skin="studio"] .uchip .uc-name small{display:none}
+[data-skin="studio"] .uchip button{display:none}
+[data-skin="studio"] .uchip .av{width:22px;height:22px;background:#0B0D10;color:var(--acc);font-size:10px}
+[data-skin="studio"] .tools .tb.opt{display:flex}
+/* 홈 */
+[data-skin="studio"] .home{padding:118px 24px 90px;
+  background:radial-gradient(760px 420px at 50% 0%,rgba(201,255,87,.13),transparent 66%),
+             radial-gradient(820px 520px at 12% 22%,rgba(88,120,255,.17),transparent 62%),
+             radial-gradient(700px 440px at 90% 18%,rgba(255,86,138,.12),transparent 62%),#07080B}
+[data-skin="studio"] .home-in{max-width:1100px;gap:46px}
+[data-skin="studio"] .hx{display:block;text-align:center;background:none;border:0;padding:12px 0 0;overflow:visible}
+[data-skin="studio"] .hx::after{display:none}
+[data-skin="studio"] .hx-k{justify-content:center;display:inline-flex;gap:8px;padding:7px 14px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#CBD3E1;font-size:12.5px}
+[data-skin="studio"] .hx h1{font-size:54px;letter-spacing:-.045em;line-height:1.08;margin:24px 0 0;font-weight:800}
+[data-skin="studio"] .hx h1 b{background:linear-gradient(100deg,#fff,#C9FF57 72%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+[data-skin="studio"] .hx p{font-size:16px;max-width:560px;margin:18px auto 0;color:rgba(255,255,255,.66)}
+[data-skin="studio"] .hx-r{justify-content:center;margin-top:30px}
+[data-skin="studio"] .hx-s{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;min-width:132px}
+[data-skin="studio"] .hs-h{justify-content:center;text-align:center;flex-direction:column;gap:6px}
+[data-skin="studio"] .hs-h h2{font-size:30px;letter-spacing:-.03em}
+[data-skin="studio"] .hs-h h2 i{display:none}
+[data-skin="studio"] .hs-h .hs-d{font-size:14px;color:rgba(255,255,255,.6)}
+[data-skin="studio"] .tiles2{gap:14px}
+[data-skin="studio"] .tile2{border-radius:18px;padding:22px 20px 18px;min-height:150px;
+  background:linear-gradient(170deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border-color:rgba(255,255,255,.09)}
+[data-skin="studio"] .tile2::before{display:none}
+[data-skin="studio"] .tile2:hover{transform:translateY(-4px);border-color:rgba(201,255,87,.35);box-shadow:0 26px 60px -30px rgba(0,0,0,.9)}
+[data-skin="studio"] .t-ico{background:rgba(201,255,87,.14);border:1px solid rgba(201,255,87,.3);color:#C9FF57}
+[data-skin="studio"] .t-grp{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7)}
+[data-skin="studio"] .t-go{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
+[data-skin="studio"] .tile2:hover .t-go{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+[data-skin="studio"] .rc{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}
+[data-skin="studio"] .subtabs{background:rgba(10,12,16,.9);border-bottom:1px solid var(--line)}
+/* 앱을 열면 떠 있는 메뉴가 화면을 가리지 않도록 아래로 밀어 준다 */
+[data-skin="studio"] .stage:has(#home[hidden]){padding-top:84px}
+[data-skin="studio"] .note{margin-top:14px;padding:26px 0 6px;text-align:center;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.44);font-size:12.5px;line-height:1.9}
+[data-skin="studio"] .note b{color:rgba(255,255,255,.72)}
+[data-skin="studio"] .dd{border-radius:16px;padding:7px;background:rgba(20,23,30,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 26px 60px rgba(0,0,0,.6);z-index:62}
+[data-skin="studio"] .dd button{border-radius:11px;gap:2px}
+[data-skin="studio"] .dd button:hover,[data-skin="studio"] .dd button.on{background:rgba(201,255,87,.14)}
+[data-skin="studio"] .view iframe{background:var(--bg)}
+@media (max-width:1360px){
+  [data-skin="studio"] .brand > span:last-child{display:none}
+  [data-skin="studio"] .brand{padding:0 4px 0 3px}
+  [data-skin="studio"] .gnb .g{padding:7px 10px;font-size:12.5px}
+}
+@media (max-width:1180px){
+  [data-skin="studio"] .shell{grid-template-rows:auto minmax(0,1fr)}
+  [data-skin="studio"] .top{position:static;transform:none;width:auto;max-width:none;border-radius:0;margin:0;flex-wrap:wrap;
+    background:rgba(12,14,19,.96);border-left:0;border-right:0;border-top:0}
+  [data-skin="studio"] .brand > span:last-child{display:block}
+  [data-skin="studio"] .gnb{margin:0}
+  [data-skin="studio"] .tools{position:static;border:0;background:none;box-shadow:none;backdrop-filter:none;padding:0}
+  [data-skin="studio"] .home{padding-top:40px}
+  [data-skin="studio"] .stage:has(#home[hidden]){padding-top:0}
+  [data-skin="studio"] .hx h1{font-size:38px}
+}
 
 /* 모노: 대분류에 마우스를 올리면 뜨는 하위 목록 */
 .dd{position:fixed;z-index:30;min-width:250px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px}
@@ -366,7 +470,7 @@ input[type=color].f{padding:2px;height:34px;cursor:pointer}
     <div class="tools">
       <div class="lbl">화면 테마</div>
       <div class="seg" id="skinSeg" role="group" aria-label="화면 테마">
-        <button data-skin="navy">네이비</button><button data-skin="mono">모노</button>
+        <button data-skin="navy">네이비</button><button data-skin="mono">모노</button><button data-skin="studio">스튜디오</button>
       </div>
       <button class="tb opt" id="reloadBtn" title="지금 화면만 다시 불러오기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg><span>새로고침</span></button>
       <button class="tb opt" id="printBtn" title="지금 화면만 인쇄 (Ctrl+P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg><span>인쇄</span></button>
@@ -735,7 +839,7 @@ function makeFrame(id){
 
 /* ---------- 화면 그리기 ---------- */
 var S = { group:null, app:null, lastApp: lsGet("intra_last") || {} };
-var SKIN = document.documentElement.getAttribute("data-skin") || "navy";
+var SKIN = document.documentElement.getAttribute("data-skin") || "studio";
 
 function renderTop(){
   $("#gnb").innerHTML =
@@ -869,14 +973,18 @@ function go(gid, src, replace){
 var ddTimer = null, ddFor = null;
 function openDD(btn){
   clearTimeout(ddTimer);
-  var gid = btn.dataset.dd; if(!gid || true) return closeDD();   // 두 테마 모두 왼쪽 메뉴에 하위 목록이 펼쳐져 있어 사용 안 함
-  var g = groupOf(gid), r = btn.getBoundingClientRect(), dd = $("#dd");
+  // 네이비·모노는 왼쪽 메뉴에 하위 목록이 펼쳐져 있어 사용하지 않고, 스튜디오에서만 펼침 메뉴를 쓴다
+  var gid = btn.dataset.dd;
+  if(!gid || document.documentElement.getAttribute("data-skin") !== "studio") return closeDD();
+  var list = appsIn(gid); if(!list.length) return closeDD();
+  var r = btn.getBoundingClientRect(), dd = $("#dd");
   ddFor = gid;
-  dd.innerHTML = appsIn(gid).map(function(a){
+  dd.innerHTML = list.map(function(a){
     return '<button data-a="'+a.src+'" class="'+(S.app===a.src?'on':'')+'"><b>'+esc(a.name)+'</b><span>'+esc(a.desc)+'</span></button>';
   }).join("");
-  dd.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 270)) + "px";
-  dd.style.top = (r.bottom + 4) + "px";
+  dd.style.left = Math.max(8, Math.min(r.left - 6, window.innerWidth - 272)) + "px";
+  var bar = document.querySelector(".top").getBoundingClientRect();
+  dd.style.top = (Math.max(r.bottom, bar.bottom) + 8) + "px";
   dd.hidden = false;
 }
 function closeDD(){ clearTimeout(ddTimer); $("#dd").hidden = true; ddFor = null; }
@@ -1059,6 +1167,9 @@ function hotkey(e){
   }
   if(e.key === "Escape"){ closeDD(); if(E) closeEditor(); if($("#userRoot").innerHTML) closeUsers(); }
   if(!e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.key === "t" || e.key === "T"){   /* 숨은 기능: 예전 테마로 잠깐 돌려 보기 */
+    e.preventDefault(); var order = ["studio","navy","mono"]; setSkin(order[(order.indexOf(SKIN)+1) % order.length]); return;
+  }
   if(e.key === "0"){ e.preventDefault(); go(null, null); return; }
   var n = parseInt(e.key, 10), vg = visGroups();
   if(n >= 1 && n <= vg.length){ e.preventDefault(); go(vg[n-1].id, null); }
@@ -1101,6 +1212,13 @@ var PALETTE = {
     darkN: stops({"0":"#20283a",".065":"#262e42",".09":"#2e374d",".12":"#353f57",".14":"#39435c",".17":"#3e4861",".2":"#4a5570",".26":"#56617c",".35":"#848da4",".5":"#b0b8ca",".65":"#c9cedb",".8":"#e4e7ef","1":"#f5f7fb"}),
     solid: stops({"0":"#465170",".3":"#56617c"}),
     acc:h2r("#7b93d9"), accSoft:h2r("#3a4766"), soft:true
+  },
+  studio: {   // 짙은 먹색 + 라임 포인트
+    dark:true,
+    light: stops({"0":"#f2f3f5",".15":"#e6e8ea",".3":"#d2d5d9",".45":"#b4b9bf",".62":"#888e96",".75":"#676d75",".86":"#4b5159",".92":"#3c424a",".96":"#2f343b",".985":"#1e2227","1":"#15181d"}),
+    darkN: stops({"0":"#15181d",".065":"#1b1f25",".09":"#20242a",".12":"#272c33",".14":"#2b3038",".17":"#31373f",".2":"#3b414a",".26":"#474e58",".35":"#6b7280",".5":"#9aa1ab",".65":"#c2c7cd",".8":"#e2e5e8","1":"#f6f7f8"}),
+    solid: stops({"0":"#3a4049",".3":"#474e58"}),
+    acc:h2r("#c9ff57"), accSoft:h2r("#2a3318"), soft:true
   },
   mono: {
     dark:false,
