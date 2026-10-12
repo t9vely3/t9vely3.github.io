@@ -4741,5 +4741,115 @@ firebase.auth().onAuthStateChanged(user => {
 });
 </script>
 
+
+<script id="savecheck">
+/* =========================================================
+   저장 진단 — 업무 화면에서 저장이 안 될 때 이유를 바로 알려 준다
+   · 로그인이 안 된 상태면 화면 위에 띠를 띄운다
+   · 저장이 거부되면 그 이유(규칙 / 로그인 / 연결)를 띠에 적어 준다
+   · 원래 화면 동작은 그대로 두고 알림만 덧붙인다
+   ========================================================= */
+(function(){
+  if (window.__saveCheck) return; window.__saveCheck = 1;
+  if (typeof firebase === "undefined" || !firebase.apps) return;
+
+  var BAR = null, shown = "", loginBar = false;
+  function bar(kind, title, detail){
+    if (shown === kind + title) return;
+    shown = kind + title;
+    if (!BAR){
+      BAR = document.createElement("div");
+      BAR.setAttribute("style",
+        "position:fixed;left:0;right:0;top:0;z-index:2147483000;padding:11px 44px 11px 16px;" +
+        "font:600 13px/1.6 Pretendard,system-ui,sans-serif;letter-spacing:-.01em;" +
+        "box-shadow:0 6px 20px rgba(0,0,0,.25);word-break:keep-all");
+      var x = document.createElement("button");
+      x.textContent = "✕";
+      x.setAttribute("style","position:absolute;right:10px;top:8px;border:0;background:none;color:inherit;" +
+        "font-size:15px;cursor:pointer;opacity:.7;padding:4px 8px");
+      x.onclick = function(){ BAR.remove(); BAR = null; shown = ""; };
+      BAR.appendChild(x);
+      var body = document.createElement("div"); body.id = "__scBody";
+      BAR.insertBefore(body, x);
+      (document.body || document.documentElement).appendChild(BAR);
+    }
+    BAR.style.background = kind === "bad" ? "#7E2B2B" : "#7A5A22";
+    BAR.style.color = "#FFF2F2";
+    BAR.querySelector("#__scBody").innerHTML =
+      '<b style="font-size:13.5px">' + title + '</b>' +
+      (detail ? '<div style="font-weight:500;opacity:.92;margin-top:3px">' + detail + '</div>' : '');
+  }
+
+  function auth(){ try{ return firebase.apps.length ? firebase.apps[0].auth() : null; }catch(e){ return null; } }
+  function signedIn(){ var a = auth(); return !!(a && a.currentUser); }
+
+  /* 1) 로그인 상태 확인 — 늦게 복원되는 경우가 있어 몇 초 지켜본다 */
+  var waited = 0;
+  var timer = setInterval(function(){
+    waited += 1000;
+    if (signedIn()){ clearInterval(timer); if (BAR && loginBar){ BAR.remove(); BAR = null; shown = ""; loginBar = false; } return; }
+    if (waited >= 6000){
+      clearInterval(timer);
+      loginBar = true;
+      bar("bad", "이 화면에 로그인되어 있지 않습니다. 지금 상태로는 저장이 되지 않습니다.",
+        "인트라넷 홈으로 나갔다가 다시 들어와 주세요. 그래도 같으면 관리자에게 이 문구를 그대로 알려 주세요.");
+    }
+  }, 1000);
+  try{ var a0 = auth(); if (a0) a0.onAuthStateChanged(function(u){
+    if (u && BAR && loginBar){ BAR.remove(); BAR = null; shown = ""; loginBar = false; }
+  }); }catch(e){}
+
+  /* 2) 저장 거부를 가로채 이유를 보여 준다 */
+  function explain(e){
+    var c = (e && (e.code || e.message)) || "";
+    if (/permission-denied|insufficient permissions/i.test(c))
+      return ["bad", "저장소 규칙이 막고 있어 저장되지 않았습니다.",
+        "관리자에게 이 화면의 규칙을 바꿔 달라고 알려 주세요. (permission-denied)"];
+    if (/unauthenticated/i.test(c))
+      return ["bad", "로그인이 풀려서 저장되지 않았습니다.", "인트라넷 홈으로 나갔다가 다시 들어와 주세요."];
+    if (/unavailable|network/i.test(c))
+      return ["warn", "연결이 끊겨 저장되지 않았습니다.", "잠시 뒤 다시 눌러 주세요."];
+    if (/quota|resource-exhausted/i.test(c))
+      return ["warn", "저장소 사용량 한도에 걸렸습니다.", "관리자에게 알려 주세요."];
+    return ["bad", "저장되지 않았습니다.", String(c).slice(0, 160)];
+  }
+  function report(e){ var r = explain(e); loginBar = false; bar(r[0], r[1], r[2]); }
+
+  function patch(){
+    var fs = firebase.firestore;
+    if (!fs || !fs.DocumentReference || !fs.DocumentReference.prototype.set) return false;
+    ["set","update","delete"].forEach(function(m){
+      var orig = fs.DocumentReference.prototype[m];
+      if (!orig || orig.__sc) return;
+      var next = function(){
+        var p; try{ p = orig.apply(this, arguments); }catch(err){ report(err); throw err; }
+        return p && p.catch ? p.catch(function(err){ report(err); throw err; }) : p;
+      };
+      next.__sc = 1; fs.DocumentReference.prototype[m] = next;
+    });
+    var add = fs.CollectionReference && fs.CollectionReference.prototype.add;
+    if (add && !add.__sc){
+      var nextAdd = function(){
+        var p; try{ p = add.apply(this, arguments); }catch(err){ report(err); throw err; }
+        return p && p.catch ? p.catch(function(err){ report(err); throw err; }) : p;
+      };
+      nextAdd.__sc = 1; fs.CollectionReference.prototype.add = nextAdd;
+    }
+    var wb = fs.WriteBatch && fs.WriteBatch.prototype.commit;
+    if (wb && !wb.__sc){
+      var nextWb = function(){
+        var p; try{ p = wb.apply(this, arguments); }catch(err){ report(err); throw err; }
+        return p && p.catch ? p.catch(function(err){ report(err); throw err; }) : p;
+      };
+      nextWb.__sc = 1; fs.WriteBatch.prototype.commit = nextWb;
+    }
+    return true;
+  }
+  if (!patch()){
+    var n = 0, t2 = setInterval(function(){ if (patch() || ++n > 40) clearInterval(t2); }, 250);
+  }
+})();
+
+</script>
 </body>
 </html>

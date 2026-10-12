@@ -1,0 +1,216 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>업무 화면 권한 점검</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#1A1F27; --panel:#232A34; --sunk:#1F252E; --line:#343D4A; --line2:#404A59;
+  --ink:#DFE5EE; --muted:#A3AEBE; --faint:#7C8798;
+  --acc:#7FA8DF; --acc-soft:#28333F; --acc-ink:#111721;
+  --ok:#7FC4A3; --ok-soft:#24332E; --warn:#D7A273; --warn-soft:#332D26; --bad:#DB9090; --bad-soft:#352B2C;
+}
+body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.65 "Pretendard Variable",Pretendard,system-ui,sans-serif;
+  letter-spacing:-.01em;word-break:keep-all}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+.top{display:flex;align-items:center;gap:10px;height:56px;padding:0 22px;background:var(--panel);border-bottom:1px solid var(--line)}
+.top b{font-size:14.5px;font-weight:700}
+.top span{font-size:12.5px;color:var(--faint)}
+.wrap{max-width:1040px;margin:0 auto;padding:26px 20px 60px}
+h1{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.03em}
+.lead{margin:0 0 22px;color:var(--muted);font-size:13.5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h2{margin:0 0 4px;font-size:15px;font-weight:700}
+.card p.d{margin:0 0 14px;font-size:12.5px;color:var(--faint)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=email],input[type=password]{flex:1;min-width:190px;padding:10px 13px;border-radius:9px;border:1px solid var(--line2);
+  background:var(--sunk);color:var(--ink)}
+input::placeholder{color:var(--faint)}
+.go{padding:10px 20px;border-radius:9px;background:var(--acc);color:var(--acc-ink);font-weight:700}
+.go[disabled]{opacity:.5;cursor:default}
+.ghost{padding:9px 14px;border-radius:9px;border:1px solid var(--line2);color:var(--muted);font-size:13px}
+.ghost:hover{color:var(--ink);background:var(--sunk)}
+.note{margin-top:12px;font-size:12px;color:var(--faint);line-height:1.8}
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;font-weight:600;color:var(--faint);white-space:nowrap}
+td.c{width:1%;white-space:nowrap}
+.pill{display:inline-grid;place-items:center;min-width:52px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.no{background:var(--bad-soft);color:var(--bad)}
+.pill.wait{background:var(--sunk);color:var(--faint)}
+.pill.skip{background:var(--warn-soft);color:var(--warn)}
+.why{color:var(--muted);font-size:12.5px}
+.sum{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sum b{font-size:15px}
+.fix{margin-top:14px;padding:14px 16px;border-radius:10px;background:var(--warn-soft);border:1px solid var(--warn)}
+.fix b{color:var(--warn);font-size:13.5px}
+.fix p{margin:6px 0 10px;font-size:12.5px;color:var(--muted);line-height:1.75}
+pre{margin:0;padding:14px;border-radius:9px;background:#141920;border:1px solid var(--line);overflow:auto;
+  font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#C9D4E3;max-height:330px}
+.fixhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.copy{padding:6px 12px;border-radius:7px;border:1px solid var(--line2);font-size:12px;color:var(--muted)}
+.copy:hover{color:var(--ink);background:var(--sunk)}
+.steps{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.9}
+.steps a{color:var(--acc)}
+details{margin-top:10px}
+summary{cursor:pointer;font-size:13px;color:var(--acc);font-weight:600}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);padding:10px 18px;border-radius:999px;
+  background:var(--panel);border:1px solid var(--line2);font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:9}
+</style></head><body>
+<header class="top"><b>업무 화면 권한 점검</b><span>AIX 3부서 인트라넷</span></header>
+<div class="wrap">
+  <h1>직원이 저장할 수 있는지 확인합니다</h1>
+  <p class="lead">업무 화면마다 쓰는 데이터 저장소가 따로 있습니다. 여기서 한 계정으로 다섯 곳에 모두 접속해 보고,
+    읽기와 저장이 실제로 되는지 하나씩 시험합니다. 막히는 곳이 있으면 그 자리에서 고치는 방법을 보여 드립니다.</p>
+
+  <div class="card">
+    <h2>점검할 계정</h2>
+    <p class="d">문제를 겪는 직원의 인트라넷 계정으로 넣으시면 그 사람 기준으로 점검합니다. 비밀번호는 저장하지 않습니다.</p>
+    <div class="row">
+      <input type="email" id="em" placeholder="직원 이메일" autocomplete="username">
+      <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password">
+      <button class="go" id="run">점검 시작</button>
+    </div>
+    <div class="note">저장 시험은 <b>시험용 문서 한 개를 만들었다가 바로 지우는</b> 방식입니다. 기존 자료는 건드리지 않습니다.</div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+var SITES = [{"key": "notice", "label": "공지사이트 체크 관리", "projectId": "noticecheck-80980", "cfg": {"apiKey": "AIzaSyCQix_uMdvMdGKvo3ZSe7KgIoD7HJEXp0g", "authDomain": "noticecheck-80980.firebaseapp.com", "projectId": "noticecheck-80980", "storageBucket": "noticecheck-80980.firebasestorage.app", "messagingSenderId": "251674052066", "appId": "1:251674052066:web:9edd72d52728a1486425bb"}, "cols": ["noticeboard_notices", "noticeboard_meta", "noticeboard_log", "noticeboard_users", "noticeboard_files"], "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    function signedIn() { return request.auth != null; }\n\n    // 공지 · 확인 기록 · 가입 신청 · 첨부까지, 로그인한 직원이면 모두 읽고 쓸 수 있다.\n    // 새 자료가 생겨도 따로 손볼 필요가 없도록 한 줄로 묶어 둔다.\n    match /{document=**} {\n      allow read, write: if signedIn();\n    }\n  }\n}\n"}, {"key": "student", "label": "수강생 관리파일·대시보드", "projectId": "student-f3e8a", "cfg": {"apiKey": "AIzaSyCb6Evq51skrbDw_cbz9_S9LsjcY1fy9hA", "authDomain": "student-f3e8a.firebaseapp.com", "projectId": "student-f3e8a", "storageBucket": "student-f3e8a.firebasestorage.app", "messagingSenderId": "777480206536", "appId": "1:777480206536:web:1eedd24ed40f0e12f48dfd"}, "cols": ["students", "trash", "config", "backups"], "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    function signedIn() { return request.auth != null; }\n\n    // 수강생 · 휴지통 · 설정 · 자동 백업(날짜 문서와 그 아래 조각)까지 모두 포함된다.\n    match /{document=**} {\n      allow read, write: if signedIn();\n    }\n  }\n}\n"}, {"key": "cash", "label": "견적서", "projectId": "cash-eabc1", "cfg": {"apiKey": "AIzaSyB8qZIVzINN5BGSNd6ojqshNC9RXh7jqKU", "authDomain": "cash-eabc1.firebaseapp.com", "projectId": "cash-eabc1", "storageBucket": "cash-eabc1.firebasestorage.app", "messagingSenderId": "8436628517", "appId": "1:8436628517:web:3a072098e57c02397353cc"}, "cols": ["sbs_quotes", "sbs_master", "sbs_auth"], "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    function signedIn() { return request.auth != null; }\n\n    match /{document=**} {\n      allow read, write: if signedIn();\n    }\n  }\n}\n"}, {"key": "gov", "label": "국취 사전접수 관리", "projectId": "govermentscore", "cfg": {"apiKey": "AIzaSyBUCd3OW9wx8uRQrQ9jBMIVjzuZ47sjNv8", "authDomain": "govermentscore.firebaseapp.com", "projectId": "govermentscore", "storageBucket": "govermentscore.firebasestorage.app", "messagingSenderId": "808577453289", "appId": "1:808577453289:web:8e6385fb947196ccc8f478"}, "cols": ["sbs_score_checks"], "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    function signedIn() { return request.auth != null; }\n\n    // 자가진단 사이트에서 학생이 접수하는 건 로그인 없이 만들 수 있어야 한다.\n    match /sbs_score_checks/{doc} {\n      allow create: if true;\n    }\n\n    // 목록을 보고 고치고 지우는 일은 로그인한 직원만 할 수 있다.\n    match /{document=**} {\n      allow read, write: if signedIn();\n    }\n  }\n}\n"}, {"key": "guide", "label": "수강생 안내 관리", "projectId": "notice-3aef1", "cfg": {"apiKey": "AIzaSyDvYKTh4G2SFxw8LKgz1YaP3oR1mFbR8Kc", "authDomain": "notice-3aef1.firebaseapp.com", "projectId": "notice-3aef1", "storageBucket": "notice-3aef1.firebasestorage.app", "messagingSenderId": "39136833631", "appId": "1:39136833631:web:e85baeeee4dd80f03bebea"}, "cols": ["posts", "schedule", "scheduleColors", "courses", "curriculum", "classrooms", "seminars", "rules", "materials", "materialCategories", "settings", "_staff"], "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    function signedIn() { return request.auth != null; }\n\n    // 수강생이 보는 안내 사이트는 로그인 없이 읽을 수 있어야 한다.\n    match /posts/{doc}              { allow read: if true; }\n    match /schedule/{doc}           { allow read: if true; }\n    match /scheduleColors/{doc}     { allow read: if true; }\n    match /courses/{doc}            { allow read: if true; }\n    match /curriculum/{doc}         { allow read: if true; }\n    match /classrooms/{doc}         { allow read: if true; }\n    match /seminars/{doc}           { allow read: if true; }\n    match /rules/{doc}              { allow read: if true; }\n    match /materials/{doc}          { allow read: if true; }\n    match /materialCategories/{doc} { allow read: if true; }\n    match /settings/{doc}           { allow read: if true; }\n\n    // 글 · 일정 · 수업일정 · 자료를 올리고 고치는 일은 로그인한 직원만 한다.\n    // 직원 목록(_staff)은 공개하지 않고 여기에만 포함된다.\n    match /{document=**} {\n      allow read, write: if signedIn();\n    }\n  }\n}\n"}];
+var TESTDOC = "zz__권한점검__";
+var $ = function(s){ return document.querySelector(s); };
+var esc = function(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); };
+function toast(m){ var t=document.createElement("div"); t.className="toast"; t.textContent=m; document.body.appendChild(t); setTimeout(function(){t.remove();},2200); }
+
+var WHY = {
+  "permission-denied": "저장소 규칙이 막고 있습니다. 아래 규칙을 넣으면 풀립니다.",
+  "auth/wrong-password": "이 저장소에 같은 이메일이 다른 비밀번호로 등록돼 있습니다.",
+  "auth/invalid-credential": "이 저장소에 같은 이메일이 다른 비밀번호로 등록돼 있습니다.",
+  "auth/email-already-in-use": "이 저장소에 같은 이메일이 다른 비밀번호로 등록돼 있습니다.",
+  "auth/user-not-found": "이 저장소에 계정이 아직 없습니다.",
+  "auth/weak-password": "비밀번호가 6자보다 짧습니다.",
+  "auth/network-request-failed": "네트워크가 막혔습니다. 사내망 차단 여부를 확인해 주세요.",
+  "auth/operation-not-allowed": "이 저장소에서 이메일 로그인 방식이 꺼져 있습니다.",
+  "unavailable": "저장소에 연결하지 못했습니다. 잠시 뒤 다시 해 보세요."
+};
+function why(code){ return WHY[code] || code || ""; }
+
+function card(s){
+  return '<div class="card" id="c_'+s.key+'">' +
+    '<div class="sum"><b>'+esc(s.label)+'</b><span class="pill wait" id="st_'+s.key+'">확인 중</span></div>' +
+    '<p class="d">저장소 '+esc(s.projectId)+'</p>' +
+    '<table><thead><tr><th>자료</th><th class="c">읽기</th><th class="c">저장</th><th>결과</th></tr></thead>' +
+    '<tbody id="tb_'+s.key+'"></tbody></table>' +
+    '<div id="fx_'+s.key+'"></div></div>';
+}
+function pill(state, text){ return '<span class="pill '+state+'">'+text+'</span>'; }
+
+function fixBox(s){
+  return '<div class="fix"><div class="fixhead"><b>이 저장소의 규칙을 바꿔야 합니다</b>' +
+    '<button class="copy" onclick="copyRules(\'' + s.key + '\')">규칙 복사</button></div>' +
+    '<p>아래 내용을 그대로 붙여 넣으면 로그인한 직원은 모두 저장할 수 있게 됩니다.</p>' +
+    '<ol class="steps">' +
+    '<li><a href="https://console.firebase.google.com/project/'+s.projectId+'/firestore/rules" target="_blank" rel="noopener">Firebase 콘솔의 이 저장소 규칙 화면</a>을 엽니다.</li>' +
+    '<li>안에 있던 내용을 모두 지우고 아래 규칙을 붙여 넣습니다.</li>' +
+    '<li>오른쪽 위 <b>게시</b>를 누릅니다. 1분쯤 뒤부터 적용됩니다.</li></ol>' +
+    '<details><summary>규칙 보기</summary><pre id="rl_'+s.key+'">'+esc(s.rules)+'</pre></details></div>';
+}
+function authFix(s, code){
+  var pwCase = ["auth/wrong-password","auth/invalid-credential","auth/email-already-in-use"].indexOf(code) >= 0;
+  if(pwCase) return '<div class="fix"><div class="fixhead"><b>이 저장소의 계정 비밀번호가 다릅니다</b></div>' +
+    '<p>예전에 이 업무 화면에서 따로 가입하면서 다른 비밀번호가 등록된 것입니다. ' +
+    '그 계정을 지우면 다음에 인트라넷으로 들어갈 때 지금 비밀번호로 다시 만들어집니다. 업무 자료는 지워지지 않습니다.</p>' +
+    '<ol class="steps">' +
+    '<li><a href="https://console.firebase.google.com/project/'+s.projectId+'/authentication/users" target="_blank" rel="noopener">이 저장소의 계정 목록</a>을 엽니다.</li>' +
+    '<li>해당 직원 이메일을 찾아 오른쪽 점 세 개 → <b>사용자 삭제</b>를 누릅니다.</li>' +
+    '<li>그 직원이 인트라넷에서 다시 로그인하면 계정이 새로 만들어집니다.</li></ol></div>';
+  if(code === "auth/operation-not-allowed") return '<div class="fix"><div class="fixhead"><b>이메일 로그인 방식이 꺼져 있습니다</b></div>' +
+    '<p>이 저장소에서 이메일·비밀번호 로그인을 켜야 직원이 들어올 수 있습니다.</p>' +
+    '<ol class="steps"><li><a href="https://console.firebase.google.com/project/'+s.projectId+'/authentication/providers" target="_blank" rel="noopener">로그인 방식 설정</a>을 엽니다.</li>' +
+    '<li><b>이메일/비밀번호</b>를 켜고 저장합니다.</li></ol></div>';
+  return '';
+}
+function copyRules(key){
+  var s = SITES.filter(function(x){ return x.key===key; })[0]; if(!s) return;
+  navigator.clipboard.writeText(s.rules).then(function(){ toast("규칙을 복사했습니다"); },
+    function(){ toast("복사하지 못했습니다. 규칙 보기를 눌러 직접 복사해 주세요"); });
+}
+
+async function checkSite(s, email, pw){
+  var tb = $("#tb_"+s.key), stv = $("#st_"+s.key);
+  var app;
+  try{ app = firebase.app(s.key); }catch(e){ app = firebase.initializeApp(s.cfg, s.key); }
+  var auth = app.auth(), db = app.firestore();
+
+  // 1) 로그인
+  var authErr = null;
+  try{
+    if(auth.currentUser && auth.currentUser.email !== email) await auth.signOut();
+    await auth.signInWithEmailAndPassword(email, pw);
+  }catch(e){
+    if(["auth/user-not-found","auth/invalid-login-credentials"].indexOf(e.code) >= 0){
+      try{ await auth.createUserWithEmailAndPassword(email, pw); }
+      catch(e2){ authErr = e2.code || e2.message; }
+    } else authErr = e.code || e.message;
+  }
+  if(authErr){
+    stv.className = "pill no"; stv.textContent = "로그인 실패";
+    tb.innerHTML = '<tr><td colspan="4" class="why">이 저장소에 로그인하지 못했습니다 — '+esc(why(authErr))+'</td></tr>';
+    $("#fx_"+s.key).innerHTML = authFix(s, authErr);
+    return {site:s, login:false, bad:1, code:authErr};
+  }
+
+  // 2) 자료별 읽기·저장
+  var bad = 0, denied = 0, left = [];
+  for(var i=0;i<s.cols.length;i++){
+    var col = s.cols[i], rOk = false, wOk = false, rErr = "", wErr = "";
+    try{ await db.collection(col).limit(1).get(); rOk = true; }
+    catch(e){ rErr = e.code || e.message; }
+    try{
+      await db.collection(col).doc(TESTDOC).set({ by: email, at: Date.now(), note: "권한 점검용 임시 문서" });
+      wOk = true;
+      try{ await db.collection(col).doc(TESTDOC).delete(); }catch(e){ left.push(col); }
+    }catch(e){ wErr = e.code || e.message; }
+
+    if(!rOk || !wOk){ bad++; if(rErr === "permission-denied" || wErr === "permission-denied") denied++; }
+    tb.insertAdjacentHTML("beforeend",
+      '<tr><td>'+esc(col)+'</td><td class="c">'+pill(rOk?"ok":"no", rOk?"됨":"막힘")+'</td>' +
+      '<td class="c">'+pill(wOk?"ok":"no", wOk?"됨":"막힘")+'</td>' +
+      '<td class="why">'+esc(rOk&&wOk ? "이상 없습니다" : why(wErr||rErr))+'</td></tr>');
+  }
+  if(left.length) tb.insertAdjacentHTML("beforeend",
+    '<tr><td colspan="4" class="why">시험용 문서(' + esc(TESTDOC) + ')를 ' + esc(left.join(", ")) + '에서 지우지 못했습니다. 직접 지워 주세요.</td></tr>');
+
+  if(bad === 0){ stv.className = "pill ok"; stv.textContent = "이상 없음"; }
+  else { stv.className = "pill no"; stv.textContent = bad + "곳 막힘"; }
+  if(denied) $("#fx_"+s.key).innerHTML = fixBox(s);
+  return {site:s, login:true, bad:bad, denied:denied};
+}
+
+async function run(){
+  var email = $("#em").value.trim().toLowerCase(), pw = $("#pw").value;
+  if(!email || !pw){ toast("이메일과 비밀번호를 넣어 주세요"); return; }
+  var b = $("#run"); b.disabled = true; b.textContent = "점검 중…";
+  $("#out").innerHTML = SITES.map(card).join("");
+  var res = [];
+  for(var i=0;i<SITES.length;i++) res.push(await checkSite(SITES[i], email, pw));
+  var bad = res.filter(function(r){ return r.bad; });
+  $("#out").insertAdjacentHTML("afterbegin",
+    '<div class="card"><h2>' + (bad.length ? bad.length + "곳에서 막혔습니다" : "모든 업무에서 저장까지 됩니다") + '</h2>' +
+    '<p class="d">' + (bad.length
+      ? "아래에서 막힌 저장소마다 넣을 규칙을 보여 드립니다. 규칙을 바꾼 뒤 이 페이지에서 다시 점검해 보세요."
+      : "이 계정은 다섯 업무 모두에서 읽고 저장할 수 있습니다. 그래도 화면에서 저장이 안 된다면 알려 주세요.") + '</p></div>');
+  b.disabled = false; b.textContent = "다시 점검";
+  try{ await Promise.all(SITES.map(function(s){ try{ return firebase.app(s.key).auth().signOut(); }catch(e){ return null; } })); }catch(e){}
+}
+$("#run").addEventListener("click", run);
+$("#pw").addEventListener("keydown", function(e){ if(e.key === "Enter") run(); });
+</script>
+</body></html>
