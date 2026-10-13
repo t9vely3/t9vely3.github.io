@@ -1,0 +1,985 @@
+<!doctype html>
+<html data-aix="cod" lang="ko">
+<head>
+<!-- AIX v2: 원본 COD/index.html 복사본. 기능 코드는 원본 그대로이고, 아래 잠금 한 줄만 추가됨 -->
+<script src="../shared/lock.js"></script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매출 COD 관리대장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --surface-2:#f7f9fb; --surface-3:#eff3f7;
+  --line:#dde3ea; --line-soft:#e9edf2;
+  --ink:#151a21; --ink-2:#525d6b; --ink-3:#8a94a2;
+  --accent:#26406e; --accent-ink:#ffffff; --accent-soft:#e6ecf6;
+  --warn:#a35b00; --warn-bg:#fff7e8; --warn-mark:#e8930c;
+  --danger:#a72218; --danger-bg:#fef4f2; --danger-mark:#dc4438;
+  --ok:#0f6b41; --ok-bg:#eff9f2; --ok-mark:#22a35e;
+  --shadow:0 1px 2px rgba(21,26,33,.05), 0 8px 24px -16px rgba(21,26,33,.28);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161c; --surface:#191e26; --surface-2:#1f242d; --surface-3:#222834;
+    --line:#2c3440; --line-soft:#242b35;
+    --ink:#e8ecf2; --ink-2:#a3adbb; --ink-3:#6f7987;
+    --accent:#3f5b8f; --accent-ink:#f2f6ff; --accent-soft:#22304a;
+    --warn:#f0b755; --warn-bg:#2a2317; --warn-mark:#e8930c;
+    --danger:#f29289; --danger-bg:#2b1b19; --danger-mark:#e2574a;
+    --ok:#68d39c; --ok-bg:#14251d; --ok-mark:#2fb56f;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161c; --surface:#191e26; --surface-2:#1f242d; --surface-3:#222834;
+  --line:#2c3440; --line-soft:#242b35;
+  --ink:#e8ecf2; --ink-2:#a3adbb; --ink-3:#6f7987;
+  --accent:#3f5b8f; --accent-ink:#f2f6ff; --accent-soft:#22304a;
+  --warn:#f0b755; --warn-bg:#2a2317; --warn-mark:#e8930c;
+  --danger:#f29289; --danger-bg:#2b1b19; --danger-mark:#e2574a;
+  --ok:#68d39c; --ok-bg:#14251d; --ok-mark:#2fb56f;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1420px; margin:0 auto; padding:22px 20px 64px}
+
+/* ── header ─────────────────────────────── */
+.top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px}
+h1{font-size:19px; font-weight:700; letter-spacing:-.35px; margin:0 0 3px}
+.top .sub{font-size:12.5px; color:var(--ink-3)}
+.status-pill{
+  display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-3);
+  background:var(--surface); border:1px solid var(--line); border-radius:99px; padding:5px 11px;
+}
+.status-pill .d{width:6px;height:6px;border-radius:99px;background:var(--ok-mark)}
+.status-pill.warnmode .d{background:var(--warn-mark)}
+
+/* ── stat tiles ─────────────────────────── */
+.tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:11px; margin-bottom:16px}
+.tile{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:13px 15px 14px; box-shadow:var(--shadow)}
+.tile .lbl{font-size:11.5px; color:var(--ink-3); letter-spacing:.2px; margin-bottom:6px}
+.tile .val{font-family:"IBM Plex Mono",monospace; font-size:21px; font-weight:600; letter-spacing:-.5px; font-variant-numeric:tabular-nums}
+.tile .val .u{font-family:"IBM Plex Sans KR",sans-serif; font-size:12px; font-weight:500; color:var(--ink-3); margin-left:3px}
+.tile .foot{font-size:11.5px; color:var(--ink-3); margin-top:6px}
+.tile.cod .val{color:var(--warn)}
+.tile.bal .val{color:var(--danger)}
+.tile.none .val{color:var(--danger)}
+.meter{height:4px; border-radius:99px; background:var(--surface-3); margin-top:9px; overflow:hidden}
+.meter i{display:block; height:100%; background:var(--warn-mark); border-radius:99px; transition:width .3s}
+
+/* ── toolbar ────────────────────────────── */
+.bar{display:flex; gap:7px; align-items:center; flex-wrap:wrap; margin-bottom:11px}
+.chip{
+  font:inherit; font-size:12.5px; font-weight:500; color:var(--ink-2);
+  background:var(--surface); border:1px solid var(--line); border-radius:99px;
+  padding:6px 13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+}
+.chip .d{width:7px;height:7px;border-radius:99px;display:inline-block}
+.chip.f-cod .d{background:var(--warn-mark)} .chip.f-none .d{background:var(--danger-mark)} .chip.f-done .d{background:var(--ok-mark)}
+.chip .n{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3)}
+.chip[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--bg)}
+.chip[aria-pressed="true"] .n{color:var(--bg); opacity:.7}
+.chip:hover{border-color:var(--ink-3)}
+input.search{
+  font:inherit; font-size:13px; color:var(--ink); flex:1; min-width:180px;
+  background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:7px 12px;
+}
+input.search::placeholder{color:var(--ink-3)}
+.btn{
+  font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-2);
+  background:var(--surface); border:1px solid var(--line); border-radius:8px;
+  padding:7px 13px; cursor:pointer;
+}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.1)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border-radius:4px}
+
+/* ── sheet ──────────────────────────────── */
+.sheet{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden}
+.scroll{overflow:auto; max-height:calc(100vh - 300px); min-height:240px}
+.grid{min-width:1180px}
+.r{
+  display:grid;
+  grid-template-columns:120px minmax(130px,1.05fr) 132px 86px 116px 116px 116px minmax(170px,1.5fr) 124px 32px;
+  align-items:stretch; border-bottom:1px solid var(--line-soft);
+}
+.hd{
+  background:var(--surface-2); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:3;
+}
+.hd > div{
+  padding:10px 11px; font-size:11px; font-weight:600; color:var(--ink-3); letter-spacing:.3px; white-space:nowrap;
+}
+.hd > div.n{text-align:right}
+.row{position:relative; background:var(--surface)}
+.row::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px}
+.row.s-cod::before{background:var(--warn-mark)}
+.row.s-none::before{background:var(--danger-mark)}
+.row.s-done::before{background:var(--ok-mark)}
+.row.s-done{background:var(--surface); }
+.row.s-done .cell input{color:var(--ink-3)}
+.row:hover{background:var(--surface-2)}
+.row.editing{background:var(--accent-soft)}
+.cell{display:flex; align-items:center; border-right:1px solid var(--line-soft); min-height:38px}
+.cell:last-child{border-right:0}
+.cell input{
+  font:inherit; font-size:13px; color:var(--ink); background:transparent; border:0;
+  width:100%; padding:8px 11px; min-width:0;
+}
+.cell input::placeholder{color:var(--ink-3); opacity:.65}
+.cell input:focus{outline:none; background:var(--surface-3); box-shadow:inset 0 0 0 1.5px var(--accent)}
+.cell.n input{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500}
+.cell.bal input{font-weight:600}
+.row.s-none .cell.bal input{color:var(--danger)}
+.row.s-cod .cell.bal input{color:var(--warn)}
+.row.s-done .cell.bal input{color:var(--ink-3); font-weight:500}
+.cell.dt input{font-family:"IBM Plex Mono",monospace; font-size:12px}
+.cell.del{justify-content:center; border-right:0}
+.del button{
+  font:inherit; width:22px; height:22px; line-height:1; border-radius:6px; cursor:pointer;
+  background:transparent; border:1px solid transparent; color:var(--ink-3); font-size:14px;
+}
+.del button:hover{background:var(--danger-bg); border-color:var(--danger-mark); color:var(--danger)}
+.del button.armed{background:var(--danger-mark); border-color:var(--danger-mark); color:#fff; width:auto; padding:0 7px; font-size:11px; font-weight:700}
+
+/* group headers */
+.grp{
+  display:flex; align-items:center; gap:9px; padding:9px 13px;
+  font-size:11.5px; font-weight:600; letter-spacing:.2px;
+  border-bottom:1px solid var(--line-soft); position:sticky; top:37px; z-index:2;
+}
+.grp .d{width:7px;height:7px;border-radius:99px}
+.grp .cnt{font-family:"IBM Plex Mono",monospace; font-weight:500; color:var(--ink-3); font-size:11px}
+.grp .amt{margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11.5px; font-variant-numeric:tabular-nums}
+.grp.g-cod{background:var(--warn-bg); color:var(--warn)} .grp.g-cod .d{background:var(--warn-mark)}
+.grp.g-none{background:var(--danger-bg); color:var(--danger)} .grp.g-none .d{background:var(--danger-mark)}
+.grp.g-done{background:var(--ok-bg); color:var(--ok)} .grp.g-done .d{background:var(--ok-mark)}
+
+.sumrow{
+  display:grid;
+  grid-template-columns:120px minmax(130px,1.05fr) 132px 86px 116px 116px 116px minmax(170px,1.5fr) 124px 32px;
+  background:var(--surface-2); border-top:1px solid var(--line); font-weight:600;
+  position:sticky; bottom:0; z-index:3;
+}
+.sumrow > div{padding:11px; font-size:12.5px; white-space:nowrap}
+.sumrow > div.n{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.sumrow .t-cod{color:var(--warn)} .sumrow .t-bal{color:var(--danger)}
+
+.empty{padding:52px 20px; text-align:center; color:var(--ink-3); font-size:13px}
+.empty b{display:block; color:var(--ink-2); font-weight:600; margin-bottom:5px; font-size:14px}
+
+.legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:13px; font-size:11.5px; color:var(--ink-3)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:8px;height:8px;border-radius:2px; display:inline-block}
+.note{margin-top:9px; font-size:11.5px; color:var(--ink-3); max-width:70ch}
+
+/* 로그인 화면 */
+.gate{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.gatecard{
+  width:100%; max-width:360px; background:var(--surface); border:1px solid var(--line);
+  border-radius:14px; box-shadow:var(--shadow); padding:28px 26px 24px;
+}
+.gatecard h2{font-size:17px; font-weight:700; margin:0 0 4px; letter-spacing:-.3px}
+.gatecard p{font-size:12.5px; color:var(--ink-3); margin:0 0 20px}
+.gatecard label{display:block; font-size:11.5px; color:var(--ink-2); font-weight:600; margin:0 0 5px}
+.gatecard input{
+  font:inherit; font-size:13.5px; color:var(--ink); width:100%; margin-bottom:13px;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:9px 11px;
+}
+.gatecard button{
+  font:inherit; font-size:13px; font-weight:600; width:100%; cursor:pointer;
+  background:var(--accent); color:var(--accent-ink); border:1px solid var(--accent);
+  border-radius:8px; padding:10px;
+}
+.gatecard button:disabled{opacity:.6; cursor:default}
+.gate-err{font-size:12px; color:var(--danger); margin-top:11px; min-height:16px; line-height:1.45}
+.gate-diag{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3);
+  margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft);
+  line-height:1.6; word-break:break-all;
+}
+#logout{margin-left:8px}
+
+/* 브라우저 기록 업로드 안내 */
+.migrate{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  background:var(--warn-bg); border:1px solid var(--warn-mark); color:var(--warn);
+  border-radius:9px; padding:10px 13px; margin-bottom:11px; font-size:12.5px;
+}
+.migrate .sp{flex:1}
+
+/* 폴백 사유 안내 */
+.notice{
+  display:flex; align-items:flex-start; gap:10px;
+  background:var(--danger-bg); border:1px solid var(--danger-mark); color:var(--danger);
+  border-radius:9px; padding:11px 14px; margin-bottom:14px; font-size:12.5px; line-height:1.55;
+}
+.notice b{display:block; margin-bottom:2px}
+.notice code{font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+.migrate button{
+  font:inherit; font-size:12px; font-weight:600; cursor:pointer; border-radius:7px; padding:6px 11px;
+  background:var(--warn-mark); border:1px solid var(--warn-mark); color:#fff;
+}
+.migrate button.ghost{background:transparent; color:var(--warn)}
+
+.toast{
+  position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(10px);
+  background:var(--ink); color:var(--bg); font-size:12.5px; font-weight:500;
+  padding:9px 16px; border-radius:99px; opacity:0; pointer-events:none; transition:.25s; z-index:50;
+}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (max-width:900px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:780px){
+  .wrap{padding:16px 12px 56px}
+  .grid{min-width:0}
+  .hd{display:none}
+  .grp{position:static; border-radius:0}
+  .r.row{
+    display:grid; grid-template-columns:1fr 1fr; gap:0;
+    padding:6px 6px 6px 10px; border-bottom:1px solid var(--line);
+  }
+  .cell{border-right:0; border-bottom:1px solid var(--line-soft); min-height:34px}
+  .cell::before{
+    content:attr(data-label); font-size:10.5px; color:var(--ink-3);
+    padding-left:6px; min-width:52px; letter-spacing:.2px;
+  }
+  .cell input{padding:6px 6px}
+  .cell.name, .cell.memo{grid-column:1 / -1}
+  .cell.del{position:absolute; right:6px; top:6px; border:0; min-height:0}
+  .scroll{max-height:none; overflow:visible}
+  .sumrow{grid-template-columns:1fr; position:static}
+  .sumrow > div{border-bottom:1px solid var(--line-soft)}
+  .sumrow > div.n::before{content:attr(data-label); float:left; font-weight:500; color:var(--ink-3); font-family:"IBM Plex Sans KR",sans-serif; font-size:11.5px}
+  .sumrow .sp{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="gate" id="gate" hidden>
+  <form class="gatecard" id="gateForm">
+    <h2>매출 · COD 관리대장</h2>
+    <p>등록된 계정으로 로그인하면 기록을 불러옵니다.</p>
+    <label for="gateEmail">이메일</label>
+    <input id="gateEmail" type="email" autocomplete="username" required>
+    <label for="gatePw">비밀번호</label>
+    <input id="gatePw" type="password" autocomplete="current-password" required>
+    <button type="submit">로그인</button>
+    <div class="gate-err" id="gateErr"></div>
+    <div class="gate-diag" id="gateDiag"></div>
+  </form>
+</div>
+
+<div class="wrap" id="app">
+  <div class="top">
+    <div>
+      <h1>매출 · COD · 잔액 관리대장</h1>
+      <div class="sub" id="subline">불러오는 중…</div>
+    </div>
+    <div style="display:flex; align-items:center">
+      <div class="status-pill" id="conn"><span class="d"></span><span id="connText">연결 확인 중</span></div>
+      <button class="btn" id="logout" hidden>로그아웃</button>
+    </div>
+  </div>
+
+  <div class="notice" id="notice" hidden>
+    <div><b id="noticeTitle"></b><span id="noticeText"></span></div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="lbl">금액 합계</div>
+      <div class="val" id="tAmount">0<span class="u">원</span></div>
+      <div class="foot" id="tAmountFoot">0건</div>
+    </div>
+    <div class="tile cod">
+      <div class="lbl">COD 수납 합계</div>
+      <div class="val" id="tCod">0<span class="u">원</span></div>
+      <div class="meter"><i id="tMeter" style="width:0%"></i></div>
+      <div class="foot" id="tCodFoot">수납률 0%</div>
+    </div>
+    <div class="tile bal">
+      <div class="lbl">미수 잔액</div>
+      <div class="val" id="tBal">0<span class="u">원</span></div>
+      <div class="foot" id="tBalFoot">미수 0건</div>
+    </div>
+    <div class="tile none">
+      <div class="lbl">미등록 (COD 없음)</div>
+      <div class="val" id="tNone">0<span class="u">건</span></div>
+      <div class="foot" id="tNoneFoot">금액 0원</div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="chip" data-f="all" aria-pressed="true">전체 <span class="n" id="cAll">0</span></button>
+    <button class="chip f-cod" data-f="cod" aria-pressed="false"><span class="d"></span>COD 진행 <span class="n" id="cCod">0</span></button>
+    <button class="chip f-none" data-f="none" aria-pressed="false"><span class="d"></span>미등록 <span class="n" id="cNone">0</span></button>
+    <button class="chip f-done" data-f="done" aria-pressed="false"><span class="d"></span>완납 <span class="n" id="cDone">0</span></button>
+    <input class="search" id="q" type="search" placeholder="학생이름 · 연락처 · 멘토 · 메모 검색" autocomplete="off">
+    <button class="btn" id="csv">CSV 내려받기</button>
+    <button class="btn primary" id="add">+ 행 추가</button>
+  </div>
+
+  <div class="migrate" id="migrate" hidden>
+    이 브라우저에 저장돼 있던 기록이 <b id="migrateN">0</b>건 있습니다. 클라우드로 올릴까요?
+    <span class="sp"></span>
+    <button type="button" id="migrateGo">올리기</button>
+    <button type="button" class="ghost" id="migrateNo">나중에</button>
+  </div>
+
+  <div class="sheet">
+    <div class="scroll">
+      <div class="grid">
+        <div class="r hd">
+          <div>날짜</div><div>학생이름</div><div>연락처</div><div>멘토</div>
+          <div class="n">금액</div><div class="n">COD</div><div class="n">잔액</div>
+          <div>메모</div><div>결제일자</div><div></div>
+        </div>
+        <div id="body"></div>
+      </div>
+      <div class="sumrow" id="footer">
+        <div class="lbl-cell">합계</div>
+        <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+        <div class="n" id="fAmount" data-label="금액">0</div>
+        <div class="n t-cod" id="fCod" data-label="COD">0</div>
+        <div class="n t-bal" id="fBal" data-label="잔액">0</div>
+        <div class="sp"></div><div class="sp"></div><div class="sp"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--warn-mark)"></i>COD 진행 — COD가 들어왔고 잔액이 남은 건. 목록 최상단.</span>
+    <span><i style="background:var(--danger-mark)"></i>미등록 — COD가 0원인 건. 중간.</span>
+    <span><i style="background:var(--ok-mark)"></i>완납 — 잔액 0원. 날짜와 무관하게 최하단.</span>
+  </div>
+  <div class="note">잔액은 금액 − COD로 자동 계산됩니다. 잔액 칸에 직접 숫자를 넣으면 그 값이 우선하고, 금액이나 COD를 다시 고치면 자동 계산으로 돌아갑니다. 입력한 값은 자동 저장됩니다.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════
+     여기만 채우면 됩니다.
+     Firebase 콘솔 → 프로젝트 설정 → 내 앱 → 웹 앱의 firebaseConfig 값을
+     그대로 옮겨 넣으십시오. 비워 두면 이 브라우저에만 저장하는 모드로 돕니다.
+     ══════════════════════════════════════════════════════════════ */
+  var FIREBASE_CONFIG = {
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+  };
+  var COLLECTION = "records";   // Firestore 하위 컬렉션 이름. 바꾸려면 보안 규칙도 같이 바꾸십시오.
+  /* ════════════════════════════════════════════════════════════ */
+
+
+  /* ── state ───────────────────────────── */
+  var rows = new Map();          // id -> row object
+  var col = null, local = false;   // col: 로그인된 사용자의 Firestore 컬렉션
+  var fbAuth = null, fbStore = null, unsub = null, uploadShown = false;
+  var editingId = null, pendingRender = false;
+  var filter = "all", query = "";
+  var saveTimers = new Map();
+  var LS = "cod-ledger-v1";
+
+  function uid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,"").slice(0,20);
+    return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+  function num(v){
+    if (v === null || v === undefined || v === "") return 0;
+    var n = parseFloat(String(v).replace(/[^0-9.-]/g,""));
+    return isNaN(n) ? 0 : n;
+  }
+  function fmt(n){
+    var s = Math.abs(Math.round(n)).toLocaleString("ko-KR");
+    return (n < 0 ? "-" : "") + s;
+  }
+  function today(){
+    var d = new Date(), p = function(x){ return String(x).padStart(2,"0"); };
+    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+  }
+  function blank(){
+    return { id: uid(), date: today(), name:"", phone:"", mentor:"", amount:0, cod:0,
+             balanceManual:null, memo:"", payDate:"", createdAt: Date.now() };
+  }
+  function balanceOf(r){
+    return (r.balanceManual !== null && r.balanceManual !== undefined)
+      ? num(r.balanceManual) : num(r.amount) - num(r.cod);
+  }
+  function statusOf(r){
+    var amt = num(r.amount), cod = num(r.cod), bal = balanceOf(r);
+    if (amt > 0 && bal <= 0) return "done";
+    if (cod <= 0) return "none";
+    return "cod";
+  }
+  var RANK = { cod:0, none:1, done:2 };
+  var LABEL = { cod:"COD 진행", none:"미등록", done:"완납" };
+
+  /* ── storage ─────────────────────────── */
+  function persist(r){
+    if (local){
+      try { localStorage.setItem(LS, JSON.stringify(Array.from(rows.values()))); } catch(e){}
+      return;
+    }
+    if (!col) return;
+    var t = saveTimers.get(r.id);
+    if (t) clearTimeout(t);
+    saveTimers.set(r.id, setTimeout(function(){
+      saveTimers.delete(r.id);
+      var body = Object.assign({}, r); delete body.id;
+      col.doc(r.id).set(body).catch(function(e){
+        toast(e && e.code === "permission-denied" ? "쓰기 권한이 없습니다. 보안 규칙을 확인해 주세요."
+                                                  : "저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      });
+    }, 450));
+  }
+  function persistNow(r){
+    var t = saveTimers.get(r.id); if (t){ clearTimeout(t); saveTimers.delete(r.id); }
+    if (local){ try { localStorage.setItem(LS, JSON.stringify(Array.from(rows.values()))); } catch(e){} return Promise.resolve(); }
+    if (!col) return Promise.resolve();
+    var body = Object.assign({}, r); delete body.id;
+    return col.doc(r.id).set(body).catch(function(){ toast("저장에 실패했습니다."); });
+  }
+  function removeRow(id){
+    rows.delete(id);
+    if (local){ try { localStorage.setItem(LS, JSON.stringify(Array.from(rows.values()))); } catch(e){} }
+    else if (col) col.doc(id).delete().catch(function(){ toast("삭제에 실패했습니다."); });
+    render();
+  }
+
+  /* ── derived list ────────────────────── */
+  function visible(){
+    var q = query.trim().toLowerCase();
+    var list = Array.from(rows.values()).filter(function(r){
+      var st = statusOf(r);
+      if (filter !== "all" && st !== filter) return false;
+      if (!q) return true;
+      return [r.name, r.phone, r.mentor, r.memo].join(" ").toLowerCase().indexOf(q) >= 0;
+    });
+    list.sort(function(a,b){
+      var d = RANK[statusOf(a)] - RANK[statusOf(b)];
+      if (d) return d;
+      var da = a.date || "", dbb = b.date || "";
+      if (da !== dbb) return da < dbb ? 1 : -1;
+      return (b.createdAt||0) - (a.createdAt||0);
+    });
+    return list;
+  }
+
+  /* ── render ──────────────────────────── */
+  var body = document.getElementById("body");
+
+  function cell(cls, label, input){
+    var d = document.createElement("div");
+    d.className = "cell " + cls;
+    d.setAttribute("data-label", label);
+    d.appendChild(input);
+    return d;
+  }
+  function mkInput(type, val, ph){
+    var i = document.createElement("input");
+    i.type = type; i.value = val == null ? "" : val;
+    if (ph) i.placeholder = ph;
+    if (type === "text") i.autocomplete = "off";
+    return i;
+  }
+  function mkNum(val){
+    var i = document.createElement("input");
+    i.type = "text"; i.inputMode = "numeric"; i.value = num(val) ? fmt(num(val)) : "";
+    i.placeholder = "0";
+    return i;
+  }
+
+  function buildRow(r){
+    var el = document.createElement("div");
+    el.className = "r row s-" + statusOf(r);
+    el.dataset.id = r.id;
+
+    var fDate = mkInput("date", r.date, "");
+    var fName = mkInput("text", r.name, "학생이름");
+    var fPhone = mkInput("text", r.phone, "010-0000-0000");
+    var fMentor = mkInput("text", r.mentor, "멘토");
+    var fAmount = mkNum(r.amount);
+    var fCod = mkNum(r.cod);
+    var fBal = mkNum(balanceOf(r));
+    if (!balanceOf(r) && (num(r.amount) || num(r.cod))) fBal.value = "0";
+    var fMemo = mkInput("text", r.memo, "메모");
+    var fPay = mkInput("date", r.payDate, "");
+
+    el.appendChild(cell("dt date","날짜",fDate));
+    el.appendChild(cell("name","학생이름",fName));
+    el.appendChild(cell("phone","연락처",fPhone));
+    el.appendChild(cell("mentor","멘토",fMentor));
+    el.appendChild(cell("n amount","금액",fAmount));
+    el.appendChild(cell("n cod","COD",fCod));
+    el.appendChild(cell("n bal","잔액",fBal));
+    el.appendChild(cell("memo","메모",fMemo));
+    el.appendChild(cell("dt pay","결제일자",fPay));
+
+    var dcell = document.createElement("div");
+    dcell.className = "cell del";
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.textContent = "×"; btn.title = "행 삭제"; btn.setAttribute("aria-label","행 삭제");
+    btn.addEventListener("click", function(){
+      if (btn.classList.contains("armed")) { removeRow(r.id); return; }
+      btn.classList.add("armed"); btn.textContent = "삭제";
+      setTimeout(function(){ btn.classList.remove("armed"); btn.textContent = "×"; }, 2600);
+    });
+    dcell.appendChild(btn);
+    el.appendChild(dcell);
+
+    function refreshRow(){
+      el.className = "r row s-" + statusOf(r) + (editingId === r.id ? " editing" : "");
+      if (document.activeElement !== fBal){
+        var b = balanceOf(r);
+        fBal.value = b ? fmt(b) : (num(r.amount) || num(r.cod) ? "0" : "");
+      }
+      summarize();
+    }
+
+    fDate.addEventListener("input", function(){ r.date = fDate.value; persist(r); });
+    fName.addEventListener("input", function(){ r.name = fName.value; persist(r); });
+    fMentor.addEventListener("input", function(){ r.mentor = fMentor.value; persist(r); });
+    fMemo.addEventListener("input", function(){ r.memo = fMemo.value; persist(r); });
+    fPay.addEventListener("input", function(){ r.payDate = fPay.value; persist(r); });
+
+    fPhone.addEventListener("input", function(){ r.phone = fPhone.value; persist(r); });
+    fPhone.addEventListener("blur", function(){
+      var d = fPhone.value.replace(/[^0-9]/g,"");
+      if (d.length === 11) fPhone.value = d.slice(0,3)+"-"+d.slice(3,7)+"-"+d.slice(7);
+      else if (d.length === 10) fPhone.value = d.slice(0,3)+"-"+d.slice(3,6)+"-"+d.slice(6);
+      r.phone = fPhone.value; persist(r);
+    });
+
+    function numHandlers(input, key){
+      input.addEventListener("focus", function(){
+        var v = num(r[key]); input.value = v ? String(v) : "";
+        input.select();
+      });
+      input.addEventListener("input", function(){
+        r[key] = num(input.value);
+        if (key === "amount" || key === "cod") r.balanceManual = null;
+        refreshRow(); persist(r);
+      });
+      input.addEventListener("blur", function(){
+        var v = num(r[key]); input.value = v ? fmt(v) : "";
+      });
+    }
+    numHandlers(fAmount, "amount");
+    numHandlers(fCod, "cod");
+
+    fBal.addEventListener("focus", function(){
+      var v = balanceOf(r); fBal.value = v ? String(v) : ""; fBal.select();
+    });
+    fBal.addEventListener("input", function(){
+      r.balanceManual = fBal.value.trim() === "" ? null : num(fBal.value);
+      refreshRow(); persist(r);
+    });
+    fBal.addEventListener("blur", function(){
+      var v = balanceOf(r); fBal.value = v ? fmt(v) : "0";
+    });
+
+    el.addEventListener("focusin", function(){
+      editingId = r.id; el.classList.add("editing");
+    });
+    el.addEventListener("focusout", function(){
+      setTimeout(function(){
+        if (el.contains(document.activeElement)) return;
+        el.classList.remove("editing");
+        if (editingId === r.id){
+          editingId = null;
+          persistNow(r);
+          if (pendingRender){ pendingRender = false; render(); }
+          else render();
+        }
+      }, 60);
+    });
+
+    return el;
+  }
+
+  function groupHeader(st, list){
+    var d = document.createElement("div");
+    d.className = "grp g-" + st;
+    var sum = list.reduce(function(a,r){ return a + (st === "done" ? num(r.amount) : balanceOf(r)); }, 0);
+    d.innerHTML = '<span class="d"></span>' + LABEL[st] +
+      ' <span class="cnt">' + list.length + '건</span>' +
+      '<span class="amt">' + (st === "done" ? "금액 " : "잔액 ") + fmt(sum) + '원</span>';
+    return d;
+  }
+
+  function render(){
+    if (editingId !== null){ pendingRender = true; return; }
+    var list = visible();
+    body.textContent = "";
+    if (!list.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.innerHTML = rows.size
+        ? "<b>조건에 맞는 행이 없습니다</b>필터나 검색어를 바꿔 보세요."
+        : "<b>아직 기록이 없습니다</b>오른쪽 위 <strong>+ 행 추가</strong>로 첫 건을 넣어 보세요.";
+      body.appendChild(e);
+    } else {
+      var last = null;
+      list.forEach(function(r){
+        var st = statusOf(r);
+        if (st !== last){
+          body.appendChild(groupHeader(st, list.filter(function(x){ return statusOf(x) === st; })));
+          last = st;
+        }
+        body.appendChild(buildRow(r));
+      });
+    }
+    summarize();
+  }
+
+  function summarize(){
+    var all = Array.from(rows.values());
+    var amount = 0, cod = 0, bal = 0, noneN = 0, noneAmt = 0, codN = 0, doneN = 0, unpaidN = 0;
+    all.forEach(function(r){
+      var st = statusOf(r), b = balanceOf(r);
+      amount += num(r.amount); cod += num(r.cod);
+      if (b > 0){ bal += b; unpaidN++; }
+      if (st === "none"){ noneN++; noneAmt += num(r.amount); }
+      else if (st === "cod") codN++;
+      else doneN++;
+    });
+    var rate = amount > 0 ? Math.max(0, Math.min(100, cod / amount * 100)) : 0;
+
+    document.getElementById("tAmount").innerHTML = fmt(amount) + '<span class="u">원</span>';
+    document.getElementById("tAmountFoot").textContent = all.length + "건 기록";
+    document.getElementById("tCod").innerHTML = fmt(cod) + '<span class="u">원</span>';
+    document.getElementById("tMeter").style.width = rate.toFixed(1) + "%";
+    document.getElementById("tCodFoot").textContent = "수납률 " + rate.toFixed(1) + "%";
+    document.getElementById("tBal").innerHTML = fmt(bal) + '<span class="u">원</span>';
+    document.getElementById("tBalFoot").textContent = "미수 " + unpaidN + "건";
+    document.getElementById("tNone").innerHTML = noneN + '<span class="u">건</span>';
+    document.getElementById("tNoneFoot").textContent = "금액 " + fmt(noneAmt) + "원";
+
+    document.getElementById("cAll").textContent = all.length;
+    document.getElementById("cCod").textContent = codN;
+    document.getElementById("cNone").textContent = noneN;
+    document.getElementById("cDone").textContent = doneN;
+
+    var vis = visible();
+    var va = 0, vc = 0, vb = 0;
+    vis.forEach(function(r){ va += num(r.amount); vc += num(r.cod); vb += Math.max(0, balanceOf(r)); });
+    document.getElementById("fAmount").textContent = fmt(va);
+    document.getElementById("fCod").textContent = fmt(vc);
+    document.getElementById("fBal").textContent = fmt(vb);
+
+    document.getElementById("subline").textContent =
+      all.length ? (all.length + "건 · 미수 " + fmt(bal) + "원 · 미등록 " + noneN + "건") : "행을 추가해 기록을 시작하세요";
+  }
+
+  /* ── toast ───────────────────────────── */
+  var toastEl = document.getElementById("toast"), toastT;
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add("on");
+    clearTimeout(toastT); toastT = setTimeout(function(){ toastEl.classList.remove("on"); }, 2800);
+  }
+
+  /* ── controls ────────────────────────── */
+  document.getElementById("add").addEventListener("click", function(){
+    var r = blank();
+    rows.set(r.id, r);
+    persistNow(r);
+    editingId = null; pendingRender = false;
+    render();
+    var el = body.querySelector('.row[data-id="' + r.id + '"]');
+    if (el){ el.scrollIntoView({block:"center", behavior:"smooth"}); el.querySelectorAll("input")[1].focus(); }
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".chip"), function(c){
+    c.addEventListener("click", function(){
+      filter = c.dataset.f;
+      Array.prototype.forEach.call(document.querySelectorAll(".chip"), function(x){
+        x.setAttribute("aria-pressed", String(x === c));
+      });
+      editingId = null; render();
+    });
+  });
+
+  var qEl = document.getElementById("q"), qT;
+  qEl.addEventListener("input", function(){
+    clearTimeout(qT);
+    qT = setTimeout(function(){ query = qEl.value; editingId = null; render(); }, 180);
+  });
+
+  document.getElementById("csv").addEventListener("click", async function(){
+    var list = visible();
+    if (!list.length){ toast("내려받을 행이 없습니다."); return; }
+    var head = ["날짜","학생이름","연락처","멘토","금액","COD","잔액","메모","결제일자","상태"];
+    var esc = function(v){ v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+    var lines = [head.join(",")];
+    list.forEach(function(r){
+      lines.push([r.date, r.name, r.phone, r.mentor, num(r.amount), num(r.cod),
+                  balanceOf(r), r.memo, r.payDate, LABEL[statusOf(r)]].map(esc).join(","));
+    });
+    var csv = "﻿" + lines.join("\r\n");
+    var fname = "매출COD관리대장_" + today() + ".csv";
+    var dl = null;
+    try { if (window.claude && window.claude.use) dl = await window.claude.use("downloads"); } catch(e){ dl = null; }
+    if (dl){
+      try { await dl.save({ filename: fname, data: csv }); toast("CSV를 저장했습니다."); }
+      catch(e){ if (!(e && e.code === "declined")) toast("내려받기에 실패했습니다."); }
+      return;
+    }
+    try {
+      var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "COD_ledger_" + today() + ".csv";
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      toast("CSV를 내려받았습니다.");
+    } catch(e){ toast("내려받기에 실패했습니다."); }
+  });
+
+  /* ── boot ────────────────────────────── */
+  function setConn(text, warn){
+    document.getElementById("connText").textContent = text;
+    document.getElementById("conn").classList.toggle("warnmode", !!warn);
+  }
+  function notice(title, text){
+    var n = document.getElementById("notice");
+    if (!n) return;
+    document.getElementById("noticeTitle").textContent = title;
+    document.getElementById("noticeText").textContent = text;
+    n.hidden = false;
+    try { console.warn("[관리대장] " + title + " — " + text); } catch(e){}
+  }
+  function loadLocal(label){
+    local = true; col = null;
+    setConn(label || "이 브라우저에만 저장", true);
+    try {
+      var raw = localStorage.getItem(LS);
+      if (raw) JSON.parse(raw).forEach(function(r){ rows.set(r.id, r); });
+    } catch(e){}
+    render();
+  }
+  function localRows(){
+    try { return JSON.parse(localStorage.getItem(LS) || "[]"); } catch(e){ return []; }
+  }
+
+  /* 로그인 화면 */
+  var gate = document.getElementById("gate");
+  var gateForm = document.getElementById("gateForm");
+  var gateErr = document.getElementById("gateErr");
+  function showGate(on){ gate.hidden = !on; document.getElementById("app").hidden = on; }
+  document.getElementById("logout").addEventListener("click", function(){
+    if (fbAuth) fbAuth.signOut();
+  });
+  var AUTH_MSG = {
+    "auth/invalid-email": "이메일 형식이 올바르지 않습니다.",
+    "auth/user-not-found": "등록되지 않은 계정입니다. Firebase 콘솔 Authentication → Users에서 계정을 추가하십시오.",
+    "auth/wrong-password": "비밀번호가 맞지 않습니다.",
+    "auth/invalid-credential": "이메일이나 비밀번호가 맞지 않습니다.",
+    "auth/invalid-login-credentials": "이메일이나 비밀번호가 맞지 않습니다.",
+    "auth/user-disabled": "사용 중지된 계정입니다.",
+    "auth/too-many-requests": "시도가 많아 잠시 막혔습니다. 몇 분 뒤 다시 해 주십시오.",
+    "auth/operation-not-allowed": "이메일/비밀번호 로그인이 꺼져 있습니다. Authentication → Sign-in method에서 켜십시오.",
+    "auth/unauthorized-domain": "이 주소가 승인된 도메인에 없습니다. Authentication → Settings → 승인된 도메인에 추가하십시오.",
+    "auth/network-request-failed": "인증 서버에 연결하지 못했습니다. 네트워크나 확장 프로그램(광고 차단 등)을 확인해 주십시오.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "apiKey 값이 올바르지 않습니다. firebaseConfig를 다시 복사해 주십시오.",
+    "auth/configuration-not-found": "이 프로젝트에 Authentication이 설정돼 있지 않습니다. 콘솔에서 Authentication을 시작해 주십시오.",
+    "auth/operation-not-supported-in-this-environment": "파일을 직접 연 상태(file://)에서는 로그인이 되지 않습니다. GitHub Pages 주소로 열어 주십시오."
+  };
+  function diag(msg){
+    var el = document.getElementById("gateDiag");
+    if (el) el.textContent = msg;
+    try { console.log("[관리대장] " + msg); } catch(e){}
+  }
+  function showAuthError(e){
+    var code = (e && e.code) ? e.code : "";
+    gateErr.textContent = AUTH_MSG[code] || "로그인에 실패했습니다.";
+    diag("오류 " + (code || "코드없음") + " · " + ((e && e.message) ? e.message : String(e)));
+  }
+
+  gateForm.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    gateErr.textContent = "";
+    var btn = gateForm.querySelector("button");
+    if (!fbAuth){
+      gateErr.textContent = "Firebase 인증이 준비되지 않았습니다. 설정값을 확인해 주십시오.";
+      diag("fbAuth 없음 · SDK 또는 설정값 문제");
+      return;
+    }
+    var email = document.getElementById("gateEmail").value.trim();
+    var pw = document.getElementById("gatePw").value;
+    btn.disabled = true; btn.textContent = "확인 중…";
+    diag("인증 요청 보내는 중… (" + email + ")");
+    var settled = false;
+    var timer = setTimeout(function(){
+      if (settled) return;
+      settled = true;
+      btn.disabled = false; btn.textContent = "로그인";
+      gateErr.textContent = "인증 서버에서 응답이 없습니다. 네트워크, 승인된 도메인, 광고 차단 확장 프로그램을 확인해 주십시오.";
+      diag("응답 없음 (12초 초과)");
+    }, 12000);
+    function done(){ settled = true; clearTimeout(timer); btn.disabled = false; btn.textContent = "로그인"; }
+
+    var pr;
+    try {
+      pr = fbAuth.signInWithEmailAndPassword(email, pw);
+    } catch(e){ done(); showAuthError(e); return; }
+    if (!pr || typeof pr.then !== "function"){
+      done();
+      gateErr.textContent = "SDK가 올바르게 응답하지 않았습니다.";
+      diag("signInWithEmailAndPassword가 Promise를 반환하지 않음");
+      return;
+    }
+    pr.then(function(){
+      if (settled) return;
+      done();
+      diag("인증 성공 · 세션 확인 중…");
+      setTimeout(function(){
+        if (!col) {
+          gateErr.textContent = "로그인은 됐지만 화면이 넘어가지 않습니다. 브라우저 콘솔(F12)의 메시지를 확인해 주십시오.";
+          diag("인증은 성공했으나 onAuthStateChanged가 반응하지 않음");
+        }
+      }, 6000);
+    }).catch(function(e){
+      if (settled) return;
+      done(); showAuthError(e);
+    });
+  });
+
+  /* 브라우저에 남아 있던 기록을 클라우드로 올리는 안내 */
+  function offerUpload(cloudEmpty){
+    if (uploadShown || !cloudEmpty) return;
+    var pend = localRows();
+    if (!pend.length) return;
+    uploadShown = true;
+    var bn = document.getElementById("migrate");
+    document.getElementById("migrateN").textContent = pend.length;
+    bn.hidden = false;
+    document.getElementById("migrateGo").onclick = function(){
+      bn.hidden = true;
+      Promise.all(pend.map(function(r){
+        var body = Object.assign({}, r); delete body.id;
+        return col.doc(r.id).set(body);
+      })).then(function(){
+        toast(pend.length + "건을 올렸습니다.");
+        try { localStorage.removeItem(LS); } catch(e){}
+      }).catch(function(){ toast("올리는 중 문제가 생겼습니다."); });
+    };
+    document.getElementById("migrateNo").onclick = function(){ bn.hidden = true; };
+  }
+
+  function subscribe(){
+    if (unsub) { unsub(); unsub = null; }
+    unsub = col.onSnapshot(function(snap){
+      var seen = new Set();
+      snap.docs.forEach(function(doc){
+        seen.add(doc.id);
+        if (doc.id === editingId) return;
+        if (saveTimers.has(doc.id)) return;
+        var data = doc.data() || {};
+        rows.set(doc.id, {
+          id: doc.id,
+          date: data.date || "", name: data.name || "", phone: data.phone || "",
+          mentor: data.mentor || "", amount: num(data.amount), cod: num(data.cod),
+          balanceManual: (data.balanceManual === null || data.balanceManual === undefined) ? null : num(data.balanceManual),
+          memo: data.memo || "", payDate: data.payDate || "", createdAt: data.createdAt || 0
+        });
+      });
+      Array.from(rows.keys()).forEach(function(id){
+        if (!seen.has(id) && id !== editingId && !saveTimers.has(id)) rows.delete(id);
+      });
+      render();
+      offerUpload(snap.empty);
+    }, function(err){
+      setConn(err && err.code === "permission-denied" ? "읽기 권한 없음 · 보안 규칙 확인" : "저장 연결에 문제가 있습니다", true);
+    });
+  }
+
+  render();
+
+  (function(){
+    var cfgReady = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId;
+    if (!cfgReady){
+      showGate(false);
+      loadLocal("설정 전 · 이 브라우저에만 저장");
+      notice("Firebase 설정값이 비어 있습니다",
+             "HTML 파일 위쪽 FIREBASE_CONFIG의 apiKey와 projectId를 채우면 로그인 화면이 나오고 클라우드 저장으로 바뀝니다. 지금은 이 브라우저에만 저장됩니다.");
+      return;
+    }
+    if (!window.firebase || !window.firebase.initializeApp){
+      showGate(false);
+      loadLocal("SDK를 불러오지 못함 · 이 브라우저에만 저장");
+      notice("Firebase SDK를 불러오지 못했습니다",
+             "gstatic.com 접속이 막혀 있습니다. 인터넷 연결, 사내 네트워크 차단, 광고 차단 확장 프로그램을 확인해 주십시오. 파일 위쪽 세 줄의 SDK 버전(10.12.2)이 잘못돼도 같은 증상이 납니다.");
+      return;
+    }
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      fbAuth = firebase.auth();
+      fbStore = firebase.firestore();
+    } catch(e){
+      showGate(false);
+      loadLocal("Firebase 초기화 실패 · 이 브라우저에만 저장");
+      notice("Firebase 초기화에 실패했습니다",
+             "설정값을 다시 확인해 주십시오. 오류: " + (e && e.message ? e.message : String(e)));
+      return;
+    }
+    setConn("로그인 확인 중", true);
+    diag("SDK " + ((window.firebase && firebase.SDK_VERSION) ? firebase.SDK_VERSION : "?") +
+         " · project " + FIREBASE_CONFIG.projectId +
+         " · authDomain " + FIREBASE_CONFIG.authDomain +
+         " · origin " + location.origin);
+    fbAuth.onAuthStateChanged(function(user){
+      if (user){
+        diag("세션 확인됨 · uid " + user.uid);
+        local = false;
+        try {
+          col = fbStore.collection("users").doc(user.uid).collection(COLLECTION);
+        } catch(e){
+          gateErr.textContent = "Firestore 경로를 만들지 못했습니다.";
+          diag("Firestore 오류 · " + (e && e.message ? e.message : String(e)));
+          return;
+        }
+        rows.clear();
+        showGate(false);
+        document.getElementById("logout").hidden = false;
+        setConn("클라우드 저장 · " + (user.email || "로그인됨"), false);
+        subscribe();
+      } else {
+        if (unsub){ unsub(); unsub = null; }
+        col = null; rows.clear(); render();
+        document.getElementById("logout").hidden = true;
+        document.getElementById("gatePw").value = "";
+        setConn("로그인이 필요합니다", true);
+        showGate(true);
+      }
+    });
+  })();
+})();
+</script>
+</body>
+</html>

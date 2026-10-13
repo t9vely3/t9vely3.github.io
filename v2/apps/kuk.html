@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>국취 사전접수 · AIX</title>
+<script src="../shared/lock.js"></script>
+<link rel="stylesheet" href="../shared/theme.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="../shared/aix.js"></script>
+<style>
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tools .search { flex: 1 1 240px; }
+.stbtn { border: 1px solid var(--line); background: transparent; color: var(--sub); font-weight: 700; font-size: 12px; padding: 6px 10px; border-radius: 9px; cursor: pointer; white-space: nowrap; }
+.stbtn.done { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.stbtns { display: flex; gap: 8px; margin-top: 8px; }
+.stbtns button { flex: 1; }
+.big dd { font-family: var(--num); font-size: 22px; font-weight: 700; }
+.gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.gate .card { width: min(400px, 100%); display: flex; flex-direction: column; gap: 12px; padding: 30px; }
+.gate h1 { margin: 0; font-size: 24px; font-weight: 900; }
+.more { margin: 16px auto 0; display: flex; }
+@media (max-width: 720px) { .hide-sm { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <form class="card" id="gateForm">
+    <h1>국취 사전접수</h1>
+    <p class="muted" style="margin:0">직원 계정으로만 열 수 있습니다.</p>
+    <label for="em" class="muted">이메일</label>
+    <input class="input" type="email" id="em" autocomplete="username" required>
+    <label for="pw" class="muted">비밀번호</label>
+    <input class="input" type="password" id="pw" autocomplete="current-password" required>
+    <div id="err" role="alert" style="color:var(--bad);font-size:13px;min-height:18px"></div>
+    <button class="btn primary" id="loginBtn" type="submit">로그인</button>
+  </form>
+</div>
+
+<div class="page" id="app" hidden>
+  <div class="page-head">
+    <h1>국민취업지원제도 사전접수</h1>
+    <div class="row">
+      <button class="btn" type="button" id="csvBtn">CSV 내려받기</button>
+      <button class="btn" type="button" id="reloadBtn">새로고침</button>
+    </div>
+  </div>
+  <div class="ro-band" id="roBand" hidden>점검 기간이라 신청완료 처리와 삭제는 기존 화면에서 해 주세요. 보기와 CSV 내려받기는 그대로 됩니다.</div>
+  <div class="stats" id="sums"></div>
+  <div class="card">
+    <div class="tools">
+      <div class="tabs" id="tabs" role="tablist" aria-label="상태별 보기">
+        <button type="button" data-f="all" class="on">전체</button>
+        <button type="button" data-f="pending">미완료</button>
+        <button type="button" data-f="done">신청완료</button>
+        <button type="button" data-f="pass">가능</button>
+        <button type="button" data-f="fail">미달</button>
+      </div>
+      <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="search" id="q" placeholder="이름 또는 연락처 검색" aria-label="이름 또는 연락처 검색"></label>
+    </div>
+    <div id="listWrap" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div class="veil" id="veil">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <header><h3 id="dTitle"></h3><button class="btn sm" type="button" data-close>닫기</button></header>
+    <div class="in" id="dBody"></div>
+    <div class="out">
+      <button class="btn danger" type="button" id="delBtn">삭제</button>
+      <button class="btn" type="button" data-close>닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = AIX.esc;
+  var C = AIX.connect("gov"), db = C.db, auth = C.auth;   /* 기존 화면과 같은 앱 이름(admin) → 로그인 상태 공유 */
+  var COL = "sbs_score_checks", PAGE = 100;
+  var ROWS = [], filter = "all", keyword = "", cursor = null, noMore = false, current = null, STAFF = null;
+
+  function when(iso) {
+    var d = new Date(iso); if (isNaN(d)) return "—";
+    var p = function (n) { return String(n).padStart(2, "0"); };
+    return p(d.getMonth() + 1) + "." + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  var isDone = function (r) { return r.status === "done"; };
+  var statusLabel = function (r) { return isDone(r) ? "신청완료" : "미완료"; };
+
+  /* ---------- 불러오기 ---------- */
+  async function loadAll(reset) {
+    if (reset) { ROWS = []; cursor = null; noMore = false; }
+    try {
+      var q = db.collection(COL).orderBy("savedAt", "desc").limit(PAGE);
+      if (cursor) q = q.startAfter(cursor);
+      var snap = await q.get();
+      snap.docs.forEach(function (d) { ROWS.push(Object.assign({ id: d.id }, d.data())); });
+      if (snap.docs.length) cursor = snap.docs[snap.docs.length - 1];
+      if (snap.docs.length < PAGE) noMore = true;
+    } catch (e) {
+      AIX.toast("불러오지 못했습니다. 로그인 상태를 확인해 주세요"); noMore = true;
+    }
+    render();
+  }
+
+  /* ---------- 화면 ---------- */
+  function visible() {
+    var k = keyword.trim().replace(/[^0-9가-힣a-zA-Z]/g, "");
+    return ROWS.filter(function (r) {
+      if (filter === "pass" && !r.pass) return false;
+      if (filter === "fail" && r.pass) return false;
+      if (filter === "pending" && isDone(r)) return false;
+      if (filter === "done" && !isDone(r)) return false;
+      if (k && (String(r.name || "") + String(r.contact || "")).replace(/[^0-9가-힣a-zA-Z]/g, "").indexOf(k) < 0) return false;
+      return true;
+    });
+  }
+  function renderSums() {
+    var today = AIX.iso(new Date());
+    var cells = [
+      ["전체 접수", ROWS.length, ""],
+      ["오늘", ROWS.filter(function (r) { return r.savedAt && AIX.iso(new Date(r.savedAt)) === today; }).length, "var(--accent-text)"],
+      ["가능 판정", ROWS.filter(function (r) { return r.pass; }).length, ""],
+      ["신청완료", ROWS.filter(isDone).length, ""]
+    ];
+    $("#sums").innerHTML = cells.map(function (c) {
+      return '<div class="stat"><span class="k">' + c[0] + '</span><span class="v" style="color:' + c[2] + '">' + c[1] + "<small>건</small></span></div>";
+    }).join("");
+  }
+  function render() {
+    renderSums();
+    var list = visible(), wrap = $("#listWrap");
+    if (!list.length) { wrap.innerHTML = '<div class="blank">' + (ROWS.length ? "조건에 맞는 접수가 없습니다." : "아직 접수된 건이 없습니다.") + "</div>"; return; }
+    wrap.innerHTML = '<div class="table-wrap"><table class="tbl"><thead><tr>' +
+      '<th>접수</th><th>이름</th><th class="hide-sm">연락처</th><th class="hide-sm">상담 멘토</th><th class="hide-sm">기준</th><th class="r">점수</th><th>판정</th><th>신청</th>' +
+      "</tr></thead><tbody>" + list.map(function (r) {
+        return '<tr class="click" data-id="' + esc(r.id) + '">' +
+          '<td class="num muted">' + when(r.savedAt) + "</td>" +
+          "<td><b>" + esc(r.name) + "</b></td>" +
+          '<td class="hide-sm num">' + (esc(r.contact) || "—") + "</td>" +
+          '<td class="hide-sm">' + (esc(r.mentorName) || '<span class="muted">—</span>') + "</td>" +
+          '<td class="hide-sm muted">' + esc(r.track) + "</td>" +
+          '<td class="r num"><b>' + esc(r.total) + "</b></td>" +
+          '<td><span class="tag ' + (r.pass ? "ok" : "bad") + '">' + (r.pass ? "가능" : "미달") + "</span></td>" +
+          '<td><button type="button" class="stbtn ' + (isDone(r) ? "done" : "") + '" data-toggle="' + esc(r.id) + '">' + statusLabel(r) + "</button></td></tr>";
+      }).join("") + "</tbody></table></div>" +
+      (noMore ? "" : '<button class="btn more" type="button" id="moreBtn">더 불러오기</button>');
+    var more = $("#moreBtn"); if (more) more.onclick = function () { loadAll(false); };
+  }
+  $("#listWrap").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-toggle]");
+    if (t) { e.stopPropagation(); return toggleDone(t.dataset.toggle); }
+    var tr = e.target.closest("tr[data-id]"); if (tr) openDetail(tr.dataset.id);
+  });
+
+  /* ---------- 상세 ---------- */
+  function openDetail(id) {
+    var r = ROWS.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+    current = r;
+    $("#dTitle").textContent = r.name || "이름 없음";
+    var kv = function (k, v, cls) { return '<div class="kv ' + (cls || "") + '"><dt>' + k + "</dt><dd>" + esc(v) + "</dd></div>"; };
+    var pt = function (band, p) { return (band || "—") + (p != null ? " · " + p + "점" : ""); };
+    $("#dBody").innerHTML =
+      kv("연락처", r.contact || "—") + kv("접수 시각", when(r.savedAt)) + kv("상담 멘토", r.mentorName || "—") + kv("작성 경로", r.by || "—") +
+      '<div class="grp">진단 결과</div>' +
+      kv("적용 기준", r.track || "—") + kv("합계 점수", (r.total != null ? r.total : "—") + "점", "big") +
+      kv("기준 점수", r.cutoff == null ? "미설정" : r.cutoff + "점") + kv("판정", r.verdict || "—") +
+      '<div class="grp">항목별</div>' +
+      kv("가구원 수", r.household ? r.household + "인" : "—") + kv("소득 구간", pt(r.incomeBand, r.incomePt)) +
+      kv("재산 구간", pt(r.assetBand, r.assetPt)) + kv("취업 기간", pt(r.workBand, r.workPt)) + kv("가감점", (r.extraPt || 0) + "점") +
+      '<div class="grp">신청 여부</div><div class="stbtns">' +
+      '<button type="button" class="btn ' + (isDone(r) ? "" : "primary") + '" data-st="pending">미완료</button>' +
+      '<button type="button" class="btn ' + (isDone(r) ? "primary" : "") + '" data-st="done">신청완료</button></div>';
+    $("#veil").classList.add("on");
+  }
+  function closeDetail() { $("#veil").classList.remove("on"); current = null; }
+  $("#dBody").addEventListener("click", function (e) { var b = e.target.closest("[data-st]"); if (b && current) setStatus(b.dataset.st, current.id); });
+  $("#veil").addEventListener("click", function (e) { if (e.target.id === "veil" || e.target.closest("[data-close]")) closeDetail(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDetail(); });
+
+  function toggleDone(id) { var r = ROWS.filter(function (x) { return x.id === id; })[0]; if (r) setStatus(isDone(r) ? "pending" : "done", id); }
+
+  /* 기존 화면과 같은 항목(status · statusAt · statusBy)으로 저장 */
+  async function setStatus(st, id) {
+    var r = ROWS.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+    var before = r.status; r.status = st; render(); if (current) openDetail(r.id);
+    try {
+      await db.collection(COL).doc(r.id).update({ status: st, statusAt: new Date().toISOString(), statusBy: STAFF ? STAFF.email : "" });
+      AIX.toast(st === "done" ? "신청완료로 바꿨습니다" : "미완료로 되돌렸습니다");
+    } catch (e) {
+      r.status = before; render(); if (current) openDetail(r.id);
+      if (e.code !== "aix/read-only") AIX.toast("바꾸지 못했습니다");
+    }
+  }
+  $("#delBtn").addEventListener("click", async function () {
+    if (!current) return; var r = current;
+    if (!confirm(r.name + " 님의 접수 건을 지울까요?\n지운 뒤에는 되돌릴 수 없습니다.")) return;
+    try {
+      await db.collection(COL).doc(r.id).delete();
+      ROWS = ROWS.filter(function (x) { return x.id !== r.id; }); closeDetail(); render(); AIX.toast("삭제했습니다");
+    } catch (e) { if (e.code !== "aix/read-only") AIX.toast("삭제하지 못했습니다"); }
+  });
+
+  /* ---------- CSV (기존과 같은 열) ---------- */
+  $("#csvBtn").addEventListener("click", function () {
+    var list = visible(); if (!list.length) return AIX.toast("내려받을 내용이 없습니다");
+    var head = ["접수시각", "이름", "연락처", "상담멘토", "적용기준", "가구원수", "소득구간", "소득점수", "재산구간", "재산점수", "취업기간", "취업점수", "가감점", "합계", "기준점수", "판정", "신청여부", "작성경로"];
+    var cell = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+    var lines = [head.map(cell).join(",")];
+    list.forEach(function (r) {
+      lines.push([when(r.savedAt), r.name, r.contact, r.mentorName, r.track, r.household, r.incomeBand, r.incomePt, r.assetBand, r.assetPt, r.workBand, r.workPt, r.extraPt, r.total, r.cutoff, r.verdict, statusLabel(r), r.by].map(cell).join(","));
+    });
+    var blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "사전접수_" + AIX.iso(new Date()).replace(/-/g, "") + ".csv";
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+    AIX.toast(list.length + "건을 내려받았습니다");
+  });
+  $("#reloadBtn").addEventListener("click", function () { loadAll(true); });
+  $("#q").addEventListener("input", function (e) { keyword = e.target.value; render(); });
+  $("#tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    filter = b.dataset.f;
+    document.querySelectorAll("#tabs button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    render();
+  });
+
+  /* ---------- 로그인 ---------- */
+  function loginError(e) {
+    switch (e && e.code) {
+      case "auth/invalid-email": return "이메일 형식이 올바르지 않습니다";
+      case "auth/user-not-found": case "auth/wrong-password": case "auth/invalid-credential": return "이메일 또는 비밀번호가 올바르지 않습니다";
+      case "auth/too-many-requests": return "시도가 너무 많습니다. 잠시 후 다시 해 주세요";
+      case "auth/network-request-failed": return "네트워크에 연결할 수 없습니다";
+      default: return "로그인 실패: " + ((e && (e.message || e.code)) || "알 수 없는 오류");
+    }
+  }
+  $("#gateForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = $("#loginBtn"); btn.disabled = true; btn.textContent = "확인 중…"; $("#err").textContent = "";
+    try { await auth.signInWithEmailAndPassword($("#em").value.trim(), $("#pw").value); $("#pw").value = ""; }
+    catch (err) { $("#err").textContent = loginError(err); }
+    btn.disabled = false; btn.textContent = "로그인";
+  });
+  var opened = false;
+  auth.onAuthStateChanged(function (u) {
+    if (u && !u.isAnonymous) {
+      STAFF = { email: u.email || "" };
+      $("#gate").hidden = true; $("#app").hidden = false; $("#roBand").hidden = !AIX.READ_ONLY;
+      if (!opened) { opened = true; loadAll(true); }
+    } else { $("#app").hidden = true; $("#gate").hidden = false; }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html data-aix="sales" lang="ko">
+<head>
+<!-- AIX v2: 원본 team31/apps/sales.html 복사본. 기능 코드는 원본 그대로이고, 아래 잠금 한 줄만 추가됨 -->
+<script src="../shared/lock.js"></script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>상담 매출 관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Firebase v10 (modular) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, GoogleAuthProvider,
+    signInWithPopup, signInWithEmailAndPassword,
+    onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+    onSnapshot, query, orderBy, serverTimestamp, writeBatch, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCQofo_Tp-5W5CdNWGD0tu1yuU62rE4pWY",
+    authDomain: "complete-55019.firebaseapp.com",
+    projectId: "complete-55019",
+    storageBucket: "complete-55019.firebasestorage.app",
+    messagingSenderId: "157946979859",
+    appId: "1:157946979859:web:e0e6012454622defe441e6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  window.__fb = {
+    app, auth, db, provider,
+    collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+    onSnapshot, query, orderBy, serverTimestamp, writeBatch, getDocs,
+    signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  };
+
+  window.__fbReady = true;
+  if(typeof window.onFirebaseReady === 'function'){
+    window.onFirebaseReady();
+  }
+</script>
+<style>
+  :root{
+    --bg:#fafbfc;
+    --surface:#ffffff;
+    --surface-2:#f6f8fa;
+    --line:#e6e8ec;
+    --line-soft:#eef0f3;
+    --text:#0b1220;
+    --text-2:#475569;
+    --muted:#94a3b8;
+    --navy:#0b1220;
+    --navy-2:#1e293b;
+
+    --green:#16a34a; --green-bg:#ecfdf5; --green-line:#a7f3d0;
+    --yellow:#b45309; --yellow-bg:#fffbeb; --yellow-line:#fde68a;
+    --red:#e11d48; --red-bg:#fff1f2; --red-line:#fecdd3;
+    --blue:#2563eb; --blue-bg:#eff6ff; --blue-line:#bfdbfe;
+
+    --sidebar-w:232px;
+    --rightbar-w:320px;
+    --topbar-h:56px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;
+    background:var(--bg);color:var(--text);
+    font-feature-settings:"ss01","ss02","cv11","tnum";
+    letter-spacing:-0.005em;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ===== Layout ===== */
+  .app{display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--rightbar-w);grid-template-rows:var(--topbar-h) 1fr;min-height:100vh}
+  .topbar{grid-column:1 / -1;grid-row:1;position:sticky;top:0;z-index:40;background:rgba(255,255,255,.85);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 20px}
+  .sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--line);background:var(--surface);padding:16px 12px;position:sticky;top:var(--topbar-h);height:calc(100vh - var(--topbar-h));overflow-y:auto}
+  .main{grid-column:2;grid-row:2;padding:16px 20px 48px;min-width:0}
+  .rightbar{grid-column:3;grid-row:2;border-left:1px solid var(--line);background:var(--surface);padding:16px;position:sticky;top:var(--topbar-h);height:calc(100vh - var(--topbar-h));overflow-y:auto}
+
+  @media (max-width:1280px){
+    .app{grid-template-columns:var(--sidebar-w) 1fr}
+    .rightbar{display:none}
+  }
+  @media (max-width:900px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+  }
+
+  /* ===== Topbar ===== */
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-0.02em}
+  .brand-mark{width:22px;height:22px;border-radius:6px;background:var(--navy);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900}
+  .brand small{color:var(--muted);font-weight:500;font-size:12px;margin-left:6px}
+  .topbar-search{flex:1;max-width:520px;position:relative}
+  .topbar-search input{width:100%;height:36px;border:1px solid var(--line);border-radius:10px;padding:0 12px 0 34px;background:var(--surface-2);outline:none;font-size:13px;font-family:inherit}
+  .topbar-search input:focus{background:#fff;border-color:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.15)}
+  .topbar-search .icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+  /* ===== Sidebar ===== */
+  .side-section{padding:6px 4px;margin-top:16px}
+  .side-section:first-child{margin-top:0}
+  .side-title{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;padding:0 8px 8px}
+  .side-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;user-select:none;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+  .side-item:hover{background:var(--surface-2)}
+  .side-item.active{background:var(--navy);color:#fff}
+  .side-item .count{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}
+  .side-item.active .count{background:rgba(255,255,255,.14);color:#fff}
+  .side-item .dot{width:7px;height:7px;border-radius:999px;display:inline-block;flex-shrink:0}
+
+  /* ===== Surfaces ===== */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+
+  /* ===== KPI row ===== */
+  .kpi{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+  .kpi-cell{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+  .kpi-cell .l{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.02em;text-transform:uppercase}
+  .kpi-cell .v{font-size:22px;font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+  .kpi-cell .d{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+  .kpi-cell.accent{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .kpi-cell.accent .l{color:rgba(255,255,255,.6)}
+  .kpi-cell.accent .d{color:rgba(255,255,255,.5)}
+  .kpi-cell .v.pos{color:var(--blue)}
+  .kpi-cell .v.neg{color:var(--red)}
+  @media (max-width:1400px){.kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:700px){.kpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  /* ===== Buttons & chips ===== */
+  .btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;transition:.12s;font-family:inherit;white-space:nowrap;flex-shrink:0}
+  .btn:hover{border-color:#94a3b8}
+  .btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .btn-primary:hover{background:#000}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--text-2)}
+  .btn-ghost:hover{background:var(--surface-2)}
+  .btn-sm{height:28px;padding:0 10px;font-size:12px;border-radius:7px}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--text-2);cursor:pointer;font-family:inherit}
+  .chip:hover{border-color:#94a3b8}
+  .chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .icon-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;background:#fff;color:var(--text-2);font-weight:700;font-size:12px;cursor:pointer}
+  .icon-btn:hover{border-color:#94a3b8;color:var(--text)}
+
+  /* ===== Inputs (modal) ===== */
+  .input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;outline:none;background:#fff;font-size:13px;font-family:inherit}
+  .input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.15)}
+  .mini-btn{border:1px solid var(--line);background:#fff;color:var(--text-2);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0}
+  .mini-btn:hover{border-color:#94a3b8}
+  .mini-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .toggle{border:1px solid var(--line);background:#fff;color:var(--text-2);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+  .toggle.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  /* ===== Table ===== */
+  .table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .table-head-bar{padding:12px 16px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .table-head-bar h2{font-size:14px;font-weight:800}
+  .table-head-bar .sub{font-size:12px;color:var(--muted)}
+  .data-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+  .data-table thead th{position:sticky;top:0;background:#fff;font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line-soft);white-space:nowrap;z-index:1}
+  .data-table tbody td{padding:12px;font-size:13px;border-bottom:1px solid var(--line-soft);vertical-align:middle;white-space:nowrap;background:#fff}
+  .data-table tbody tr:hover td{background:#fafbfc}
+  .data-table tbody tr.month-head td{background:var(--surface-2);font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:8px 12px}
+  .data-table td.bar{padding:0;width:3px;position:relative;background:transparent !important}
+  .data-table td.bar::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:transparent}
+  tr.r-등록 td.bar::before{background:var(--green)}
+  tr.r-COD td.bar::before{background:#f59e0b}
+  tr.r-미등록 td.bar::before{background:var(--red)}
+  tr.r-추등 td.bar::before{background:var(--blue)}
+  tr.r-미완료 td.bar::before{background:#111827}
+  tr.r-등록 td:not(.bar){background:#f0fdf4}
+  tr.r-COD td:not(.bar){background:#fffbeb}
+  tr.r-미등록 td:not(.bar){background:#fff1f2}
+  tr.r-추등 td:not(.bar){background:#eff6ff}
+  tr.r-미완료 td:not(.bar){background:#f8fafc}
+  .data-table tbody tr.r-등록:hover td:not(.bar){background:#dcfce7}
+  .data-table tbody tr.r-COD:hover td:not(.bar){background:#fef3c7}
+  .data-table tbody tr.r-미등록:hover td:not(.bar){background:#ffe4e6}
+  .data-table tbody tr.r-추등:hover td:not(.bar){background:#dbeafe}
+  .data-table tbody tr.r-미완료:hover td:not(.bar){background:#e2e8f0}
+  .student-cell .name{font-size:14px;font-weight:800;color:var(--text);cursor:pointer;letter-spacing:-0.005em}
+  .student-cell .name:hover{text-decoration:underline;text-underline-offset:3px}
+  .student-cell .sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .course-pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--text-2);font-size:11px;font-weight:700;border:1px solid var(--line-soft)}
+  .money{font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
+  .money.paid{color:var(--blue)}
+  .money.remain-pos{color:var(--red)}
+  .money.remain-zero{color:var(--muted)}
+  .badge{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:800;line-height:1}
+  .badge-등록{background:var(--green-bg);color:var(--green);border:1px solid var(--green-line)}
+  .badge-COD{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-line)}
+  .badge-미등록{background:var(--red-bg);color:var(--red);border:1px solid var(--red-line)}
+  .badge-추등{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-line)}
+  .badge-미완료{background:#111827;color:#fff;border:1px solid #111827}
+
+  /* ===== Right panel ===== */
+  .panel-section{margin-bottom:20px}
+  .panel-section:last-child{margin-bottom:0}
+  .panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+  .panel-title h3{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+  .panel-title .count{font-size:11px;color:var(--muted);font-weight:700}
+  .mentor-row{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line-soft);border-radius:10px;margin-bottom:6px;background:#fff}
+  .mentor-row .n{display:flex;align-items:center;justify-content:space-between}
+  .mentor-row .name{font-weight:800;font-size:13px}
+  .mentor-row .remain{font-size:12px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums}
+  .mentor-row .meta{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .mentor-row .bars{display:flex;gap:2px;height:5px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-top:4px}
+  .mentor-row .bars span{display:block;height:100%}
+  .urgent-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line-soft);border-radius:10px;margin-bottom:6px;background:#fff}
+  .urgent-row .name{font-weight:800;font-size:13px}
+  .urgent-row .sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .urgent-row .amt{font-weight:800;font-size:13px;color:var(--red);font-variant-numeric:tabular-nums}
+  .panel-empty{padding:14px;font-size:12px;color:var(--muted);text-align:center;border:1px dashed var(--line);border-radius:10px}
+
+  /* ===== Drawer / Modal ===== */
+  .drawer{position:fixed;right:0;top:0;bottom:0;width:420px;max-width:92vw;background:#fff;border-left:1px solid var(--line);box-shadow:-20px 0 40px -20px rgba(2,6,23,.15);transform:translateX(110%);transition:transform .22s ease;z-index:60;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+  .drawer-h h3{font-size:14px;font-weight:800}
+  .drawer-body{padding:18px;overflow:auto}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+  .detail-grid dt{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px}
+  .detail-grid dd{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(4px);z-index:70;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+  .modal-backdrop.flex{display:flex}
+  .modal-panel{background:#fff;border-radius:16px;width:100%;max-width:720px;border:1px solid var(--line);box-shadow:0 24px 60px -20px rgba(2,6,23,.3)}
+
+  /* ===== Sync indicator ===== */
+  #syncIndicator{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:0.02em}
+  #syncIndicator[data-state="syncing"]{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+  #syncIndicator[data-state="error"]{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+  #syncIndicator[data-state="idle"]{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+
+  /* ===== Login / Auth ===== */
+  #authOverlay{position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,#fafbfc 0%,#eef2f7 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+  .auth-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 24px 60px -20px rgba(2,6,23,.12);text-align:center}
+  .auth-card .logo{width:56px;height:56px;background:var(--navy);border-radius:14px;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;margin-bottom:16px;letter-spacing:-0.03em}
+  .auth-card h1{font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:6px}
+  .auth-card .sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+  .auth-card .g-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;height:44px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:.12s;color:var(--text);font-family:inherit}
+  .auth-card .g-btn:hover{border-color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .auth-card .g-btn svg{width:18px;height:18px;flex-shrink:0}
+  .auth-card .err{margin-top:14px;padding:10px 12px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-line);border-radius:8px;font-size:12px;font-weight:600;text-align:left;display:none}
+  .auth-card .err.show{display:block}
+  .auth-card .footer{margin-top:22px;font-size:11px;color:var(--muted)}
+  .auth-card .loading{display:none;margin-top:12px;font-size:12px;color:var(--muted)}
+  .auth-card .loading.show{display:block}
+
+  .auth-divider{display:flex;align-items:center;margin:18px 0 14px;color:var(--muted);font-size:11px;font-weight:700}
+  .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .auth-divider span{padding:0 12px}
+
+  .auth-toggle{width:100%;background:transparent;border:none;font-size:13px;font-weight:700;color:var(--text-2);cursor:pointer;padding:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+  .auth-toggle:hover{color:var(--text)}
+  .auth-email-form{display:none;flex-direction:column;gap:8px;margin-top:8px}
+  .auth-email-form.show{display:flex}
+  .auth-input{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#fff}
+  .auth-input:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.15)}
+  .auth-submit{width:100%;height:40px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;margin-top:2px}
+  .auth-submit:hover{background:#000}
+  .auth-submit:disabled{opacity:.6;cursor:not-allowed}
+
+  /* 로그인한 사용자 아바타 (topbar) */
+  .user-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;background:#fff}
+  .user-chip:hover{border-color:#94a3b8}
+  .user-chip img{width:22px;height:22px;border-radius:999px}
+  .user-chip .mail{color:var(--text-2);font-weight:600}
+
+  /* ===== Toast ===== */
+  .toast-stack{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toast{pointer-events:auto;min-width:260px;max-width:420px;background:#0b1220;color:#fff;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 16px 40px -12px rgba(0,0,0,.35);display:flex;align-items:flex-start;gap:10px;animation:toastIn .2s ease-out}
+  .toast .t-icon{flex-shrink:0;font-weight:900;width:18px;height:18px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-top:1px}
+  .toast.success{background:#064e3b}
+  .toast.success .t-icon{background:#10b981;color:#fff}
+  .toast.error{background:#7f1d1d}
+  .toast.error .t-icon{background:#ef4444;color:#fff}
+  .toast.info .t-icon{background:#3b82f6;color:#fff}
+  .toast .t-body{flex:1;line-height:1.4}
+  .toast .t-action{font-weight:800;color:#93c5fd;cursor:pointer;text-decoration:underline;font-size:12px;margin-top:4px;display:inline-block}
+  .toast.success .t-action{color:#6ee7b7}
+  .toast.error .t-action{color:#fca5a5}
+  .toast .t-close{margin-left:4px;color:rgba(255,255,255,.5);cursor:pointer;font-size:16px;line-height:1}
+  @keyframes toastIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* ===== Skeleton ===== */
+  .skeleton{background:linear-gradient(90deg,#f1f5f9 0%,#e2e8f0 50%,#f1f5f9 100%);background-size:200% 100%;animation:skel 1.2s ease-in-out infinite;border-radius:4px;display:inline-block}
+  @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  /* ===== Empty state ===== */
+  .empty-state{padding:48px 24px;text-align:center;color:var(--muted)}
+  .empty-state .e-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px}
+  .empty-state .e-sub{font-size:13px;margin-bottom:16px}
+
+  /* ===== Checkbox ===== */
+  .ckbox{width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;transition:.12s}
+  .ckbox:hover{border-color:#94a3b8}
+  .ckbox.checked{background:var(--navy);border-color:var(--navy);color:#fff}
+  .ckbox.checked::after{content:"✓";font-size:10px;font-weight:900;line-height:1}
+  .data-table tbody tr.selected td{background:#eef4ff !important}
+
+  /* ===== Bulk bar ===== */
+  .bulk-bar{position:sticky;top:var(--topbar-h);z-index:30;background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 8px 20px -8px rgba(0,0,0,.3)}
+  .bulk-bar .btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)}
+  .bulk-bar .btn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)}
+
+  /* ===== Inline edit ===== */
+  .cell-editable{cursor:cell;position:relative}
+  .cell-editable:hover{background:#eef4ff !important;outline:1px dashed #94a3b8;outline-offset:-2px}
+  .inline-input{width:100%;border:1px solid var(--navy);border-radius:6px;padding:4px 8px;outline:none;font-size:13px;font-family:inherit;font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px rgba(11,18,32,.12);background:#fff}
+
+  /* ===== Chart ===== */
+  .chart-wrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .chart-wrap h3{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+  .chart-wrap .c-sub{font-size:11px;color:var(--muted);font-weight:600}
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:1200px){.chart-grid{grid-template-columns:1fr}}
+  .bar-row{display:grid;grid-template-columns:60px 1fr 80px;align-items:center;gap:10px;padding:4px 0;font-size:12px}
+  .bar-row .lbl{color:var(--text-2);font-weight:700}
+  .bar-row .val{color:var(--text);font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+  .bar-track{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--navy);border-radius:99px;transition:width .4s ease}
+  .line-chart{position:relative;height:160px;padding:20px 8px 28px;box-sizing:border-box}
+  .line-chart .chart-svg{width:100%;height:100%;display:block;overflow:visible}
+  .line-chart .chart-xlabels{position:absolute;left:8px;right:8px;bottom:4px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;pointer-events:none}
+  .line-chart .chart-max{position:absolute;top:2px;left:8px;font-size:10px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+  .line-chart .line-path{fill:none;stroke:var(--navy);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  .line-chart .area-path{fill:rgba(11,18,32,0.06);stroke:none}
+  .line-chart .dot{fill:var(--navy)}
+
+  /* ===== Trash/archive marker ===== */
+  .row-deleted td{opacity:.5;text-decoration:line-through}
+
+  /* ===== Kbd ===== */
+  kbd{background:var(--surface-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:11px;font-weight:700;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2)}
+
+  .discount-pane{min-height:52px}
+
+  /* ===== Modal form styles (compact) ===== */
+  .form-card{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+  .form-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .form-title .form-sub{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0}
+  .field{min-width:0}
+  .field > label{display:block;font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:0.04em;margin-bottom:4px;text-transform:uppercase}
+  .field > label .field-aux{text-transform:none;color:var(--blue);font-size:10px;background:var(--blue-bg);border:1px solid var(--blue-line);padding:0 5px;border-radius:4px;margin-left:4px;letter-spacing:0}
+  .field > label .field-aux.manual{color:var(--red);background:var(--red-bg);border-color:var(--red-line)}
+  .field .input{padding:8px 10px;font-size:13px}
+  .field-hint{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media (max-width:720px){.grid-3{grid-template-columns:1fr 1fr}}
+  .chipset{display:flex;flex-wrap:wrap;gap:5px}
+  .chipset .mini-btn{padding:5px 9px;font-size:11.5px;border-radius:7px}
+  .modal-scroll{scrollbar-gutter:stable}
+  /* 모달이 좁을 때 2열 → 1열로 */
+  @media (max-width:880px){
+    .modal-panel > .modal-scroll{grid-template-columns:1fr !important}
+  }
+</style>
+</head>
+<body>
+<!-- ===== Login overlay (Firebase Auth) ===== -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="logo">S</div>
+    <h1>상담 매출 관리</h1>
+    <p class="sub">SBS Academy 3-1 · 내부 전용 시스템<br>허용된 계정으로만 접근할 수 있어요</p>
+
+    <!-- 구글 로그인 -->
+    <button class="g-btn" onclick="loginWithGoogle()">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 34.9 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.6l6.2 5.2C41.2 35.3 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Google 계정으로 로그인
+    </button>
+
+    <!-- 구분선 -->
+    <div class="auth-divider"><span>또는</span></div>
+
+    <!-- 이메일/비밀번호 토글 -->
+    <button class="auth-toggle" type="button" onclick="toggleEmailLogin()">
+      <span id="emailLoginLabel">이메일·비밀번호로 로그인</span>
+      <span id="emailLoginArrow">▾</span>
+    </button>
+
+    <!-- 이메일 로그인 폼 -->
+    <form id="emailLoginForm" class="auth-email-form" onsubmit="return loginWithEmail(event)">
+      <input id="loginEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="username" required />
+      <input id="loginPassword" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password" required />
+      <button type="submit" class="auth-submit">로그인</button>
+    </form>
+
+    <div id="authError" class="err"></div>
+    <div id="authLoading" class="loading">로그인 처리 중...</div>
+    <div class="footer">접속 문의: 관리자에게 이메일을 전달해주세요</div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none">
+  <!-- ===== Topbar ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">S</span>
+      <span>상담 매출 관리<small>SBS Academy 3-1</small></span>
+    </div>
+    <div class="topbar-search">
+      <span class="icon">⌕</span>
+      <input id="search" placeholder="학생 · 멘토 · 과정 검색" oninput="renderAll()" />
+    </div>
+    <div class="topbar-right">
+      <span id="syncIndicator" class="hidden" data-state="idle"></span>
+      <button class="btn btn-sm" onclick="openSalesPeriodModal()" title="영업월 시작일/종료일 설정">영업월 설정</button>
+      <button class="btn btn-sm" onclick="openTrash()" title="최근 30일 삭제 기록"> 휴지통 <span id="trashBadge" style="font-size:10px;background:var(--surface-2);padding:1px 5px;border-radius:99px;font-weight:800;margin-left:2px">0</span></button>
+      <button class="btn btn-sm" onclick="exportCSV()" title="현재 필터된 목록을 CSV로 내보내기">↓ CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal()" title="새 상담 기록 (Ctrl/⌘ + N)">＋ 새 상담</button>
+      <span id="userChip" class="user-chip" onclick="logout()" title="클릭하면 로그아웃"></span>
+    </div>
+  </header>
+
+  <!-- ===== Left Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="side-section">
+      <div class="side-title">기간</div>
+      <div id="monthTabs"></div>
+    </div>
+    <div class="side-section">
+      <div class="side-title">결과</div>
+      <div id="resultFilters"></div>
+    </div>
+    <div class="side-section">
+      <div class="side-title">정렬</div>
+      <button class="side-item active" id="sortDescBtn" onclick="setSort('desc')"><span>날짜 최신순</span></button>
+      <button class="side-item" id="sortAscBtn" onclick="setSort('asc')"><span>날짜 오래된순</span></button>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <main class="main">
+    <!-- KPI -->
+    <div class="kpi">
+      <div class="kpi-cell"><span class="l">총 상담</span><span class="v" id="totalCount">0</span><span class="d" id="kpiCountSub">이번 기간</span></div>
+      <div class="kpi-cell"><span class="l">실결제 합계</span><span class="v" id="totalSales">0</span><span class="d" id="bonusSumLabel">최종 결제 기준</span></div>
+      <div class="kpi-cell"><span class="l">매출 (입금)</span><span class="v pos" id="paidSales">0</span><span class="d">실제 입금액</span></div>
+      <div class="kpi-cell"><span class="l">미수 잔액</span><span class="v neg" id="remainingSales">0</span><span class="d">회수 필요</span></div>
+      <div class="kpi-cell"><span class="l">등록 전환율</span><span class="v" id="conversionRate">0%</span><span class="d">등록 ÷ 전체</span></div>
+      <div class="kpi-cell accent">
+        <span class="l">결과 요약</span>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:11px;font-weight:700;margin-top:4px">
+          <div>등록<br><b id="regCount" style="font-size:15px">0</b></div>
+          <div>COD<br><b id="codCount" style="font-size:15px">0</b></div>
+          <div>미등<br><b id="failCount" style="font-size:15px">0</b></div>
+          <div>추등<br><b id="promoteCount" style="font-size:15px">0</b></div>
+          <div>미완<br><b id="incompleteCount" style="font-size:15px">0</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-grid">
+      <div class="chart-wrap">
+        <h3>월별 매출 추이 <span class="c-sub">최근 6개월 · 실결제 기준</span></h3>
+        <div id="monthlyChart" class="line-chart"></div>
+      </div>
+      <div class="chart-wrap">
+        <h3>멘토별 매출 <span class="c-sub">현재 필터 기준 · 상위 6명</span></h3>
+        <div id="mentorBarChart"></div>
+      </div>
+    </div>
+
+    <!-- Bulk action bar (only when selection) -->
+    <div id="bulkBar" class="bulk-bar" style="display:none">
+      <div><b id="bulkCount">0</b>건 선택됨</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-sm" onclick="bulkChangeResult()">상태 일괄 변경</button>
+        <button class="btn btn-sm" onclick="bulkDelete()" style="background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.3);color:#fff">일괄 삭제</button>
+        <button class="btn btn-sm" onclick="clearSelection()">선택 해제</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-head-bar">
+        <div>
+          <h2>상담 목록</h2>
+          <p class="sub">학생명 클릭 · 전체 보기 · 숫자·날짜 더블클릭 시 인라인 편집</p>
+        </div>
+        <div class="sub" id="tableCountLabel">0건</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:3px;padding:0"></th>
+              <th style="width:28px;padding:10px 0 10px 12px"><span class="ckbox" id="selectAllCb" onclick="toggleSelectAll()"></span></th>
+              <th>상담일</th>
+              <th>납부기한</th>
+              <th>학생 · 멘토</th>
+              <th>과정</th>
+              <th>결과</th>
+              <th style="text-align:right">수강료</th>
+              <th style="text-align:right">매출</th>
+              <th style="text-align:right">잔액</th>
+              <th style="text-align:center">할인</th>
+              <th style="text-align:center">메모</th>
+              <th style="text-align:right">관리</th>
+            </tr>
+          </thead>
+          <tbody id="table"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Right Panel ===== -->
+  <aside class="rightbar">
+    <div class="panel-section">
+      <div class="panel-title">
+        <h3>우선 확인 · 잔액</h3>
+        <span class="count" id="urgentCount">0</span>
+      </div>
+      <div id="urgentList"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">
+        <h3>멘토별 성과</h3>
+        <span class="count" id="mentorCount">0명</span>
+      </div>
+      <div id="mentorCards"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- ===== Detail Drawer ===== -->
+<div id="detailDrawer" class="drawer">
+  <div class="drawer-h">
+    <h3 id="detailTitle">상세 보기</h3>
+    <button class="btn btn-sm" onclick="closeDetail()">닫기</button>
+  </div>
+  <div class="drawer-body">
+    <dl id="detailContent" class="detail-grid"></dl>
+    <div id="detailHistory" style="margin-top:24px"></div>
+  </div>
+</div>
+
+<!-- ===== Trash Drawer ===== -->
+<div id="trashDrawer" class="drawer">
+  <div class="drawer-h">
+    <h3>휴지통 · 최근 30일</h3>
+    <button class="btn btn-sm" onclick="closeTrash()">닫기</button>
+  </div>
+  <div class="drawer-body">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">삭제 후 30일 내에 복원할 수 있어요. 30일이 지나면 자동으로 영구 삭제됩니다.</p>
+    <div id="trashList"></div>
+  </div>
+</div>
+
+<!-- ===== Sales Period Drawer / Modal ===== -->
+<div id="salesPeriodModal" class="modal-backdrop">
+  <div class="modal-panel" style="max-width:860px">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <p style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase">영업 기준</p>
+        <h2 style="font-size:18px;font-weight:800;margin-top:2px">영업월 설정</h2>
+      </div>
+      <button onclick="closeSalesPeriodModal()" class="btn btn-sm">닫기</button>
+    </div>
+    <div style="padding:18px 20px;max-height:70vh;overflow:auto">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">시작일과 종료일 기준으로 월 필터를 나눕니다. 저장하면 로그인한 사용자 화면에 바로 반영돼요.</div>
+      <div id="salesPeriodList" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn" onclick="addSalesPeriodRow()">＋ 영업월 추가</button>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--line-soft);display:flex;gap:8px;background:#fff">
+      <button onclick="closeSalesPeriodModal()" class="btn" style="flex:1">취소</button>
+      <button onclick="saveSalesPeriodSettings()" class="btn btn-primary" style="flex:1">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toasts ===== -->
+<div id="toastStack" class="toast-stack"></div>
+
+<div id="modal" class="modal-backdrop">
+  <div class="modal-panel" style="max-width:1100px">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <p style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase">상담 정보</p>
+        <h2 id="modalTitle" style="font-size:18px;font-weight:800;margin-top:2px">상담 입력</h2>
+      </div>
+      <button onclick="closeModal()" class="btn btn-sm">닫기</button>
+    </div>
+
+    <div class="modal-scroll" style="padding:18px 20px;display:grid;grid-template-columns:1.1fr 1fr;gap:14px;max-height:78vh;overflow:auto">
+
+      <!-- LEFT: 기본 정보 -->
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+
+        <!-- 1. 분류 -->
+        <div class="form-card">
+          <h3 class="form-title">분류</h3>
+          <div class="grid-3">
+            <div class="field"><label>상담 날짜</label><input id="date" type="date" class="input" /></div>
+            <div class="field"><label>납부기한</label><input id="deadline" type="date" class="input" /></div>
+            <div class="field"><label>결과</label>
+              <select id="result" class="input">
+                <option value="auto">자동 계산</option>
+                <option>등록</option><option>COD</option><option>미등록</option><option>추등</option><option>미완료</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 학생 -->
+        <div class="form-card">
+          <h3 class="form-title">학생 / 멘토</h3>
+          <div class="grid-2">
+            <div class="field"><label>학생명</label><input id="student" class="input" placeholder="학생명 입력" /></div>
+            <div class="field"><label>멘토</label><input id="mentor" class="input" placeholder="멘토명 입력" /></div>
+          </div>
+          <div class="field" style="margin-top:10px"><label>과정</label>
+            <div class="chipset" id="coursePresetWrap"></div>
+            <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+              <input id="courseAddInput" class="input" placeholder="과정명 추가" style="flex:1 1 auto;min-width:0" />
+              <button class="btn btn-sm" onclick="addCourse()">추가</button>
+            </div>
+            <div class="field-hint">선택: <span id="selectedCourse" style="font-weight:800;color:var(--text)">선택 안됨</span></div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label>결제권자</label>
+            <div class="chipset" id="payerWrap"></div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label>목적</label>
+            <div class="chipset" id="purposeWrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: 금액 / 결제 -->
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+
+        <!-- A. 할인 방식 (가장 먼저) -->
+        <div class="form-card">
+          <h3 class="form-title">할인 방식</h3>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <button type="button" id="supportBtn" class="toggle" onclick="setDiscountType('과목지원')">과목지원</button>
+            <button type="button" id="percentBtn" class="toggle" onclick="setDiscountType('%할인')">% 할인</button>
+            <button type="button" id="noDiscountBtn" class="toggle active" onclick="setDiscountType('')">할인 없음</button>
+          </div>
+          <div id="discountPane" class="discount-pane"></div>
+        </div>
+
+        <!-- B. 수강료 (할인방식 선택 시에만 표시) -->
+        <div class="form-card" id="tuitionCard" style="display:none">
+          <h3 class="form-title" id="tuitionTitle">수강료</h3>
+          <div id="tuitionPane"></div>
+        </div>
+
+        <!-- C. 수강료 외 (매출외수당) -->
+        <div class="form-card">
+          <h3 class="form-title">수강료 외 <span class="form-sub">매출외수당 = 따즈아 + ACP</span></h3>
+          <div class="grid-2">
+            <div class="field"><label>따즈아 금액</label><input id="ddazuaPrice" class="input" inputmode="numeric" oninput="formatCurrencyInput(this); updatePaymentPreview();" /></div>
+            <div class="field"><label>ACP 금액</label><input id="acpPrice" class="input" inputmode="numeric" oninput="formatCurrencyInput(this); updatePaymentPreview();" /></div>
+          </div>
+          <div class="field" style="margin-top:10px"><label>따즈아 빠른 입력</label><div class="chipset" id="ddazuaQuickWrap"></div></div>
+          <div class="field" style="margin-top:10px"><label>ACP 과목 빠른 입력</label><div class="chipset" id="acpPresetWrap"></div></div>
+          <div class="field-hint" style="margin-top:8px">매출외수당 합계 <b id="bonusTotal" style="color:var(--text);font-variant-numeric:tabular-nums">0</b></div>
+        </div>
+
+        <!-- D. 결제 정보 -->
+        <div class="form-card">
+          <h3 class="form-title">결제 정보</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label>납부금액 <span class="field-aux" id="payableAuto">자동</span></label>
+              <input id="payableAmount" class="input" inputmode="numeric" oninput="formatCurrencyInput(this); onPayableManualEdit();" />
+              <div class="field-hint">총금액에서 할인 차감한 금액</div>
+            </div>
+            <div class="field"><label>직권할인</label><input id="specialDiscount" class="input" inputmode="numeric" oninput="formatCurrencyInput(this); updatePaymentPreview();" /></div>
+            <div class="field">
+              <label>실결제금액</label>
+              <input id="finalPrice" class="input" style="background:var(--surface-2);font-weight:800" readonly />
+              <div class="field-hint">납부금액 − 직권할인</div>
+            </div>
+            <div class="field"><label>매출 (입금)</label><input id="paid" class="input" inputmode="numeric" oninput="formatCurrencyInput(this); updateRemain();" /></div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label>잔액</label>
+            <input id="remain" class="input" style="background:var(--surface-2);font-weight:800;color:var(--red)" readonly />
+            <div class="field-hint">실결제금액 − 매출</div>
+          </div>
+        </div>
+
+        <!-- E. 특이사항 -->
+        <div class="form-card">
+          <h3 class="form-title">특이사항</h3>
+          <textarea id="memo" class="input" style="min-height:88px;resize:vertical" placeholder="상담 메모, 이슈, 후속 확인 내용"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:14px 20px;border-top:1px solid var(--line-soft);display:flex;gap:8px;background:#fff;position:sticky;bottom:0">
+      <button onclick="closeModal()" class="btn" style="flex:1">취소</button>
+      <button onclick="saveData()" id="saveButton" class="btn btn-primary" style="flex:1">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwdEWt6oUIoWJ7KVYz4_5GjS4Y9igKLmEbnshVafIKlQTE_ltRZb2-hjqVTw0glOODteQ/exec";
+const STORAGE_KEY = 'consult-dashboard-rows-v2';
+const LAST_SYNC_KEY = 'consult-dashboard-last-sync';
+const TRASH_KEY = 'consult-dashboard-trash-v1';
+const REFRESH_IF_OLDER_MS = 30 * 1000;
+const TRASH_TTL_DAYS = 30;
+const SALES_PERIODS_KEY = 'consult-dashboard-sales-periods-v1';
+const DEFAULT_SALES_PERIODS = [];
+
+let rows = [];
+let trash = [];                 // 휴지통 (로컬)
+let selectedIds = new Set();    // 일괄작업용
+let initialLoading = true;      // 스켈레톤 표시용
+let editIndex = null;
+let syncing = false;
+let pendingOps = 0;
+let lastSyncAt = 0;
+let currentMonth = '전체';
+let currentResult = '전체';
+let currentSort = 'desc';
+let selectedCourseValue = '';
+let currentDiscountType = '';
+let salesPeriods = [];
+let courseOptions = ['편집','모션','실내','웹툰','드로잉','마야','웹','자격증'];
+const payerOptions = ['본인','부모님','친구','지인'];
+const purposeOptions = ['취업','취미','창업','보충'];
+const quickAmounts = [320000,390000,500000,990000];
+const ddazuaQuickAmounts = [320000,390000,500000,990000];
+const acpMap = {1:70000,2:130000,3:190000,4:250000,5:310000};
+
+function onlyNumber(v){ return String(v || '').replace(/[^0-9]/g,''); }
+function num(v){ return Number(onlyNumber(v) || 0); }
+function format(v){ return Number(v || 0).toLocaleString('ko-KR'); }
+function formatCurrencyInput(el){ const value = onlyNumber(el.value); el.value = value ? Number(value).toLocaleString('ko-KR') : ''; }
+function todayStr(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function displayDate(v){ if(!v) return '-'; if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v.replace(/-/g,'.'); return v; }
+function monthFromDate(dateValue){ const text = String(dateValue||''); const m = text.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return `${parseInt(m[2],10)}월`; const m2 = text.match(/^(\d{1,2})\./); if(m2) return `${parseInt(m2[1],10)}월`; return '미분류'; }
+function isoTime(dateValue){ const d = new Date(dateValue); return isNaN(d) ? 0 : d.getTime(); }
+
+function normalizeSalesPeriods(periods){
+  return (Array.isArray(periods) ? periods : [])
+    .filter(p => p && p.label && p.start && p.end)
+    .map(p => ({ id: p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())), label: String(p.label).trim(), start: p.start, end: p.end }))
+    .sort((a,b)=> a.start.localeCompare(b.start));
+}
+function saveSalesPeriodsLocal(){ localStorage.setItem(SALES_PERIODS_KEY, JSON.stringify(salesPeriods)); }
+function loadSalesPeriodsLocal(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(SALES_PERIODS_KEY) || '[]');
+    salesPeriods = normalizeSalesPeriods(saved.length ? saved : DEFAULT_SALES_PERIODS);
+  }catch(e){ salesPeriods = normalizeSalesPeriods(DEFAULT_SALES_PERIODS); }
+}
+function salesMonthFromDate(dateValue){
+  if(!dateValue) return '미분류';
+  if(!salesPeriods.length) return monthFromDate(dateValue);
+  const target = new Date(dateValue + 'T00:00:00').getTime();
+  if(Number.isNaN(target)) return '미분류';
+  for(const period of salesPeriods){
+    const start = new Date(period.start + 'T00:00:00').getTime();
+    const end = new Date(period.end + 'T23:59:59').getTime();
+    if(target >= start && target <= end) return period.label;
+  }
+  return monthFromDate(dateValue);
+}
+function openSalesPeriodModal(){ renderSalesPeriodList(); document.getElementById('salesPeriodModal').classList.add('flex'); }
+function closeSalesPeriodModal(){ document.getElementById('salesPeriodModal').classList.remove('flex'); }
+function renderSalesPeriodList(){
+  const wrap = document.getElementById('salesPeriodList'); if(!wrap) return;
+  wrap.innerHTML = salesPeriods.map(p => `
+    <div class="card" style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <div><label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">표시명</label><input class="input" data-sp-field="label" data-sp-id="${p.id}" value="${String(p.label).replace(/"/g,'&quot;')}" placeholder="예: 4월" /></div>
+      <div><label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">시작일</label><input class="input" type="date" data-sp-field="start" data-sp-id="${p.id}" value="${p.start}" /></div>
+      <div><label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">종료일</label><input class="input" type="date" data-sp-field="end" data-sp-id="${p.id}" value="${p.end}" /></div>
+      <div><button class="btn btn-sm" style="color:var(--red)" onclick="removeSalesPeriodRow('${p.id}')">삭제</button></div>
+    </div>`).join('');
+  if(!salesPeriods.length){ wrap.innerHTML = '<div class="panel-empty">영업월 설정이 없습니다. 추가 후 저장해주세요.</div>'; }
+}
+function addSalesPeriodRow(){ salesPeriods.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()), label:'', start:'', end:'' }); renderSalesPeriodList(); }
+function removeSalesPeriodRow(id){ salesPeriods = salesPeriods.filter(p => p.id !== id); renderSalesPeriodList(); }
+function hasSalesPeriodOverlap(periods){
+  const sorted = [...periods].sort((a,b)=> a.start.localeCompare(b.start));
+  for(let i=0;i<sorted.length-1;i++){ if(sorted[i].end >= sorted[i+1].start) return true; }
+  return false;
+}
+let unsubscribeSettings = null;
+function settingsDocRef(){
+  const fb = window.__fb;
+  return fb.doc(fb.db, 'appSettings', 'salesPeriods');
+}
+function startSalesPeriodSync(){
+  const fb = window.__fb;
+  if(!fb) return;
+  if(unsubscribeSettings) unsubscribeSettings();
+  unsubscribeSettings = fb.onSnapshot(settingsDocRef(), snap => {
+    const data = snap.exists() ? snap.data() : null;
+    if(data && Array.isArray(data.periods)){
+      salesPeriods = normalizeSalesPeriods(data.periods);
+      saveSalesPeriodsLocal();
+      renderAll();
+    }
+  }, err => console.error('영업월 설정 리스너 에러', err));
+}
+function stopSalesPeriodSync(){ if(unsubscribeSettings){ unsubscribeSettings(); unsubscribeSettings = null; } }
+async function saveSalesPeriodSettings(){
+  const next = salesPeriods.map(period => {
+    const labelEl = document.querySelector(`[data-sp-field="label"][data-sp-id="${period.id}"]`);
+    const startEl = document.querySelector(`[data-sp-field="start"][data-sp-id="${period.id}"]`);
+    const endEl = document.querySelector(`[data-sp-field="end"][data-sp-id="${period.id}"]`);
+    return { id: period.id, label: labelEl?.value.trim() || '', start: startEl?.value || '', end: endEl?.value || '' };
+  });
+  for(const item of next){
+    if(!item.label || !item.start || !item.end){ alert('표시명, 시작일, 종료일을 모두 입력해주세요.'); return; }
+    if(item.start > item.end){ alert(`${item.label}의 시작일이 종료일보다 늦습니다.`); return; }
+  }
+  if(hasSalesPeriodOverlap(next)){ alert('영업월 기간이 서로 겹칩니다.'); return; }
+  salesPeriods = normalizeSalesPeriods(next);
+  saveSalesPeriodsLocal();
+  try{
+    const fb = window.__fb;
+    await fb.setDoc(settingsDocRef(), { periods: salesPeriods, updatedAt: fb.serverTimestamp(), updatedBy: currentUserEmail || '' }, { merge: true });
+    toast('영업월 설정을 저장했습니다', {type:'success', duration:1800});
+  }catch(err){
+    console.error(err);
+    toast('Firebase 저장 실패, 이 브라우저에만 저장되었습니다', {type:'error', duration:3000});
+  }
+  closeSalesPeriodModal();
+  renderAll();
+}
+
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(rows)); }
+function loadLocal(){
+  try{ rows = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ rows = []; }
+  migrateLegacyRows();
+}
+// 예전 데이터 구조(payableAmount 없는) 자동 보정 — 새 계산식 기준으로 재생성
+function migrateLegacyRows(){
+  if(!Array.isArray(rows)) return;
+  let changed = 0;
+  rows.forEach(r => {
+    if(r.payableAmount == null){
+      // 신규 필드 채우기
+      r.payableAmount = computeAutoPayable(r.price, r.discountType, r.discountRate);
+      r.payableManual = false;
+      r.bonusTotal = Number(r.ddazuaPrice||0) + Number(r.acpPrice||0);
+      // 예전엔 finalPrice = 총금액-할인-직권+따즈아+ACP였음 → 새 공식으로 재계산
+      const newFinal = Math.max(Number(r.payableAmount||0) - Number(r.specialDiscount||0), 0);
+      if(r.finalPrice !== newFinal){
+        r.finalPrice = newFinal;
+      }
+      changed++;
+    }
+  });
+  if(changed > 0){
+    console.log(`[마이그레이션] ${changed}건의 데이터를 새 계산식으로 변환했습니다`);
+    saveLocal();
+  }
+}
+function saveTrash(){ localStorage.setItem(TRASH_KEY, JSON.stringify(trash)); }
+function loadTrash(){
+  try{ trash = JSON.parse(localStorage.getItem(TRASH_KEY) || '[]'); }catch(e){ trash = []; }
+  // 30일 지난 항목 자동 비우기
+  const cutoff = Date.now() - TRASH_TTL_DAYS * 86400 * 1000;
+  trash = trash.filter(t => t.deletedAt >= cutoff);
+  saveTrash();
+}
+
+// ─────────────────────────────────────────
+// 토스트 알림
+// ─────────────────────────────────────────
+let toastCounter = 0;
+function toast(message, { type='info', action=null, duration=4000 } = {}){
+  const stack = document.getElementById('toastStack');
+  if(!stack) return;
+  const id = 't' + (++toastCounter);
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.id = id;
+  const iconText = type==='success'?'✓':type==='error'?'!':'ⓘ';
+  const actionHtml = action ? `<span class="t-action" data-act="1">${action.label}</span>` : '';
+  el.innerHTML = `<span class="t-icon">${iconText}</span><div class="t-body">${message}${actionHtml}</div><span class="t-close">×</span>`;
+  stack.appendChild(el);
+  const close = () => { el.style.transition='.2s'; el.style.opacity='0'; el.style.transform='translateY(8px)'; setTimeout(()=>el.remove(),200); };
+  el.querySelector('.t-close').addEventListener('click', close);
+  if(action){
+    el.querySelector('[data-act]').addEventListener('click', ()=>{ try{ action.onClick(); }catch(e){} close(); });
+  }
+  if(duration>0) setTimeout(close, duration);
+  return { close };
+}
+
+// ─────────────────────────────────────────
+// CSV 내보내기
+// ─────────────────────────────────────────
+function exportCSV(){
+  const filtered = getFilteredRows();
+  if(!filtered.length){ toast('내보낼 데이터가 없습니다', {type:'info'}); return; }
+  const headers = ['상담일','납부기한','학생명','멘토','과정','결과','총금액','납부금액','직권할인','실결제','매출','잔액','따즈아','ACP','매출외수당','할인방식','할인율','결제권자','목적','특이사항'];
+  const esc = v => { const s = String(v==null?'':v); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
+  const lines = [headers.join(',')];
+  filtered.forEach(r=>{
+    const remain = Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0);
+    const payable = r.payableAmount != null ? Number(r.payableAmount) : computeAutoPayable(r.price, r.discountType, r.discountRate);
+    const bonus = Number(r.bonusTotal || 0) || (Number(r.ddazuaPrice||0) + Number(r.acpPrice||0));
+    lines.push([
+      r.date, r.deadline, r.student, r.mentor, r.course, r.displayResult,
+      r.price, payable, r.specialDiscount, r.finalPrice, r.paid, remain,
+      r.ddazuaPrice, r.acpPrice, bonus,
+      r.discountType, r.discountType==='%할인'?(r.discountRate||0)+'%':'',
+      r.payer, r.purpose, r.memo
+    ].map(esc).join(','));
+  });
+  const csv = '\ufeff' + lines.join('\r\n'); // UTF-8 BOM for Excel
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = todayStr();
+  const scope = currentMonth==='전체' ? 'all' : currentMonth;
+  a.href = url; a.download = `상담목록_${scope}_${today}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast(`${filtered.length}건을 CSV로 내보냈습니다`, {type:'success'});
+}
+
+// ─────────────────────────────────────────
+// 휴지통
+// ─────────────────────────────────────────
+function openTrash(){ renderTrash(); document.getElementById('trashDrawer').classList.add('open'); }
+function closeTrash(){ document.getElementById('trashDrawer').classList.remove('open'); }
+function updateTrashBadge(){
+  const b = document.getElementById('trashBadge');
+  if(b) b.textContent = trash.length;
+}
+function renderTrash(){
+  const list = document.getElementById('trashList');
+  if(!list) return;
+  if(!trash.length){
+    list.innerHTML = '<div class="empty-state" style="padding:24px 0"><div class="e-title">휴지통이 비어 있습니다</div></div>';
+    return;
+  }
+  list.innerHTML = trash.slice().sort((a,b)=>b.deletedAt-a.deletedAt).map(t=>{
+    const r = t.row;
+    const daysLeft = Math.max(0, Math.ceil((t.deletedAt + TRASH_TTL_DAYS*86400*1000 - Date.now())/86400000));
+    return `<div class="mentor-row">
+      <div class="n">
+        <span class="name">${r.student || '-'}</span>
+        <span style="font-size:11px;color:var(--muted);font-weight:700">${daysLeft}일 후 영구삭제</span>
+      </div>
+      <div class="meta">${displayDate(r.date)} · ${r.mentor||''} · ${r.course||''} · ${format(r.finalPrice)}</div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-sm" onclick="restoreFromTrash('${t.trashId}')">복원</button>
+        <button class="btn btn-sm" style="color:var(--red)" onclick="purgeTrash('${t.trashId}')">영구 삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function restoreFromTrash(trashId){
+  const idx = trash.findIndex(t => t.trashId === trashId);
+  if(idx === -1) return;
+  const item = trash[idx];
+  // row를 id 유지한 채 다시 추가 (시트엔 새로 create)
+  const restored = { ...item.row };
+  delete restored.id; // 새 id 발급받도록
+  trash.splice(idx, 1);
+  saveTrash(); updateTrashBadge(); renderTrash();
+  restored.id = makeLocalId();
+  rows.push(restored);
+  saveLocal(); renderAll();
+  try{
+    const result = await apiCall('create', { row: toServerRow(restored) });
+    if(result?.id){
+      const i = rows.findIndex(r => r.id === restored.id);
+      if(i !== -1){ rows[i].id = result.id; saveLocal(); }
+    }
+    toast('복원했습니다', {type:'success'});
+  }catch(err){
+    toast('복원 중 시트 반영에 실패했습니다. 새로고침 후 확인해주세요.', {type:'error', duration:6000});
+  }
+}
+function purgeTrash(trashId){
+  if(!confirm('이 항목을 영구적으로 삭제할까요? 되돌릴 수 없습니다.')) return;
+  trash = trash.filter(t => t.trashId !== trashId);
+  saveTrash(); updateTrashBadge(); renderTrash();
+  toast('영구 삭제했습니다', {type:'info'});
+}
+
+// ─────────────────────────────────────────
+// 선택 / 일괄 작업
+// ─────────────────────────────────────────
+function toggleSelect(id){
+  if(selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  updateBulkBar();
+  renderTable(getFilteredRows());
+}
+function toggleSelectAll(){
+  const filtered = getFilteredRows();
+  const visibleIds = filtered.map(r=>r.id).filter(Boolean);
+  const allSelected = visibleIds.length>0 && visibleIds.every(id => selectedIds.has(id));
+  if(allSelected){ visibleIds.forEach(id=>selectedIds.delete(id)); }
+  else { visibleIds.forEach(id=>selectedIds.add(id)); }
+  updateBulkBar();
+  renderTable(getFilteredRows());
+}
+function clearSelection(){ selectedIds.clear(); updateBulkBar(); renderTable(getFilteredRows()); }
+function updateBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  const cnt = document.getElementById('bulkCount');
+  if(!bar) return;
+  bar.style.display = selectedIds.size>0 ? 'flex' : 'none';
+  if(cnt) cnt.textContent = selectedIds.size;
+  // 헤더 체크박스 상태 동기화
+  const filtered = getFilteredRows();
+  const visibleIds = filtered.map(r=>r.id).filter(Boolean);
+  const allCb = document.getElementById('selectAllCb');
+  if(allCb){
+    const all = visibleIds.length>0 && visibleIds.every(id=>selectedIds.has(id));
+    allCb.classList.toggle('checked', all);
+  }
+}
+async function bulkDelete(){
+  const ids = [...selectedIds];
+  if(!ids.length) return;
+  if(!confirm(`선택한 ${ids.length}건을 삭제할까요? (휴지통으로 이동되며 30일 내 복원 가능)`)) return;
+  const targets = ids.map(id => rows.find(r=>r.id===id)).filter(Boolean);
+  // 휴지통으로 이동
+  targets.forEach(r => {
+    trash.push({ trashId:'tr-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), row:JSON.parse(JSON.stringify(r)), deletedAt:Date.now() });
+  });
+  saveTrash(); updateTrashBadge();
+  // rows에서 제거
+  rows = rows.filter(r => !selectedIds.has(r.id));
+  saveLocal();
+  selectedIds.clear();
+  updateBulkBar();
+  renderAll();
+  toast(`${targets.length}건을 삭제했습니다`, {type:'success', action:{label:'실행 취소', onClick:()=>undoBulkDelete(targets.map(r=>r.id))}, duration:6000});
+  // 시트 반영 (서버에 있는 것만)
+  for(const r of targets){
+    if(r.id && !String(r.id).startsWith('local-')){
+      try{ await apiCall('delete', { id: r.id }); }catch(e){ console.error('삭제 반영 실패', e); }
+    }
+  }
+}
+async function undoBulkDelete(ids){
+  // 휴지통에서 해당 항목들 복원
+  const toRestore = trash.filter(t => ids.includes(t.row.id));
+  trash = trash.filter(t => !ids.includes(t.row.id));
+  saveTrash(); updateTrashBadge();
+  for(const item of toRestore){
+    const restored = JSON.parse(JSON.stringify(item.row));
+    delete restored.id;
+    restored.id = makeLocalId();
+    rows.push(restored);
+    try{
+      const result = await apiCall('create', { row: toServerRow(restored) });
+      if(result?.id){
+        const i = rows.findIndex(r => r.id === restored.id);
+        if(i !== -1) rows[i].id = result.id;
+      }
+    }catch(e){}
+  }
+  saveLocal(); renderAll();
+  toast(`${toRestore.length}건을 복원했습니다`, {type:'success'});
+}
+async function bulkChangeResult(){
+  const ids = [...selectedIds];
+  if(!ids.length) return;
+  const choice = prompt('변경할 결과를 입력하세요: 등록 / COD / 미등록 / 추등 / 미완료', '등록');
+  if(!choice) return;
+  const valid = ['등록','COD','미등록','추등','미완료'];
+  if(!valid.includes(choice)){ toast('올바른 결과값을 입력해주세요', {type:'error'}); return; }
+  const targets = rows.filter(r => ids.includes(r.id));
+  targets.forEach(r => { r.result = choice; r.displayResult = getAutoResult(r)==='등록' && choice!=='등록' ? choice : (choice==='auto'?getAutoResult(r):choice); r.displayResult = choice; });
+  saveLocal(); renderAll();
+  toast(`${targets.length}건의 상태를 "${choice}"로 변경했습니다`, {type:'success'});
+  for(const r of targets){
+    if(r.id && !String(r.id).startsWith('local-')){
+      try{ await apiCall('update', { id: r.id, row: toServerRow(r) }); }catch(e){}
+    }
+  }
+}
+
+// ─────────────────────────────────────────
+// 인라인 편집
+// ─────────────────────────────────────────
+let inlineEditState = null;
+function startInlineEdit(td, id, field, currentValue){
+  if(inlineEditState) cancelInlineEdit();
+  const original = td.innerHTML;
+  const isNumber = ['paid','price','ddazuaPrice','acpPrice','specialDiscount'].includes(field);
+  const isDate = ['date','deadline'].includes(field);
+  const isSelect = field === 'displayResult';
+  let inputHtml;
+  if(isSelect){
+    inputHtml = `<select class="inline-input">${['등록','COD','미등록','추등','미완료'].map(v=>`<option ${v===currentValue?'selected':''}>${v}</option>`).join('')}</select>`;
+  } else if(isDate){
+    inputHtml = `<input class="inline-input" type="date" value="${currentValue||''}">`;
+  } else if(isNumber){
+    inputHtml = `<input class="inline-input" type="text" inputmode="numeric" value="${format(currentValue||0)}">`;
+  } else {
+    inputHtml = `<input class="inline-input" type="text" value="${String(currentValue||'').replace(/"/g,'&quot;')}">`;
+  }
+  td.innerHTML = inputHtml;
+  const inp = td.querySelector('.inline-input');
+  inp.focus();
+  if(inp.select) inp.select();
+  inlineEditState = { td, id, field, original, inp };
+  inp.addEventListener('keydown', e => {
+    if(e.key==='Enter'){ e.preventDefault(); commitInlineEdit(); }
+    if(e.key==='Escape'){ cancelInlineEdit(); }
+  });
+  inp.addEventListener('blur', ()=> setTimeout(commitInlineEdit, 80));
+}
+function cancelInlineEdit(){
+  if(!inlineEditState) return;
+  inlineEditState.td.innerHTML = inlineEditState.original;
+  inlineEditState = null;
+}
+async function commitInlineEdit(){
+  if(!inlineEditState) return;
+  const { id, field, inp } = inlineEditState;
+  inlineEditState = null;
+  const r = rows.find(x=>x.id===id);
+  if(!r){ renderAll(); return; }
+  let val = inp.value;
+  if(['paid','price','ddazuaPrice','acpPrice','specialDiscount'].includes(field)) val = num(val);
+  const snapshot = JSON.parse(JSON.stringify(r));
+  r[field] = val;
+  // 금액류 변경 시 실결제/잔액 재계산
+  if(['price','ddazuaPrice','acpPrice','specialDiscount'].includes(field)){
+    r.finalPrice = computeFinalPriceFromRow(r);
+  }
+  if(['paid','price','ddazuaPrice','acpPrice','specialDiscount','deadline','result'].includes(field)){
+    r.displayResult = getAutoResult(r);
+  }
+  if(field === 'displayResult'){ r.result = val; r.displayResult = val; }
+  saveLocal(); renderAll();
+  if(!r.id || String(r.id).startsWith('local-')) return;
+  try{
+    await apiCall('update', { id: r.id, row: toServerRow(r) });
+    toast('수정했습니다', {type:'success', duration:1500});
+  }catch(err){
+    Object.assign(r, snapshot);
+    saveLocal(); renderAll();
+    toast('수정 실패: ' + (err.message||err), {type:'error'});
+  }
+}
+function computeFinalPriceFromRow(r){
+  // 새 공식: 실결제 = 납부금액 - 직권할인
+  // 납부금액은 수동값 우선, 없으면 자동 계산 (총금액 - %할인)
+  const autoPayable = computeAutoPayable(r.price, r.discountType, r.discountRate);
+  const payable = (r.payableManual && r.payableAmount != null) ? Number(r.payableAmount) : autoPayable;
+  return Math.max(payable - Number(r.specialDiscount||0), 0);
+}
+
+// ─────────────────────────────────────────
+// 차트
+// ─────────────────────────────────────────
+function renderCharts(filtered){
+  renderMonthlyChart();
+  renderMentorBarChart(filtered);
+}
+function renderMonthlyChart(){
+  const el = document.getElementById('monthlyChart');
+  if(!el) return;
+  // rows 전체에서 최근 6개월
+  const byMonth = {};
+  rows.forEach(r => {
+    const m = String(r.date||'').slice(0,7); // YYYY-MM
+    if(!m) return;
+    byMonth[m] = (byMonth[m]||0) + Number(r.paid||0);
+  });
+  const months = Object.keys(byMonth).sort().slice(-6);
+  if(!months.length){ el.innerHTML = '<div class="empty-state" style="padding:24px 0"><div class="e-sub">데이터가 쌓이면 추이가 표시됩니다</div></div>'; return; }
+  const values = months.map(m => byMonth[m]);
+  const max = Math.max(...values, 1);
+  // SVG 좌표계: 0~100 폭 × 0~100 높이
+  const W = 100, H = 100;
+  const step = months.length>1 ? W/(months.length-1) : 0;
+  const pts = values.map((v,i) => [i*step, H - (v/max)*H]);
+  const linePath = pts.map((p,i)=> (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const areaPath = linePath + ` L ${((months.length-1)*step).toFixed(1)},${H} L 0,${H} Z`;
+  const dots = pts.map(p => `<circle class="dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.5"/>`).join('');
+  // X축 레이블은 HTML로 분리 (세로로 찌그러지지 않도록)
+  const xLabels = months.map(m => {
+    const [, mm] = m.split('-');
+    return `<span>${parseInt(mm,10)}월</span>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="chart-max">${format(max)}</div>
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <path class="area-path" d="${areaPath}" />
+      <path class="line-path" d="${linePath}" />
+      ${dots}
+    </svg>
+    <div class="chart-xlabels">${xLabels}</div>`;
+}
+function renderMentorBarChart(filtered){
+  const el = document.getElementById('mentorBarChart');
+  if(!el) return;
+  const byMentor = {};
+  filtered.forEach(r => {
+    const k = r.mentor || '미지정';
+    byMentor[k] = (byMentor[k]||0) + Number(r.finalPrice||0);
+  });
+  const entries = Object.entries(byMentor).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if(!entries.length){ el.innerHTML = '<div class="empty-state" style="padding:24px 0"><div class="e-sub">표시할 멘토 데이터가 없습니다</div></div>'; return; }
+  const max = entries[0][1] || 1;
+  el.innerHTML = entries.map(([k,v])=>{
+    const w = (v/max*100).toFixed(1);
+    return `<div class="bar-row"><span class="lbl">${k}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div><span class="val">${format(v)}</span></div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+// 스켈레톤 로더
+// ─────────────────────────────────────────
+function renderSkeletonTable(){
+  const t = document.getElementById('table');
+  if(!t) return;
+  const rowsHtml = Array.from({length:6}).map(()=>`
+    <tr><td class="bar"></td><td><span class="ckbox"></span></td>
+    ${Array.from({length:10}).map(()=>`<td><span class="skeleton" style="height:12px;width:${40+Math.random()*60}%;vertical-align:middle"></span></td>`).join('')}
+    </tr>`).join('');
+  t.innerHTML = rowsHtml;
+}
+
+// ─────────────────────────────────────────
+// 키보드 단축키
+// ─────────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  const modalOpen = document.getElementById('modal').classList.contains('flex');
+  const editingInput = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='n' && !modalOpen){ e.preventDefault(); openModal(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f' && !modalOpen){ e.preventDefault(); document.getElementById('search')?.focus(); return; }
+  if(e.key==='/' && !editingInput && !modalOpen){ e.preventDefault(); document.getElementById('search')?.focus(); }
+});
+
+// ─────────────────────────────────────────
+// 계산 로직 (신규)
+//
+//   수강료 (총금액) ─ 할인방식 ─→ 납부금액
+//     - 과목지원/없음: 납부금액 = 총금액
+//     - %할인: 납부금액 = 총금액 × (1 - 할인율/100)
+//   실결제금액 = 납부금액 - 직권할인
+//   매출외수당 = 따즈아 + ACP
+//   잔액 = 실결제금액 - 매출
+//
+//   납부금액은 자동계산이 기본이나, 사용자가 수동 덮어쓰기 가능
+//   (payableManual = true일 때 수동값 사용)
+// ─────────────────────────────────────────
+
+let payableManual = false;
+
+function computePercentDiscount(price, rate){ return Math.round(price * (Number(rate||0) / 100)); }
+
+function computeAutoPayable(price, discountType, discountRate){
+  if(discountType === '%할인'){
+    const rate = Number(discountRate||0);
+    return Math.round(Number(price||0) * Math.max(0, 100 - rate) / 100);
+  }
+  return Number(price||0);
+}
+
+function getFormTotalPrice(){
+  const priceEl = document.getElementById('price');
+  return priceEl ? num(priceEl.value) : 0;
+}
+function getFormPayableAmount(){
+  const payField = document.getElementById('payableAmount');
+  return payField ? num(payField.value) : 0;
+}
+function computeFinalPrice(rowLike={}){
+  if(Object.keys(rowLike).length){
+    const payable = rowLike.payableAmount != null
+      ? Number(rowLike.payableAmount)
+      : computeAutoPayable(rowLike.price, rowLike.discountType, rowLike.discountRate);
+    return Math.max(payable - Number(rowLike.specialDiscount||0), 0);
+  }
+  const totalPrice = getFormTotalPrice();
+  const rate = Number(document.getElementById('discountRate')?.value || 0);
+  const autoPayable = computeAutoPayable(totalPrice, currentDiscountType, rate);
+  const payable = payableManual ? getFormPayableAmount() : autoPayable;
+  const special = num(document.getElementById('specialDiscount')?.value || 0);
+  return Math.max(payable - special, 0);
+}
+
+function onPayableManualEdit(){
+  payableManual = true;
+  const aux = document.getElementById('payableAuto');
+  if(aux){ aux.textContent = '수동'; aux.classList.add('manual'); }
+  updatePaymentPreview({skipPayableRewrite:true});
+}
+
+function resetPayableAuto(){
+  payableManual = false;
+  const aux = document.getElementById('payableAuto');
+  if(aux){ aux.textContent = '자동'; aux.classList.remove('manual'); }
+}
+
+function updatePaymentPreview(opts={}){
+  const totalPrice = getFormTotalPrice();
+  const rate = Number(document.getElementById('discountRate')?.value || 0);
+  const payField = document.getElementById('payableAmount');
+
+  let autoPayable = computeAutoPayable(totalPrice, currentDiscountType, rate);
+  if(currentDiscountType === '%할인'){
+    const discAmt = computePercentDiscount(totalPrice, rate);
+    const discField = document.getElementById('percentDiscountAmount');
+    if(discField) discField.value = discAmt ? format(discAmt) : '';
+  } else {
+    const discField = document.getElementById('percentDiscountAmount');
+    if(discField) discField.value = '';
+  }
+
+  if(payField && !payableManual && !opts.skipPayableRewrite){
+    payField.value = autoPayable ? format(autoPayable) : '';
+  }
+
+  const special = num(document.getElementById('specialDiscount')?.value || 0);
+  const payable = payableManual ? getFormPayableAmount() : autoPayable;
+  const finalPrice = Math.max(payable - special, 0);
+  const finalEl = document.getElementById('finalPrice');
+  if(finalEl) finalEl.value = finalPrice ? format(finalPrice) : '';
+
+  const ddz = num(document.getElementById('ddazuaPrice')?.value || 0);
+  const acp = num(document.getElementById('acpPrice')?.value || 0);
+  const bt = document.getElementById('bonusTotal');
+  if(bt) bt.textContent = format(ddz + acp);
+
+  updateRemain();
+}
+
+function updateRemain(){
+  const finalPrice = computeFinalPrice();
+  const paid = num(document.getElementById('paid')?.value || 0);
+  const remain = Math.max(finalPrice - paid, 0);
+  const remainEl = document.getElementById('remain');
+  if(remainEl) remainEl.value = format(remain);
+}
+
+function getAutoResult(obj){
+  const remain = Math.max(Number(obj.finalPrice||0) - Number(obj.paid||0), 0);
+  const paid = Number(obj.paid||0);
+  const isOverdue = obj.deadline && isoTime(obj.deadline) < new Date(new Date().toDateString()).getTime();
+  if(obj.result === '추등') return '추등';
+  if(paid <= 0) return '미등록';
+  if(remain <= 0) return '등록';
+  if(isOverdue) return '미완료';
+  return 'COD';
+}
+
+function getMonths(){ const labels = [...new Set(rows.map(r=>salesMonthFromDate(r.date)).filter(Boolean))]; const ordered = salesPeriods.map(p=>p.label).filter(l=>labels.includes(l)); const extra = labels.filter(l=>!ordered.includes(l)); return ['전체', ...ordered, ...extra]; }
+function getFilteredRows(){
+  const keyword = document.getElementById('search').value.trim();
+  return rows.filter(r => {
+    const monthOk = currentMonth === '전체' || salesMonthFromDate(r.date) === currentMonth;
+    const resultOk = currentResult === '전체' || r.displayResult === currentResult;
+    const searchOk = !keyword || [r.student, r.mentor, r.course].some(v => String(v||'').includes(keyword));
+    return monthOk && resultOk && searchOk;
+  }).sort((a,b)=> currentSort==='desc' ? isoTime(b.date)-isoTime(a.date) : isoTime(a.date)-isoTime(b.date));
+}
+
+function renderMonthTabs(){
+  const wrap = document.getElementById('monthTabs');
+  const months = getMonths();
+  const counts = {};
+  rows.forEach(r => { const m = salesMonthFromDate(r.date); counts[m] = (counts[m]||0)+1; });
+  counts['전체'] = rows.length;
+  wrap.innerHTML = months.map(month =>
+    `<button class="side-item ${currentMonth===month?'active':''}" onclick="setMonth('${month}')"><span>${month}</span><span class="count">${format(counts[month]||0)}</span></button>`
+  ).join('');
+}
+function renderResultFilters(){
+  const wrap = document.getElementById('resultFilters');
+  const dotColor = { 전체:'transparent', 등록:'#16a34a', COD:'#f59e0b', 미등록:'#e11d48', 추등:'#2563eb', 미완료:'#111827' };
+  const counts = {전체:0,등록:0,COD:0,미등록:0,추등:0,미완료:0};
+  rows.forEach(r => { counts[r.displayResult] = (counts[r.displayResult]||0)+1; counts.전체 += 1; });
+  wrap.innerHTML = ['전체','등록','COD','미등록','추등','미완료'].map(item =>
+    `<button class="side-item ${currentResult===item?'active':''}" onclick="setResult('${item}')"><span style="display:flex;align-items:center;gap:8px">${dotColor[item]!=='transparent'?`<span class="dot" style="background:${dotColor[item]}"></span>`:'<span class="dot" style="background:#cbd5e1"></span>'}${item}</span><span class="count">${format(counts[item]||0)}</span></button>`
+  ).join('');
+}
+
+function renderStats(filtered){
+  const counts = {등록:0,COD:0,미등록:0,추등:0,미완료:0};
+  filtered.forEach(r=> counts[r.displayResult] = (counts[r.displayResult]||0)+1 );
+  const total = filtered.reduce((s,r)=>s+Number(r.finalPrice||0),0);
+  const paid = filtered.reduce((s,r)=>s+Number(r.paid||0),0);
+  const remain = filtered.reduce((s,r)=>s+Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0),0);
+  const bonusSum = filtered.reduce((s,r)=>{
+    const bt = Number(r.bonusTotal || 0) || (Number(r.ddazuaPrice||0) + Number(r.acpPrice||0));
+    return s + bt;
+  }, 0);
+  const conversion = filtered.length ? Math.round(((counts['등록']||0)/filtered.length)*100) : 0;
+  totalCount.innerText = format(filtered.length);
+  totalSales.innerText = format(total);
+  paidSales.innerText = format(paid);
+  remainingSales.innerText = format(remain);
+  conversionRate.innerText = `${conversion}%`;
+  regCount.innerText = format(counts['등록']);
+  codCount.innerText = format(counts['COD']);
+  failCount.innerText = format(counts['미등록']);
+  promoteCount.innerText = format(counts['추등']);
+  incompleteCount.innerText = format(counts['미완료']);
+  const kpiSub = document.getElementById('kpiCountSub');
+  if(kpiSub) kpiSub.innerText = currentMonth === '전체' ? '전체 기간' : `${currentMonth} 기준`;
+  const bsl = document.getElementById('bonusSumLabel');
+  if(bsl) bsl.innerHTML = `매출외수당 <b style="color:var(--text);font-weight:800">${format(bonusSum)}</b>`;
+  const tc = document.getElementById('tableCountLabel');
+  if(tc) tc.innerText = `${format(filtered.length)}건`;
+}
+
+function renderMentorCards(filtered){
+  const map = {};
+  filtered.forEach(r=>{
+    const key = r.mentor || '미지정';
+    if(!map[key]) map[key] = {mentor:key,count:0,sales:0,remain:0,등록:0,COD:0,미등록:0,추등:0,미완료:0};
+    map[key].count += 1; map[key].sales += Number(r.finalPrice||0); map[key].remain += Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0); map[key][r.displayResult] += 1;
+  });
+  const mentors = Object.values(map).sort((a,b)=>b.count-a.count || b.sales-a.sales);
+  const mc = document.getElementById('mentorCount');
+  if(mc) mc.textContent = `${mentors.length}명`;
+  mentorCards.innerHTML = mentors.length ? mentors.map(m=>{
+    const bar = key => m.count ? (m[key]||0)/m.count*100 : 0;
+    return `<div class="mentor-row">
+      <div class="n">
+        <span class="name">${m.mentor}</span>
+        <span class="remain">${m.remain>0 ? '− '+format(m.remain) : ''}</span>
+      </div>
+      <div class="meta">상담 ${m.count}건 · 실결제 ${format(m.sales)}</div>
+      <div class="bars" title="등록/COD/미등록/추등/미완료">
+        <span style="width:${bar('등록')}%;background:var(--green)"></span>
+        <span style="width:${bar('COD')}%;background:#f59e0b"></span>
+        <span style="width:${bar('미등록')}%;background:var(--red)"></span>
+        <span style="width:${bar('추등')}%;background:var(--blue)"></span>
+        <span style="width:${bar('미완료')}%;background:#111827"></span>
+      </div>
+    </div>`;
+  }).join('') : '<div class="panel-empty">표시할 데이터가 없습니다</div>';
+}
+
+function renderUrgent(filtered){
+  const urgent = filtered
+    .filter(r=>Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0) > 0)
+    .sort((a,b)=> (Number(b.finalPrice||0)-Number(b.paid||0)) - (Number(a.finalPrice||0)-Number(a.paid||0)))
+    .slice(0,8);
+  const uc = document.getElementById('urgentCount');
+  if(uc) uc.textContent = format(urgent.length);
+  urgentList.innerHTML = urgent.length ? urgent.map(r=>{
+    const remain = Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0);
+    return `<div class="urgent-row"><div><div class="name">${r.student||'-'}</div><div class="sub">${r.mentor||''} · ${displayDate(r.deadline)}</div></div><div class="amt">${format(remain)}</div></div>`;
+  }).join('') : '<div class="panel-empty">확인할 잔액 건이 없습니다</div>';
+}
+
+function monthGroupRows(rowsInput){
+  const groups = [];
+  let current = '';
+  rowsInput.forEach(r=>{ const m = salesMonthFromDate(r.date); if(m !== current){ current = m; groups.push({type:'month', label:m}); } groups.push({type:'row', row:r}); });
+  return groups;
+}
+function renderTable(filtered){
+  table.innerHTML = '';
+  if(!filtered.length){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="13"><div class="empty-state">
+      <div class="e-title">${rows.length ? '조건에 맞는 상담이 없어요' : '아직 상담 기록이 없어요'}</div>
+      <div class="e-sub">${rows.length ? '다른 월/결과 필터를 시도해보세요' : '첫 상담을 기록해보세요'}</div>
+      ${rows.length ? '' : '<button class="btn btn-primary" onclick="openModal()">＋ 첫 상담 기록하기</button>'}
+    </div></td>`;
+    table.appendChild(tr);
+    return;
+  }
+  monthGroupRows(filtered).forEach(item=>{
+    if(item.type === 'month'){
+      const tr = document.createElement('tr');
+      tr.className = 'month-head';
+      tr.innerHTML = `<td colspan="13">${item.label}</td>`;
+      table.appendChild(tr); return;
+    }
+    const r = item.row;
+    const actualIndex = rows.indexOf(r);
+    const result = r.displayResult || '미등록';
+    const remain = Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0);
+    const id = r.id || '';
+    const selected = selectedIds.has(id);
+    const tr = document.createElement('tr');
+    tr.className = `r-${result}${selected?' selected':''}`;
+    tr.innerHTML = `
+      <td class="bar"></td>
+      <td style="padding:10px 0 10px 12px"><span class="ckbox ${selected?'checked':''}" onclick="event.stopPropagation(); toggleSelect('${id}')"></span></td>
+      <td class="cell-editable" style="color:var(--text-2);font-weight:600" data-id="${id}" data-field="date">${displayDate(r.date)}</td>
+      <td class="cell-editable" style="color:var(--text-2);font-weight:600" data-id="${id}" data-field="deadline">${displayDate(r.deadline)}</td>
+      <td class="student-cell" style="min-width:180px">
+        <div class="name" onclick="openDetail(${actualIndex})">${r.student || '-'}</div>
+        <div class="sub cell-editable" data-id="${id}" data-field="mentor" style="display:inline-block">${r.mentor || '-'}</div>
+      </td>
+      <td><span class="course-pill">${r.course || '-'}</span></td>
+      <td class="cell-editable" data-id="${id}" data-field="displayResult"><span class="badge badge-${result}">${result}</span></td>
+      <td style="text-align:right"><span class="money">${format(r.price||0)}</span></td>
+      <td style="text-align:right" class="cell-editable" data-id="${id}" data-field="paid"><span class="money paid">${format(r.paid)}</span></td>
+      <td style="text-align:right"><span class="money ${remain>0?'remain-pos':'remain-zero'}" onclick="quickEditAmount(${actualIndex}, 'remain')">${format(remain)}</span></td>
+      <td style="text-align:center"><button class="icon-btn" onclick="showMiniDetail('할인 구성', ${actualIndex}, 'discount')">%</button></td>
+      <td style="text-align:center"><button class="icon-btn" onclick="showMiniDetail('특이사항', ${actualIndex}, 'memo')">≡</button></td>
+      <td style="text-align:right">
+        <div style="display:inline-flex;gap:6px">
+          <button onclick="editRow(${actualIndex})" class="btn btn-sm">수정</button>
+          <button onclick="deleteRow(${actualIndex})" class="btn btn-sm" style="color:var(--red);border-color:var(--red-line);background:var(--red-bg)">삭제</button>
+        </div>
+      </td>`;
+    table.appendChild(tr);
+  });
+  // 더블클릭 → 인라인 편집 바인딩
+  table.querySelectorAll('.cell-editable').forEach(td => {
+    td.addEventListener('dblclick', e => {
+      const id = td.dataset.id; const field = td.dataset.field;
+      if(!id) return;
+      const r = rows.find(x=>x.id===id);
+      if(!r) return;
+      let cur = r[field];
+      if(field === 'displayResult') cur = r.displayResult || r.result || '미등록';
+      startInlineEdit(td, id, field, cur);
+    });
+  });
+}
+
+function showMiniDetail(title, index, type){
+  const r = rows[index]; if(!r) return;
+  detailTitle.textContent = `${r.student || '상세'} · ${title}`;
+  const bonusTotal = Number(r.bonusTotal || 0) || (Number(r.ddazuaPrice||0) + Number(r.acpPrice||0));
+  const payable = r.payableAmount != null ? Number(r.payableAmount) : computeAutoPayable(r.price, r.discountType, r.discountRate);
+  let html = '';
+  if(type === 'amount'){
+    html += `
+      <dt>총금액 (수강료)</dt><dd>${format(r.price)}</dd>
+      <dt>납부금액</dt><dd>${format(payable)}${r.payableManual?' <span style="font-size:10px;color:var(--red);font-weight:700">(수동)</span>':''}</dd>
+      <dt>직권할인</dt><dd>${format(r.specialDiscount)}</dd>
+      <dt>실결제금액</dt><dd style="color:var(--blue)">${format(r.finalPrice)}</dd>
+      <dt>매출 (입금)</dt><dd>${format(r.paid)}</dd>
+      <dt>잔액</dt><dd style="color:var(--red)">${format(Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0))}</dd>
+      <dt>따즈아</dt><dd>${format(r.ddazuaPrice)}</dd>
+      <dt>ACP</dt><dd>${format(r.acpPrice)}</dd>
+      <dt style="grid-column:1/-1;margin-top:8px;border-top:1px solid var(--line-soft);padding-top:8px">매출외수당 <span style="color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0">(따즈아+ACP)</span></dt>
+      <dd style="grid-column:1/-1;color:var(--blue);font-size:14px">${format(bonusTotal)}</dd>`;
+  }else if(type === 'discount'){
+    const summary = r.discountType === '%할인' ? `%할인 ${r.discountRate||0}%` : (r.discountType === '과목지원' ? `과목지원 ${r.supportPaidCount||0}/${r.supportFreeCount||0}` : '할인 없음');
+    const percentAmt = r.discountType === '%할인' ? computePercentDiscount(Number(r.price||0), Number(r.discountRate||0)) : 0;
+    html += `<dt>할인방식</dt><dd>${r.discountType || '할인 없음'}</dd><dt>요약</dt><dd>${summary}</dd><dt>할인율</dt><dd>${r.discountType === '%할인' ? `${r.discountRate||0}%` : '-'}</dd><dt>할인금액</dt><dd>${r.discountType === '%할인' ? format(percentAmt) : '-'}</dd><dt>과목지원</dt><dd>${r.discountType === '과목지원' ? `유료 ${r.supportPaidCount||0} / 무료 ${r.supportFreeCount||0}` : '-'}</dd>`;
+  }else{
+    html += `<dt style="grid-column:1/-1">특이사항</dt><dd style="grid-column:1/-1;white-space:pre-wrap;font-weight:500">${r.memo || '내용 없음'}</dd>`;
+  }
+  detailContent.innerHTML = html;
+  document.getElementById('detailDrawer').classList.add('open');
+}
+function openDetail(index){
+  const r = rows[index]; if(!r) return;
+  detailTitle.textContent = `${r.student || '상세'} 전체 작성 내용`;
+  const bonusTotal = Number(r.bonusTotal || 0) || (Number(r.ddazuaPrice||0) + Number(r.acpPrice||0));
+  const payable = r.payableAmount != null ? Number(r.payableAmount) : computeAutoPayable(r.price, r.discountType, r.discountRate);
+  detailContent.innerHTML = `
+    <dt>상담일</dt><dd>${displayDate(r.date)}</dd>
+    <dt>납부기한</dt><dd>${displayDate(r.deadline)}</dd>
+    <dt>학생명</dt><dd>${r.student || '-'}</dd>
+    <dt>멘토</dt><dd>${r.mentor || '-'}</dd>
+    <dt>과정</dt><dd>${r.course || '-'}</dd>
+    <dt>결제권자</dt><dd>${r.payer || '-'}</dd>
+    <dt>목적</dt><dd>${r.purpose || '-'}</dd>
+    <dt style="grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft)">수강료 (할인 계산)</dt>
+    <dt>총금액</dt><dd>${format(r.price)}</dd>
+    <dt>할인방식</dt><dd>${r.discountType || '할인 없음'}</dd>
+    ${r.discountType === '%할인' ? `<dt>할인율</dt><dd>${r.discountRate||0}%</dd>` : ''}
+    ${r.discountType === '과목지원' ? `<dt>과목지원</dt><dd>유료 ${r.supportPaidCount||0} / 무료 ${r.supportFreeCount||0}</dd>` : ''}
+    <dt>납부금액</dt><dd>${format(payable)}${r.payableManual?' <span style="font-size:10px;color:var(--red);font-weight:700">(수동)</span>':''}</dd>
+    <dt>직권할인</dt><dd>${format(r.specialDiscount)}</dd>
+    <dt>실결제금액</dt><dd style="color:var(--blue);font-size:14px">${format(r.finalPrice)}</dd>
+    <dt>매출 (입금)</dt><dd>${format(r.paid)}</dd>
+    <dt>잔액</dt><dd style="color:var(--red);font-size:14px">${format(Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0))}</dd>
+    <dt style="grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft)">수강료 외 (매출외수당)</dt>
+    <dt>따즈아</dt><dd>${format(r.ddazuaPrice)}</dd>
+    <dt>ACP</dt><dd>${format(r.acpPrice)}</dd>
+    <dt>매출외수당 합계</dt><dd style="color:var(--blue)">${format(bonusTotal)}</dd>
+    <dt style="grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft)">결과 · 메모</dt>
+    <dt>결과</dt><dd>${r.displayResult}</dd>
+    <dt style="grid-column:1/-1">특이사항</dt>
+    <dd style="grid-column:1 / -1;white-space:pre-wrap;font-weight:500">${r.memo || '-'}</dd>
+  `;
+  // 같은 학생의 다른 상담 기록
+  const history = document.getElementById('detailHistory');
+  if(history && r.student){
+    const others = rows.filter(x => x !== r && (x.student||'').trim() === (r.student||'').trim())
+      .sort((a,b)=> isoTime(b.date) - isoTime(a.date));
+    if(others.length){
+      history.innerHTML = `<div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px">같은 학생 이전 기록 (${others.length})</div>
+      ${others.map((o,i) => {
+        const idx = rows.indexOf(o);
+        const rem = Math.max(Number(o.finalPrice||0)-Number(o.paid||0),0);
+        return `<div class="urgent-row" style="cursor:pointer" onclick="openDetail(${idx})">
+          <div><div class="name">${displayDate(o.date)} · <span class="badge badge-${o.displayResult||'미등록'}" style="vertical-align:middle">${o.displayResult||'미등록'}</span></div><div class="sub">${o.mentor||'-'} · ${o.course||'-'}</div></div>
+          <div><div class="amt" style="color:${rem>0?'var(--red)':'var(--muted)'}">${format(rem>0?rem:o.paid)}</div></div>
+        </div>`;
+      }).join('')}`;
+    } else {
+      history.innerHTML = '';
+    }
+  }
+  document.getElementById('detailDrawer').classList.add('open');
+}
+function closeDetail(){ document.getElementById('detailDrawer').classList.remove('open'); }
+
+function renderAll(){
+  renderMonthTabs(); renderResultFilters();
+  const filtered = getFilteredRows();
+  renderStats(filtered);
+  renderMentorCards(filtered);
+  renderUrgent(filtered);
+  renderCharts(filtered);
+  if(initialLoading && rows.length === 0){
+    renderSkeletonTable();
+  } else {
+    renderTable(filtered);
+  }
+  updateBulkBar();
+  updateTrashBadge();
+  document.getElementById('sortDescBtn').classList.toggle('active', currentSort==='desc');
+  document.getElementById('sortAscBtn').classList.toggle('active', currentSort==='asc');
+}
+function setMonth(month){ currentMonth = month; renderAll(); }
+function setResult(result){ currentResult = result; renderAll(); }
+function setSort(sort){ currentSort = sort; renderAll(); }
+
+function renderCourseButtons(){
+  coursePresetWrap.innerHTML = courseOptions.map(c => `<button type="button" class="mini-btn ${selectedCourseValue===c?'active':''}" onclick="selectCourse('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+  selectedCourse.textContent = selectedCourseValue || '선택 안됨';
+}
+function selectCourse(value){ selectedCourseValue = value; renderCourseButtons(); }
+function addCourse(){ const v = courseAddInput.value.trim(); if(!v) return; if(!courseOptions.includes(v)) courseOptions.push(v); selectedCourseValue = v; courseAddInput.value=''; renderCourseButtons(); }
+function renderChoiceButtons(){
+  payerWrap.innerHTML = payerOptions.map(v => `<button type="button" class="mini-btn" data-choice="payer">${v}</button>`).join('');
+  purposeWrap.innerHTML = purposeOptions.map(v => `<button type="button" class="mini-btn" data-choice="purpose">${v}</button>`).join('');
+  // 따즈아 빠른입력
+  const ddzWrap = document.getElementById('ddazuaQuickWrap');
+  if(ddzWrap){
+    ddzWrap.innerHTML = ddazuaQuickAmounts.map(v => `<button type="button" class="mini-btn" onclick="setDdazua(${v})">${format(v)}</button>`).join('');
+  }
+  acpPresetWrap.innerHTML = Object.entries(acpMap).map(([k,v]) => `<button type="button" class="mini-btn" onclick="setAcpPreset(${k},${v})">ACP ${k}과목</button>`).join('');
+  document.querySelectorAll('[data-choice="payer"]').forEach(btn=> btn.onclick = ()=> selectSingleChoice(btn, 'payerWrap'));
+  document.querySelectorAll('[data-choice="purpose"]').forEach(btn=> btn.onclick = ()=> selectSingleChoice(btn, 'purposeWrap'));
+}
+function selectSingleChoice(btn, wrapId){ document.querySelectorAll(`#${wrapId} .mini-btn`).forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+function getSelectedChoice(wrapId){ const btn = document.querySelector(`#${wrapId} .mini-btn.active`); return btn ? btn.textContent.trim() : ''; }
+function setSelectedChoice(wrapId, value){ document.querySelectorAll(`#${wrapId} .mini-btn`).forEach(btn=> btn.classList.toggle('active', btn.textContent.trim()===value)); }
+function setDdazua(v){
+  document.getElementById('ddazuaPrice').value = format(v);
+  document.querySelectorAll('#ddazuaQuickWrap .mini-btn').forEach(btn => btn.classList.toggle('active', num(btn.textContent)===v));
+  updatePaymentPreview();
+}
+function setAcpPreset(courseCount, amount){ acpPrice.value = format(amount); updatePaymentPreview(); document.querySelectorAll('#acpPresetWrap .mini-btn').forEach(btn => btn.classList.toggle('active', btn.textContent.includes(`${courseCount}과목`))); }
+
+function setDiscountType(type){
+  currentDiscountType = type || '';
+  document.getElementById('supportBtn').classList.toggle('active', currentDiscountType==='과목지원');
+  document.getElementById('percentBtn').classList.toggle('active', currentDiscountType==='%할인');
+  document.getElementById('noDiscountBtn').classList.toggle('active', currentDiscountType==='');
+  // 할인방식 바꾸면 납부금액 자동 모드로 복귀
+  resetPayableAuto();
+  renderTuitionPane();
+  renderDiscountPane();
+  updatePaymentPreview();
+}
+
+function renderTuitionPane(){
+  const card = document.getElementById('tuitionCard');
+  const pane = document.getElementById('tuitionPane');
+  const title = document.getElementById('tuitionTitle');
+  if(!pane || !card) return;
+
+  card.style.display = '';
+  const curPrice = document.getElementById('price')?.value || '';
+
+  if(currentDiscountType === '과목지원'){
+    title.innerHTML = `수강료 <span class="form-sub">과목지원 · 납부금액 직접 입력</span>`;
+    pane.innerHTML = `
+      <div class="field">
+        <label>납부금액</label>
+        <input id="price" class="input" inputmode="numeric" value="${curPrice}" oninput="formatCurrencyInput(this); updatePaymentPreview();" />
+        <div class="field-hint">과목지원은 입력한 금액이 그대로 납부금액으로 반영됩니다.</div>
+      </div>`;
+  } else if(currentDiscountType === '%할인'){
+    title.innerHTML = `수강료 <span class="form-sub">총금액 · 할인금액 자동 계산</span>`;
+    pane.innerHTML = `
+      <div class="grid-2">
+        <div class="field">
+          <label>총금액</label>
+          <input id="price" class="input" inputmode="numeric" value="${curPrice}" oninput="formatCurrencyInput(this); updatePaymentPreview();" />
+        </div>
+        <div class="field">
+          <label>할인금액 <span class="field-aux">자동</span></label>
+          <input id="percentDiscountAmount" class="input" style="background:var(--surface-2)" readonly />
+        </div>
+      </div>
+      <div class="field-hint" style="margin-top:6px">납부금액은 아래 결제 정보 칸에 자동 반영됩니다.</div>`;
+  } else {
+    title.innerHTML = `수강료 <span class="form-sub">할인 없음 · 총금액 = 납부금액</span>`;
+    pane.innerHTML = `
+      <div class="field">
+        <label>총금액</label>
+        <input id="price" class="input" inputmode="numeric" value="${curPrice}" oninput="formatCurrencyInput(this); updatePaymentPreview();" />
+        <div class="field-hint">할인 없음은 총금액이 그대로 납부금액으로 반영됩니다.</div>
+      </div>`;
+  }
+}
+
+function renderDiscountPane(){
+  const pane = document.getElementById('discountPane');
+  if(!pane) return;
+  if(currentDiscountType === '과목지원'){
+    pane.innerHTML = `
+      <div class="grid-2">
+        <div class="field"><label>유료과목 수</label><input id="supportPaidCount" class="input" type="number" min="0" value="${document.getElementById('supportPaidCount')?.value || 0}" oninput="updatePaymentPreview()" /></div>
+        <div class="field"><label>무료과목 수</label><input id="supportFreeCount" class="input" type="number" min="0" value="${document.getElementById('supportFreeCount')?.value || 0}" oninput="updatePaymentPreview()" /></div>
+      </div>
+      <div class="field-hint" style="margin-top:8px">과목 수만 기록되며, 납부금액은 아래 수강료 칸에서 직접 입력하세요</div>`;
+  } else if(currentDiscountType === '%할인'){
+    const rate = Number(document.getElementById('discountRate')?.value || 0);
+    pane.innerHTML = `
+      <div class="field" style="max-width:220px">
+        <label>할인율 (%)</label>
+        <input id="discountRate" class="input" type="number" min="0" max="99" step="1" maxlength="2"
+          value="${rate || ''}"
+          oninput="onDiscountRateInput(this)"
+          onkeydown="onDiscountRateKeydown(event)"
+          placeholder="예: 20" />
+        <div class="field-hint">2자리 입력 시 자동으로 다음 칸 · Enter로 넘기기</div>
+      </div>`;
+  } else {
+    pane.innerHTML = `<div class="field-hint" style="padding:6px 2px">할인 없음은 위 수강료 칸에 총금액만 입력하면 됩니다.</div>`;
+  }
+}
+
+// 할인율 2자리 자동 이동
+function onDiscountRateInput(el){
+  let v = el.value.replace(/[^0-9]/g,'').slice(0,2);
+  if(v !== el.value) el.value = v;
+  updatePaymentPreview();
+  if(v.length === 2){
+    const payableEl = document.getElementById('payableAmount');
+    if(payableEl) payableEl.focus();
+  }
+}
+function onDiscountRateKeydown(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    e.stopPropagation();
+    const payableEl = document.getElementById('payableAmount');
+    if(payableEl) payableEl.focus();
+  }
+}
+
+function resetForm(){
+  ['date','deadline','student','mentor','ddazuaPrice','acpPrice','specialDiscount','finalPrice','paid','remain','memo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  // 동적 필드 초기화 (수강료 카드 내부 요소들)
+  ['price','payableAmount','percentDiscountAmount','discountRate','supportPaidCount','supportFreeCount'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  date.value = todayStr(); deadline.value = todayStr(); result.value = 'auto'; selectedCourseValue='';
+  currentDiscountType='';
+  payableManual = false;
+  setSelectedChoice('payerWrap','본인'); setSelectedChoice('purposeWrap','취업');
+  document.querySelectorAll('#acpPresetWrap .mini-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#ddazuaQuickWrap .mini-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('supportBtn').classList.remove('active');
+  document.getElementById('percentBtn').classList.remove('active');
+  document.getElementById('noDiscountBtn').classList.add('active');
+  renderCourseButtons();
+  renderTuitionPane();     // 수강료 카드 숨김 처리
+  renderDiscountPane();
+  updatePaymentPreview();
+}
+function openModal(){ resetForm(); editIndex = null; modalTitle.innerText='상담 입력'; saveButton.innerText='저장하기'; modal.classList.add('flex'); }
+function closeModal(){ modal.classList.remove('flex'); }
+
+function buildRowFromForm(){
+  const priceEl = document.getElementById('price');
+  const priceInput = priceEl ? num(priceEl.value) : 0;
+  const rate = Number(document.getElementById('discountRate')?.value || 0);
+
+  let totalPrice, payableAmount;
+  if(currentDiscountType === '과목지원'){
+    payableAmount = priceInput;
+    totalPrice = priceInput;
+  } else if(currentDiscountType === '%할인'){
+    totalPrice = priceInput;
+    const autoPayable = computeAutoPayable(totalPrice, '%할인', rate);
+    const payField = document.getElementById('payableAmount');
+    payableAmount = (payableManual && payField) ? num(payField.value) : autoPayable;
+  } else {
+    totalPrice = priceInput;
+    payableAmount = (payableManual ? getFormPayableAmount() : priceInput);
+  }
+
+  const ddz = num(ddazuaPrice.value);
+  const acp = num(acpPrice.value);
+  const special = num(specialDiscount.value);
+
+  const obj = {
+    date: date.value,
+    deadline: deadline.value,
+    student: student.value.trim(),
+    mentor: mentor.value.trim(),
+    course: selectedCourseValue,
+    price: totalPrice,
+    ddazuaPrice: ddz,
+    acpPrice: acp,
+    bonusTotal: ddz + acp,
+    payableAmount: payableAmount,
+    payableManual: payableManual,
+    specialDiscount: special,
+    discountType: currentDiscountType,
+    discountRate: rate,
+    supportPaidCount: Number(document.getElementById('supportPaidCount')?.value || 0),
+    supportFreeCount: Number(document.getElementById('supportFreeCount')?.value || 0),
+    finalPrice: Math.max(payableAmount - special, 0),
+    paid: num(paid.value),
+    payer: getSelectedChoice('payerWrap'),
+    purpose: getSelectedChoice('purposeWrap'),
+    result: result.value === 'auto' ? '' : result.value,
+    memo: memo.value.trim()
+  };
+  obj.displayResult = getAutoResult(obj);
+  return obj;
+}
+
+async function postToSheet(obj){
+  // (레거시 호환 - 더이상 사용하지 않음. apiCall 사용)
+  return apiCall('create', { row: toServerRow(obj) });
+}
+
+// ─────────────────────────────────────────
+// 서버 동기화 레이어
+// ─────────────────────────────────────────
+function makeLocalId(){
+  // 서버가 생성한 UUID와 구분되는 임시 id. 서버 응답 오면 교체됨.
+  return 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+}
+
+function toServerRow(obj){
+  // Apps Script가 기대하는 필드명과 동일한 구조
+  return {
+    id: obj.id || '',
+    date: obj.date,
+    deadline: obj.deadline,
+    student: obj.student,
+    mentor: obj.mentor,
+    course: obj.course,
+    price: obj.price,
+    ddazuaPrice: obj.ddazuaPrice,
+    acpPrice: obj.acpPrice,
+    bonusTotal: obj.bonusTotal,          // 신규: 매출외수당 (따즈아+ACP)
+    payableAmount: obj.payableAmount,    // 신규: 납부금액
+    payableManual: obj.payableManual,    // 신규: 수동입력 여부
+    specialDiscount: obj.specialDiscount,
+    discountType: obj.discountType,
+    discountRate: obj.discountRate,
+    supportPaidCount: obj.supportPaidCount,
+    supportFreeCount: obj.supportFreeCount,
+    finalPrice: obj.finalPrice,
+    paid: obj.paid,
+    payer: obj.payer,
+    purpose: obj.purpose,
+    result: obj.result,
+    displayResult: obj.displayResult,
+    memo: obj.memo
+  };
+}
+
+function setSyncIndicator(state, text){
+  const el = document.getElementById('syncIndicator');
+  if(!el) return;
+  el.dataset.state = state;      // idle | syncing | error
+  el.textContent = text || '';
+  el.classList.toggle('hidden', !text);
+}
+
+// ─────────────────────────────────────────
+// Firestore API 레이어
+// ─────────────────────────────────────────
+const CONSULTS_PATH = ['consults']; // /consults/{id}
+
+function fbCollection(){
+  const fb = window.__fb;
+  return fb.collection(fb.db, ...CONSULTS_PATH);
+}
+function fbDocRef(id){
+  const fb = window.__fb;
+  return fb.doc(fb.db, ...CONSULTS_PATH, id);
+}
+
+async function apiCall(action, payload){
+  pendingOps++;
+  setSyncIndicator('syncing', '저장 중...');
+  try{
+    const fb = window.__fb;
+    if(action === 'list'){
+      // 일회성 list는 실시간 리스너가 대체. 필요하면 getDocs로 폴백
+      const snap = await fb.getDocs(fb.query(fbCollection(), fb.orderBy('date','desc')));
+      const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      return { ok:true, rows };
+    }
+    if(action === 'create'){
+      const row = payload.row || {};
+      delete row.id;
+      row.createdAt = fb.serverTimestamp();
+      row.updatedAt = fb.serverTimestamp();
+      row.updatedBy = currentUserEmail || null;
+      const ref = await fb.addDoc(fbCollection(), row);
+      return { ok:true, id: ref.id };
+    }
+    if(action === 'update'){
+      const row = payload.row || {};
+      const id = payload.id;
+      if(!id) throw new Error('update: id 없음');
+      delete row.id;
+      row.updatedAt = fb.serverTimestamp();
+      row.updatedBy = currentUserEmail || null;
+      await fb.updateDoc(fbDocRef(id), row);
+      return { ok:true, id };
+    }
+    if(action === 'delete'){
+      const id = payload.id;
+      if(!id) throw new Error('delete: id 없음');
+      await fb.deleteDoc(fbDocRef(id));
+      return { ok:true };
+    }
+    throw new Error('알 수 없는 action: ' + action);
+  }finally{
+    pendingOps--;
+    if(pendingOps === 0) setSyncIndicator('idle', '');
+  }
+}
+
+// 실시간 리스너 - 다른 사용자 변경 즉시 반영
+let unsubscribeRows = null;
+function startRealtimeSync(){
+  if(unsubscribeRows) unsubscribeRows();
+  const fb = window.__fb;
+  const q = fb.query(fbCollection(), fb.orderBy('date', 'desc'));
+  setSyncIndicator('syncing', '실시간 연결 중...');
+  unsubscribeRows = fb.onSnapshot(q, snap => {
+    rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    migrateLegacyRows();
+    lastSyncAt = Date.now();
+    localStorage.setItem(LAST_SYNC_KEY, String(lastSyncAt));
+    saveLocal();
+    initialLoading = false;
+    renderAll();
+    setSyncIndicator('idle', '');
+  }, err => {
+    console.error('Firestore 리스너 에러', err);
+    setSyncIndicator('error', '실시간 연결 실패');
+    initialLoading = false;
+    renderAll();
+    toast('Firestore 연결 실패: ' + err.message, {type:'error', duration:6000});
+    setTimeout(()=>setSyncIndicator('idle',''), 3000);
+  });
+}
+function stopRealtimeSync(){
+  if(unsubscribeRows){ unsubscribeRows(); unsubscribeRows = null; }
+}
+
+// 수동 새로고침은 이제 필요 없지만 UI 호환을 위해 유지
+async function syncFromServer({silent=false}={}){
+  // 실시간 리스너가 항상 최신 상태를 유지함
+  if(!silent) toast('실시간으로 동기화 중입니다', {type:'info', duration:1500});
+}
+function manualRefresh(){ syncFromServer({silent:false}); }
+
+async function saveData(){
+  const obj = buildRowFromForm();
+  const isEdit = editIndex !== null;
+
+  // 중복 학생명 경고 (신규 저장 시만)
+  if(!isEdit && obj.student){
+    const dupes = rows.filter(r => (r.student||'').trim() === obj.student.trim());
+    if(dupes.length){
+      const cont = confirm(`"${obj.student}" 학생의 이전 상담 기록이 ${dupes.length}건 있습니다.\n\n그래도 새 기록으로 저장할까요?\n(취소하면 저장되지 않습니다)`);
+      if(!cont) return;
+    }
+  }
+
+  const prevSnapshot = isEdit ? JSON.parse(JSON.stringify(rows[editIndex])) : null;
+
+  if(isEdit){
+    obj.id = rows[editIndex].id || '';
+    rows[editIndex] = obj;
+  }else{
+    obj.id = makeLocalId();
+    rows.push(obj);
+  }
+  saveLocal(); renderAll(); closeModal();
+
+  try{
+    const action = isEdit ? 'update' : 'create';
+    const payload = isEdit
+      ? { id: obj.id, row: toServerRow(obj) }
+      : { row: toServerRow(obj) };
+    const result = await apiCall(action, payload);
+
+    if(result && result.id){
+      const idx = rows.findIndex(r => r.id === obj.id);
+      if(idx !== -1){
+        rows[idx].id = result.id;
+        saveLocal();
+      }
+    }
+    toast(isEdit ? '수정 저장했습니다' : '새 상담을 저장했습니다', {type:'success', duration:2000});
+  }catch(err){
+    console.error('저장 반영 실패', err);
+    if(isEdit && prevSnapshot){
+      rows[editIndex] = prevSnapshot;
+    }else{
+      const idx = rows.findIndex(r => r.id === obj.id);
+      if(idx !== -1) rows.splice(idx, 1);
+    }
+    saveLocal(); renderAll();
+    toast('시트 저장 실패: ' + (err.message || err), {type:'error', duration:6000});
+  }
+}
+
+function editRow(index){
+  const r = rows[index]; if(!r) return;
+  editIndex = index; modalTitle.innerText='상담 수정'; saveButton.innerText='수정 저장'; modal.classList.add('flex');
+  date.value = r.date || todayStr();
+  deadline.value = r.deadline || todayStr();
+  student.value = r.student || '';
+  mentor.value = r.mentor || '';
+  selectedCourseValue = r.course || '';
+  ddazuaPrice.value = r.ddazuaPrice ? format(r.ddazuaPrice) : '';
+  acpPrice.value = r.acpPrice ? format(r.acpPrice) : '';
+  specialDiscount.value = r.specialDiscount ? format(r.specialDiscount) : '';
+  paid.value = r.paid ? format(r.paid) : '';
+  memo.value = r.memo || '';
+  result.value = r.result || 'auto';
+  currentDiscountType = r.discountType || '';
+  payableManual = !!r.payableManual;
+
+  // 할인방식 토글 버튼 상태 동기화
+  document.getElementById('supportBtn').classList.toggle('active', currentDiscountType==='과목지원');
+  document.getElementById('percentBtn').classList.toggle('active', currentDiscountType==='%할인');
+  document.getElementById('noDiscountBtn').classList.toggle('active', currentDiscountType==='');
+
+  renderCourseButtons();
+  renderTuitionPane();     // 수강료 카드 재생성 (할인방식에 따라)
+  renderDiscountPane();
+
+  // 수강료 카드 내부 필드는 renderTuitionPane 이후에 채워야 함
+  const priceEl = document.getElementById('price');
+  if(priceEl){
+    if(currentDiscountType === '과목지원'){
+      // price = 납부금액
+      const payable = r.payableAmount != null ? r.payableAmount : r.price;
+      priceEl.value = payable ? format(payable) : '';
+    } else if(currentDiscountType === '%할인'){
+      priceEl.value = r.price ? format(r.price) : '';
+    } else {
+      priceEl.value = r.price ? format(r.price) : '';
+    }
+  }
+
+  const payField = document.getElementById('payableAmount');
+  if(payField && r.payableAmount != null){
+    payField.value = format(r.payableAmount);
+    const aux = document.getElementById('payableAuto');
+    if(aux){
+      if(payableManual){ aux.textContent='수동'; aux.classList.add('manual'); }
+      else { aux.textContent='자동'; aux.classList.remove('manual'); }
+    }
+  }
+  if(currentDiscountType === '%할인'){
+    const dr = document.getElementById('discountRate');
+    if(dr) dr.value = r.discountRate || '';
+  }
+  if(currentDiscountType === '과목지원'){
+    const sp = document.getElementById('supportPaidCount'); if(sp) sp.value = r.supportPaidCount || 0;
+    const sf = document.getElementById('supportFreeCount'); if(sf) sf.value = r.supportFreeCount || 0;
+  }
+
+  setSelectedChoice('payerWrap', r.payer || '본인');
+  setSelectedChoice('purposeWrap', r.purpose || '취업');
+  updatePaymentPreview();
+}
+async function deleteRow(index){
+  const victim = rows[index];
+  if(!victim) return;
+  if(!confirm(`"${victim.student||'이 기록'}"을 삭제할까요? (휴지통으로 이동 · 30일 내 복원 가능)`)) return;
+  const snapshot = JSON.parse(JSON.stringify(victim));
+  const victimId = victim.id;
+  // 휴지통에 이동
+  const trashId = 'tr-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  trash.push({ trashId, row:snapshot, deletedAt:Date.now() });
+  saveTrash(); updateTrashBadge();
+  rows.splice(index,1);
+  saveLocal(); renderAll();
+
+  toast(`"${snapshot.student||'기록'}"을 삭제했습니다`, {
+    type:'success',
+    action: {
+      label:'실행 취소',
+      onClick: async ()=>{
+        trash = trash.filter(t => t.trashId !== trashId);
+        saveTrash(); updateTrashBadge();
+        rows.splice(index, 0, snapshot);
+        saveLocal(); renderAll();
+        if(victimId && !String(victimId).startsWith('local-')){
+          // 서버에서 이미 지워졌다면 새로 create
+          try{ await apiCall('create', { row: toServerRow(snapshot) }); }catch(e){}
+        }
+      }
+    },
+    duration: 6000
+  });
+
+  if(!victimId || String(victimId).startsWith('local-')){
+    return;
+  }
+  try{
+    await apiCall('delete', { id: victimId });
+  }catch(err){
+    console.error('삭제 반영 실패', err);
+    toast('시트 삭제에 실패했습니다: ' + (err.message||err), {type:'error'});
+  }
+}
+
+async function quickEditAmount(index, type){
+  const r = rows[index]; if(!r) return;
+  const snapshot = JSON.parse(JSON.stringify(r));
+  if(type === 'paid'){
+    const next = prompt('매출 금액을 입력하세요.', String(r.paid || 0).replace(/,/g,'')); if(next===null) return; r.paid = Number(onlyNumber(next)||0);
+  }else{
+    const nextRemain = prompt('잔액 금액을 입력하세요.', String(Math.max(Number(r.finalPrice||0)-Number(r.paid||0),0))); if(nextRemain===null) return; const remain = Number(onlyNumber(nextRemain)||0); r.paid = Math.max(Number(r.finalPrice||0)-remain,0);
+  }
+  r.displayResult = getAutoResult(r);
+  saveLocal(); renderAll();
+
+  if(!r.id || String(r.id).startsWith('local-')) return;
+  try{
+    await apiCall('update', { id: r.id, row: toServerRow(r) });
+    toast('수정했습니다', {type:'success', duration:1500});
+  }catch(err){
+    console.error('금액 수정 반영 실패', err);
+    rows[index] = snapshot;
+    saveLocal(); renderAll();
+    toast('수정 실패: ' + (err.message||err), {type:'error'});
+  }
+}
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){ closeModal(); closeDetail(); }
+  if(e.key === 'Enter' && modal.classList.contains('flex') && !e.shiftKey && document.activeElement?.tagName !== 'TEXTAREA'){ e.preventDefault(); saveData(); }
+});
+
+// ─────────────────────────────────────────
+// 일회성 마이그레이션: 로컬 스토리지 또는 구글 시트의 기존 데이터 → Firestore
+// 콘솔에서 migrateToFirestore() 실행
+// ─────────────────────────────────────────
+window.migrateToFirestore = async function(sourceRows){
+  // sourceRows 없으면 현재 rows를 사용 (시트에서 마지막으로 받아온 것)
+  const fb = window.__fb;
+  if(!fb){ console.error('Firebase 미초기화'); return; }
+  const src = sourceRows || rows;
+  if(!Array.isArray(src) || src.length === 0){
+    console.warn('이전할 데이터가 없습니다');
+    return;
+  }
+  if(!confirm(`${src.length}건을 Firestore로 이전할까요?\n(기존 Firestore 데이터는 유지됨 — 중복 주의)`)) return;
+
+  const batch = fb.writeBatch(fb.db);
+  let count = 0;
+  for(const r of src){
+    const cleaned = { ...r };
+    delete cleaned.id; // Firestore가 새 id 발급
+    cleaned.createdAt = fb.serverTimestamp();
+    cleaned.updatedAt = fb.serverTimestamp();
+    cleaned.updatedBy = currentUserEmail || 'migration';
+    cleaned.migratedFromSheet = true;
+    const ref = fb.doc(fbCollection());
+    batch.set(ref, cleaned);
+    count++;
+    if(count % 400 === 0){
+      await batch.commit();
+      console.log(`[마이그레이션] ${count}건 커밋됨`);
+    }
+  }
+  await batch.commit();
+  console.log(`✅ 마이그레이션 완료: ${count}건`);
+  toast(`${count}건을 Firestore로 이전했습니다`, {type:'success', duration:4000});
+};
+let currentUserEmail = null;
+let authInitialized = false;
+
+function showAuthError(msg){
+  const err = document.getElementById('authError');
+  if(err){ err.textContent = msg; err.classList.add('show'); }
+  const loading = document.getElementById('authLoading');
+  if(loading) loading.classList.remove('show');
+}
+function hideAuthError(){
+  const err = document.getElementById('authError');
+  if(err) err.classList.remove('show');
+}
+
+async function loginWithGoogle(){
+  const fb = window.__fb;
+  if(!fb){ showAuthError('Firebase가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+  hideAuthError();
+  const loading = document.getElementById('authLoading');
+  if(loading) loading.classList.add('show');
+  try{
+    await fb.signInWithPopup(fb.auth, fb.provider);
+  }catch(err){
+    console.error('로그인 실패', err);
+    const msg = err.code === 'auth/popup-closed-by-user'
+      ? '로그인 창이 닫혔어요. 다시 시도해주세요.'
+      : (err.code === 'auth/popup-blocked'
+        ? '팝업이 차단되어 있어요. 브라우저 설정에서 팝업을 허용해주세요.'
+        : '로그인 실패: ' + (err.message||err.code||''));
+    showAuthError(msg);
+  }
+}
+
+function toggleEmailLogin(){
+  const form = document.getElementById('emailLoginForm');
+  const arrow = document.getElementById('emailLoginArrow');
+  const label = document.getElementById('emailLoginLabel');
+  if(!form) return;
+  const isOpen = form.classList.toggle('show');
+  if(arrow) arrow.textContent = isOpen ? '▴' : '▾';
+  if(label) label.textContent = isOpen ? '이메일·비밀번호 로그인' : '이메일·비밀번호로 로그인';
+  if(isOpen){
+    hideAuthError();
+    setTimeout(()=> document.getElementById('loginEmail')?.focus(), 50);
+  }
+}
+
+async function loginWithEmail(e){
+  if(e) e.preventDefault();
+  const fb = window.__fb;
+  if(!fb){ showAuthError('Firebase가 아직 로드되지 않았습니다.'); return false; }
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const pass = document.getElementById('loginPassword')?.value;
+  if(!email || !pass){ showAuthError('이메일과 비밀번호를 모두 입력해주세요.'); return false; }
+  hideAuthError();
+  const loading = document.getElementById('authLoading');
+  if(loading) loading.classList.add('show');
+  try{
+    await fb.signInWithEmailAndPassword(fb.auth, email, pass);
+  }catch(err){
+    console.error('이메일 로그인 실패', err);
+    const codeMap = {
+      'auth/invalid-email': '이메일 형식이 올바르지 않습니다.',
+      'auth/user-not-found': '등록되지 않은 이메일입니다. 관리자에게 문의하세요.',
+      'auth/wrong-password': '비밀번호가 맞지 않습니다.',
+      'auth/invalid-credential': '이메일 또는 비밀번호가 맞지 않습니다.',
+      'auth/too-many-requests': '너무 많이 시도하셨어요. 잠시 후 다시 시도해주세요.',
+      'auth/user-disabled': '비활성화된 계정입니다. 관리자에게 문의하세요.'
+    };
+    showAuthError(codeMap[err.code] || ('로그인 실패: ' + (err.message||err.code||'')));
+  }
+  return false;
+}
+
+async function logout(){
+  if(!confirm('로그아웃 하시겠어요?')) return;
+  const fb = window.__fb;
+  stopRealtimeSync();
+  try{ await fb.signOut(fb.auth); }catch(e){ console.error(e); }
+  location.reload();
+}
+
+function onUserSignedIn(user){
+  currentUserEmail = user.email || null;
+  // 오버레이 숨기고 앱 본체 표시
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('appRoot').style.display = '';
+  // 사용자 칩 표시
+  const chip = document.getElementById('userChip');
+  if(chip){
+    const photoHtml = user.photoURL ? `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer">` : '<span class="brand-mark" style="width:22px;height:22px;font-size:10px">U</span>';
+    chip.innerHTML = `${photoHtml}<span class="mail">${user.email || '사용자'}</span>`;
+  }
+  // 최초 1회만 앱 초기화
+  if(!authInitialized){
+    authInitialized = true;
+    bootApp();
+  }
+}
+
+function onUserSignedOut(){
+  currentUserEmail = null;
+  stopRealtimeSync();
+  stopSalesPeriodSync();
+  document.getElementById('authOverlay').style.display = 'flex';
+  document.getElementById('appRoot').style.display = 'none';
+}
+
+function setupAuthListener(){
+  const fb = window.__fb;
+  if(!fb){ console.warn('Firebase 미로드'); return; }
+  fb.onAuthStateChanged(fb.auth, user => {
+    const loading = document.getElementById('authLoading');
+    if(loading) loading.classList.remove('show');
+    if(user){
+      onUserSignedIn(user);
+    }else{
+      onUserSignedOut();
+    }
+  });
+}
+
+// Firebase SDK가 준비되면 호출됨
+window.onFirebaseReady = function(){
+  setupAuthListener();
+};
+// 이미 준비됐으면 바로 실행
+if(window.__fbReady){ setupAuthListener(); }
+
+// ─────────────────────────────────────────
+// 앱 본체 부팅 (로그인 성공 후 1회)
+// ─────────────────────────────────────────
+function bootApp(){
+  renderChoiceButtons();
+  loadLocal();
+  loadTrash();
+  loadSalesPeriodsLocal();
+  lastSyncAt = Number(localStorage.getItem(LAST_SYNC_KEY) || 0);
+  renderCourseButtons();
+  renderTuitionPane();
+  renderDiscountPane();
+  renderAll();
+  // 실시간 리스너 시작
+  startRealtimeSync();
+  startSalesPeriodSync();
+}
+</script>
+</body>
+</html>

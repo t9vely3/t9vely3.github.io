@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIX 데이터 백업</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+:root{--bg:#16171A;--card:#1E1F23;--line:#2C2E33;--fg:#E4E5E8;--sub:#9A9CA4;--accent:#C2DD6A;--on:#1A1D12;--warn:#E3A86B;--bad:#E68E8E;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:15px;line-height:1.6}
+.wrap{max-width:820px;margin:0 auto;padding:40px 16px 64px;display:flex;flex-direction:column;gap:18px}
+h1{margin:0;font-size:28px;font-weight:900}
+p{margin:0;color:var(--sub)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+form{display:flex;flex-wrap:wrap;gap:10px}
+input{font:inherit;height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#272930;color:var(--fg);flex:1 1 220px;min-width:0}
+button{font:inherit;font-weight:700;height:46px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:var(--on);cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--fg)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 6px;border-top:1px solid var(--line);vertical-align:top}
+th{color:var(--sub);font-weight:500}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.ok{color:var(--accent)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.scroll{overflow-x:auto}
+.sum{font-size:18px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>AIX 데이터 백업</h1>
+    <p>모든 업무 사이트의 저장 내용을 읽어서 파일 하나로 내려받습니다. 읽기만 하고 아무것도 고치거나 지우지 않습니다.</p>
+  </div>
+
+  <div class="card">
+    <form id="f">
+      <input id="email" type="email" placeholder="인트라넷 로그인 이메일" autocomplete="username" required>
+      <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" required>
+      <button id="go" type="submit">백업 시작</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="sum" id="sum">대기 중</div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>사이트</th><th>저장 칸</th><th style="text-align:right">건수</th><th>상태</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="doneBox" hidden>
+    <p style="color:var(--fg);margin-bottom:12px">백업 파일이 내려받아졌습니다. 다운로드 폴더에서 <b id="fname"></b> 파일을 안전한 곳(구글 드라이브 등)에 옮겨 두세요.</p>
+    <button class="ghost" id="again" type="button">파일 다시 받기</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, Timestamp, GeoPoint, DocumentReference, Bytes } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const P = [
+  { id: "noticecheck-80980", name: "공지 체크 · 통합 계정", login: true,
+    cfg: { apiKey: "AIzaSyCQix_uMdvMdGKvo3ZSe7KgIoD7HJEXp0g", authDomain: "noticecheck-80980.firebaseapp.com", projectId: "noticecheck-80980", appId: "1:251674052066:web:9edd72d52728a1486425bb" },
+    cols: ["noticeboard_notices", "noticeboard_meta", "noticeboard_log", "noticeboard_users", "noticeboard_files"] },
+  { id: "student-f3e8a", name: "수강생 관리 · 학사일정", login: true,
+    cfg: { apiKey: "AIzaSyCb6Evq51skrbDw_cbz9_S9LsjcY1fy9hA", authDomain: "student-f3e8a.firebaseapp.com", projectId: "student-f3e8a" },
+    cols: ["students", "trash", "backups", "config", "parts", "access"] },
+  { id: "cash-eabc1", name: "견적서", login: true,
+    cfg: { apiKey: "AIzaSyB8qZIVzINN5BGSNd6ojqshNC9RXh7jqKU", authDomain: "cash-eabc1.firebaseapp.com", projectId: "cash-eabc1", appId: "1:8436628517:web:3a072098e57c02397353cc" },
+    cols: ["sbs_quotes", "sbs_master", "sbs_auth"] },
+  { id: "govermentscore", name: "국취 자가진단 · 사전접수", login: true,
+    cfg: { apiKey: "AIzaSyBUCd3OW9wx8uRQrQ9jBMIVjzuZ47sjNv8", authDomain: "govermentscore.firebaseapp.com", projectId: "govermentscore", appId: "1:808577453289:web:8e6385fb947196ccc8f478" },
+    cols: ["sbs_score_checks", "sbs_score_config"] },
+  { id: "notice-3aef1", name: "수강생 안내", login: true,
+    cfg: { apiKey: "AIzaSyDvYKTh4G2SFxw8LKgz1YaP3oR1mFbR8Kc", authDomain: "notice-3aef1.firebaseapp.com", projectId: "notice-3aef1", appId: "1:39136833631:web:e85baeeee4dd80f03bebea" },
+    cols: ["posts", "schedule", "scheduleColors", "courses", "curriculum", "classrooms", "seminars", "rules", "materials", "materialCategories", "settings", "_staff", "_admin"] },
+  { id: "marketing-b46a6", name: "바이럴", login: false,
+    cfg: { apiKey: "AIzaSyBCbSvsFk74WAdkDYvsk0jg2d-1E_ODCXM", authDomain: "marketing-b46a6.firebaseapp.com", projectId: "marketing-b46a6", appId: "1:828018722061:web:4a6ec0391f541419ac5c44" },
+    cols: ["viral_employees", "viral_keywords", "viral_records", "viral_hidden_defaults"] },
+  { id: "home-a4d02", name: "3-1팀 퇴근보고", login: true,
+    cfg: { apiKey: "AIzaSyCJ-VTabucn0OAyPmByzZAJa8y1VJdUgss", authDomain: "home-a4d02.firebaseapp.com", projectId: "home-a4d02", appId: "1:333497794164:web:abf4791df6ef08a44a5b21" },
+    cols: ["team31", "team31/main/reports", "team31/main/events", "team31/main/config"] },
+  { id: "complete-55019", name: "3-1팀 상담 매출", login: true,
+    cfg: { apiKey: "AIzaSyCQofo_Tp-5W5CdNWGD0tu1yuU62rE4pWY", authDomain: "complete-55019.firebaseapp.com", projectId: "complete-55019", appId: "1:157946979859:web:e0e6012454622defe441e6" },
+    cols: ["consults", "appSettings"] },
+  { id: "customer-6b236", name: "상담 자료실", login: true,
+    cfg: { apiKey: "AIzaSyCHB-qL2PvtO7oEA5fDEHGaMZMcHDKyH0Q", authDomain: "customer-6b236.firebaseapp.com", projectId: "customer-6b236", appId: "1:689962334329:web:8236176ec0fa89a8e0bca8" },
+    cols: ["app", "items"] },
+  { id: "hongdaetxt", name: "사내문고", login: true,
+    cfg: { apiKey: "AIzaSyBCGs8MWo5Bw8FDf5up9x5dmvN2_SWqXO4", authDomain: "hongdaetxt.firebaseapp.com", projectId: "hongdaetxt", appId: "1:1061365979954:web:013994478cd0849616552b" },
+    cols: ["novel_series", "episodes", "comments", "novel_authors", "novel_readers", "novel_bans", "novel_config"] }
+];
+
+// Firestore 값을 다시 되살릴 수 있게 형식 정보를 붙여 JSON으로 바꾼다
+function enc(v) {
+  if (v === null || v === undefined) return v ?? null;
+  if (v instanceof Timestamp) return { __t: "timestamp", s: v.seconds, n: v.nanoseconds, iso: v.toDate().toISOString() };
+  if (v instanceof GeoPoint) return { __t: "geopoint", lat: v.latitude, lng: v.longitude };
+  if (v instanceof DocumentReference) return { __t: "ref", path: v.path };
+  if (v instanceof Bytes) return { __t: "bytes", b64: v.toBase64() };
+  if (Array.isArray(v)) return v.map(enc);
+  if (typeof v === "object") { const o = {}; for (const k of Object.keys(v)) o[k] = enc(v[k]); return o; }
+  return v;
+}
+
+const rows = document.getElementById("rows");
+const sum = document.getElementById("sum");
+let lastBlob = null, lastName = "";
+
+function row(site, col) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${site}</td><td>${col}</td><td class="num">–</td><td>대기</td>`;
+  rows.appendChild(tr);
+  return { n: tr.children[2], s: tr.children[3] };
+}
+function set(cell, text, cls) { cell.textContent = text; cell.className = cls || ""; }
+
+function save() {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(lastBlob); a.download = lastName;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  const pw = document.getElementById("pw").value;
+  const btn = document.getElementById("go");
+  btn.disabled = true; rows.innerHTML = ""; document.getElementById("doneBox").hidden = true;
+  const out = { createdAt: new Date().toISOString(), by: email, note: "AIX 업무 사이트 전체 백업 (읽기 전용)", projects: {} };
+  let total = 0, problems = 0;
+
+  for (const p of P) {
+    const cells = p.cols.map((c) => row(p.name, c));
+    const app = initializeApp(p.cfg, p.id + "-" + Date.now());
+    const db = getFirestore(app);
+    out.projects[p.id] = { name: p.name, collections: {} };
+    if (p.login) {
+      try { await signInWithEmailAndPassword(getAuth(app), email, pw); }
+      catch (err) {
+        problems++;
+        cells.forEach((c) => { set(c.s, "로그인 실패 (" + (err.code || "오류") + ")", "bad"); });
+        out.projects[p.id].error = "login: " + (err.code || String(err));
+        continue;
+      }
+    }
+    for (let i = 0; i < p.cols.length; i++) {
+      const name = p.cols[i], c = cells[i];
+      set(c.s, "읽는 중…", "warn");
+      try {
+        const snap = await getDocs(collection(db, ...name.split("/")));
+        const docs = {};
+        snap.forEach((d) => { docs[d.id] = enc(d.data()); });
+        out.projects[p.id].collections[name] = docs;
+        total += snap.size;
+        set(c.n, String(snap.size)); set(c.s, snap.size ? "완료" : "비어 있음", snap.size ? "ok" : "");
+      } catch (err) {
+        problems++;
+        out.projects[p.id].collections[name] = { __error: err.code || String(err) };
+        set(c.s, "읽기 실패 (" + (err.code || "오류") + ")", "bad");
+      }
+    }
+  }
+
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
+  lastName = `aix-backup-${stamp}.json`;
+  lastBlob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
+  sum.textContent = `총 ${total.toLocaleString()}건 백업` + (problems ? ` · 확인 필요 ${problems}곳` : " · 문제 없음");
+  sum.className = "sum " + (problems ? "warn" : "ok");
+  document.getElementById("fname").textContent = lastName;
+  document.getElementById("doneBox").hidden = false;
+  save();
+  btn.disabled = false;
+});
+document.getElementById("again").addEventListener("click", () => lastBlob && save());
+</script>
+</body>
+</html>

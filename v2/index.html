@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>AIX 홍대</title>
+<link rel="stylesheet" href="./shared/theme.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="./shared/aix.js"></script>
+<script src="./shared/skinner.js"></script>
+<style>
+html, body { height: 100%; }
+.shell { display: flex; gap: 14px; padding: 14px; height: 100%; }
+.rail { flex: 0 0 84px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow-y: auto; }
+.logo { font-family: var(--num); font-weight: 700; font-size: 19px; margin-bottom: 14px; }
+.logo span { color: var(--accent-text); }
+.rail a { width: 62px; padding: 9px 0 7px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: var(--sub); font-size: 11px; text-align: center; line-height: 1.25; position: relative; }
+.rail a:hover { background: var(--chip); color: var(--text); }
+.rail a.on { background: var(--accent); color: var(--on-accent); }
+.rail svg { width: 20px; height: 20px; }
+.rail .gap { flex: 1; }
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 0; }
+.top .row { gap: 10px; }
+.who { display: flex; align-items: center; gap: 10px; }
+.who .avatar { background: var(--accent-soft); color: var(--accent-text); }
+.stage { flex: 1; min-height: 0; position: relative; }
+.stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--card); }
+.home { height: 100%; overflow-y: auto; }
+.bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.span2 { grid-column: span 2; } .span3 { grid-column: span 3; } .tall { grid-row: span 2; }
+.hello { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+.hello h2 { font-size: 38px; font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; margin: 8px 0 0; }
+.hello p { margin: 10px 0 0; color: var(--sub); font-size: 15px; }
+.hello b { color: var(--accent-text); }
+.quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.quick button { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; background: var(--chip); color: var(--text); cursor: pointer; }
+.quick button:first-child { background: var(--accent); color: var(--on-accent); }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 72px; margin-top: 12px; }
+.bars i { flex: 1; border-radius: 5px; background: var(--rail); min-height: 3px; }
+.bars i.now { background: var(--accent); }
+.bars-x { display: flex; gap: 6px; font-size: 11px; color: var(--sub); margin-top: 4px; }
+.bars-x span { flex: 1; text-align: center; }
+.stat .v.load { color: var(--sub); }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.card-head h2 { margin: 0; }
+.card-head button { border: 0; background: none; color: var(--accent-text); font-weight: 700; font-size: 13px; cursor: pointer; }
+.sidecard { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+.sidecard .t { font-size: 13px; font-weight: 700; color: var(--accent-text); }
+.sidecard .b { font-size: 19px; font-weight: 900; line-height: 1.4; }
+.err-note { font-size: 12px; color: var(--warn); margin-top: 6px; }
+
+/* 로그인 */
+.login { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+.login .card { width: min(420px, 100%); padding: 32px; display: flex; flex-direction: column; gap: 14px; }
+.login h1 { margin: 0; font-size: 26px; font-weight: 900; }
+.login p { margin: 0; color: var(--sub); }
+.login .input { width: 100%; }
+.login .msg { color: var(--bad); font-size: 13px; min-height: 18px; }
+.login .note { font-size: 12px; color: var(--sub); }
+
+@media (max-width: 1100px) { .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span3 { grid-column: span 2; } }
+@media (max-width: 720px) {
+  .shell { flex-direction: column; height: auto; min-height: 100%; }
+  .rail { flex: none; flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 8px; border-radius: 20px; }
+  .logo, .rail .gap { display: none; }
+  .rail a { flex: 0 0 62px; }
+  .stage { min-height: 80vh; }
+  .bento { grid-template-columns: minmax(0, 1fr); }
+  .span2, .span3 { grid-column: auto; } .tall { grid-row: auto; }
+  .hello h2 { font-size: 30px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div class="login" id="loginView" hidden>
+  <form class="card" id="loginForm">
+    <div class="logo">aix<span>.</span></div>
+    <h1>AIX 홍대</h1>
+    <p>기존 인트라넷과 같은 계정으로 로그인합니다.</p>
+    <label for="em" class="muted">이메일</label>
+    <input class="input" id="em" type="email" autocomplete="username" required>
+    <label for="pw" class="muted">비밀번호</label>
+    <input class="input" id="pw" type="password" autocomplete="current-password" required>
+    <div class="msg" id="loginMsg" role="alert"></div>
+    <button class="btn primary" id="loginBtn" type="submit">로그인</button>
+    <div class="note">처음 오셨나요? <a href="../old.html" style="color:var(--accent-text);font-weight:700">가입 신청 · 팀원 승인은 여기</a>에서 합니다.</div>
+  </form>
+</div>
+
+<!-- 본 화면 -->
+<div class="shell" id="appView" hidden>
+  <nav class="rail" id="rail" aria-label="주 메뉴"></nav>
+  <div class="main">
+    <div class="top">
+      <div class="row">
+        <div class="tabs" role="tablist" aria-label="공간 전환" id="spaceTabs">
+          <button type="button" role="tab" data-space="dept">3부서</button>
+          <button type="button" role="tab" data-space="team">3-1팀</button>
+        </div>
+        <div class="ro-band" id="roBand" hidden>점검 기간 · 새 화면은 읽기 전용</div>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" id="themeBtn"></button>
+        <div class="who"><div class="avatar" id="meAvatar"></div><div><div id="meName" style="font-weight:700"></div><div class="muted" id="meMail" style="font-size:12px"></div></div></div>
+        <button class="btn sm" type="button" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="home" id="home"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = AIX.esc;
+
+  /* ---------- 메뉴 ----------
+     id 는 화면 파일 이름(apps/id.html)과 같습니다. 메뉴 이름·순서·아이콘은 여기서 바꿉니다.
+     skin: 기존 화면을 옮긴 것이라 새 색을 덧입힘 (kuk 는 새로 만든 화면이라 필요 없음) */
+  var ICON = {
+    home: "M3 11l9-7 9 7v9h-6v-6H9v6H3z",
+    user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0",
+    cal: "M4 6h16v14H4zM4 10h16M9 3v4M15 3v4",
+    doc: "M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6",
+    check: "M4 12l5 5L20 6",
+    book: "M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM8 7h7",
+    pen: "M4 20h4L19 9l-4-4L4 16zM13 7l4 4",
+    bell: "M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0",
+    shelf: "M4 4h4v16H4zM10 4h4v16h-4zM16 6l3-1 2 15-3 1z",
+    mega: "M3 10v4h3l7 5V5L6 10zM16 9a4 4 0 0 1 0 6",
+    gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2",
+    chart: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+    wallet: "M3 7h18v12H3zM3 7l3-3h12l3 3M16 13h2"
+  };
+  var MENU = {
+    dept: [
+      { id: "home", n: "홈", i: "home" },
+      { id: "students", n: "수강생", i: "user", skin: 1 },
+      { id: "schedule", n: "학사일정", i: "cal", skin: 1 },
+      { id: "quote", n: "견적서", i: "doc", skin: 1 },
+      { id: "kuk", n: "국취 접수", i: "check" },
+      { id: "notice", n: "공지 체크", i: "bell", skin: 1 },
+      { id: "viral", n: "바이럴", i: "mega", skin: 1 },
+      { id: "guide", n: "안내 편집", i: "gear", skin: 1 }
+    ],
+    team: [
+      { id: "home", n: "홈", i: "home" },
+      { id: "report", n: "퇴근보고", i: "pen", skin: 1 },
+      { id: "sales", n: "상담 매출", i: "chart", skin: 1 },
+      { id: "cod", n: "COD 대장", i: "wallet", skin: 1 }
+    ]
+  };
+  var OTHERS = ["student", "cash", "gov", "guide", "home", "sales"];
+  var S = { space: "dept", view: "home", frames: {} };
+  try { S.space = localStorage.getItem("aix-v2-space") === "team" ? "team" : "dept"; } catch (e) {}
+
+  /* ---------- 로그인 ---------- */
+  var MSG = {
+    "auth/invalid-credential": "이메일 또는 비밀번호가 맞지 않습니다.",
+    "auth/invalid-login-credentials": "이메일 또는 비밀번호가 맞지 않습니다.",
+    "auth/wrong-password": "비밀번호가 맞지 않습니다.",
+    "auth/user-not-found": "등록되지 않은 이메일입니다. 기존 인트라넷에서 가입 신청을 먼저 해 주세요.",
+    "auth/too-many-requests": "시도가 너무 많습니다. 잠시 뒤 다시 해 주세요.",
+    "auth/network-request-failed": "인터넷 연결을 확인해 주세요.",
+    "auth/unauthorized-domain": "파이어베이스 승인된 도메인에 이 주소가 없습니다."
+  };
+  function msgOf(e) { return MSG[e && e.code] || ("로그인하지 못했습니다. (" + ((e && (e.code || e.message)) || "오류") + ")"); }
+
+  async function readProfile(h) {
+    var u = h.auth.currentUser;
+    var snap = await h.db.collection("noticeboard_users").doc(u.uid).get();
+    return snap.exists ? Object.assign({ uid: u.uid, email: (u.email || "").toLowerCase() }, snap.data()) : null;
+  }
+
+  async function boot() {
+    var h;
+    try { h = await AIX.helper("notice"); } catch (e) { return showLogin("파이어베이스에 연결하지 못했습니다. 새로고침해 주세요."); }
+    if (!h.auth.currentUser) return showLogin("");
+    try {
+      var pf = await readProfile(h);
+      if (!pf || pf.status !== "approved") return showLogin("아직 승인되지 않은 계정입니다. 기존 인트라넷에서 승인을 받아 주세요.");
+      AIX.me = pf; enter();
+    } catch (e) { showLogin("계정 정보를 읽지 못했습니다. " + msgOf(e)); }
+  }
+
+  function showLogin(msg) { $("#appView").hidden = true; $("#loginView").hidden = false; $("#loginMsg").textContent = msg || ""; }
+
+  $("#loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var em = $("#em").value.trim(), pw = $("#pw").value, btn = $("#loginBtn");
+    btn.disabled = true; btn.textContent = "확인 중…"; $("#loginMsg").textContent = "";
+    try {
+      var h = await AIX.helper("notice");
+      await h.auth.signInWithEmailAndPassword(em, pw);
+      var pf = await readProfile(h);
+      if (!pf || pf.status !== "approved") { await h.auth.signOut(); throw { code: "x", message: "아직 승인되지 않은 계정입니다. 기존 인트라넷에서 승인을 받아 주세요." }; }
+      AIX.me = pf;
+      /* 다른 연결에도 같은 계정으로 로그인 (새 계정은 만들지 않음) */
+      var fails = [];
+      await Promise.all(OTHERS.map(async function (k) {
+        try {
+          var x = await AIX.helper(k), cur = x.auth.currentUser;
+          if (cur && (cur.email || "").toLowerCase() === pf.email) return;
+          if (cur) await x.auth.signOut();
+          await x.auth.signInWithEmailAndPassword(em, pw);
+        } catch (err) { fails.push(AIX.PROJECTS[k].label); }
+      }));
+      $("#pw").value = "";
+      if (fails.length) AIX.toast("로그인 안 된 곳: " + fails.join(", ") + " · 해당 화면에서 직접 로그인해 주세요");
+      enter();
+    } catch (err) {
+      $("#loginMsg").textContent = err.code === "x" ? err.message : msgOf(err);
+    }
+    btn.disabled = false; btn.textContent = "로그인";
+  });
+
+  $("#logoutBtn").addEventListener("click", async function () {
+    await Promise.all(["notice"].concat(OTHERS).map(async function (k) { try { (await AIX.helper(k)).auth.signOut(); } catch (e) {} }));
+    location.reload();
+  });
+
+  /* ---------- 화면 ---------- */
+  function enter() {
+    $("#loginView").hidden = true; $("#appView").hidden = false;
+    $("#roBand").hidden = !AIX.READ_ONLY;
+    var nm = AIX.me.name || AIX.me.email.split("@")[0];
+    $("#meName").textContent = nm; $("#meMail").textContent = AIX.me.email; $("#meAvatar").textContent = nm.slice(0, 1);
+    var hash = (location.hash || "").slice(1);
+    if (hash === "team" || hash === "dept") { S.space = hash; hash = "home"; }   /* 예전 3-1팀 주소로 들어오면 3-1팀 공간으로 */
+    paintTheme(); paintSpace();
+    if (hash && hash !== "home" && MENU[S.space].some(function (m) { return m.id === hash; })) open(hash); else open("home");
+  }
+
+  function paintTheme() {
+    var dark = AIX.theme() !== "light";
+    $("#themeBtn").innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="' +
+      (dark ? "M12 4V2M12 22v-2M4 12H2M22 12h-2M5 5L4 4M20 20l-1-1M5 19l-1 1M20 4l-1 1M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" : "M20 15A8 8 0 0 1 9 4a8 8 0 1 0 11 11z") +
+      '"></path></svg>' + (dark ? "화이트" : "다크");
+  }
+  $("#themeBtn").addEventListener("click", function () {
+    AIX.setTheme(AIX.theme() === "light" ? "dark" : "light"); paintTheme();
+    window.AIXSkin.retheme(Object.keys(S.frames).map(function (k) { return S.frames[k]; }), AIX.theme());
+  });
+
+  function paintSpace() {
+    document.querySelectorAll("#spaceTabs button").forEach(function (b) {
+      var on = b.dataset.space === S.space; b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    var html = '<div class="logo">aix<span>.</span></div>';
+    MENU[S.space].forEach(function (m) {
+      html += '<a href="#' + m.id + '" data-id="' + m.id + '" class="' + (S.view === m.id ? "on" : "") + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICON[m.i] + '"></path></svg>' + esc(m.n) + "</a>";
+    });
+    $("#rail").innerHTML = html;
+  }
+  $("#spaceTabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    S.space = b.dataset.space; try { localStorage.setItem("aix-v2-space", S.space); } catch (er) {}
+    S.view = "home"; paintSpace(); open("home");
+  });
+  $("#rail").addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-id]"); if (!a) return;
+    e.preventDefault(); open(a.dataset.id);
+  });
+
+  function open(id) {
+    S.view = id;
+    history.replaceState(null, "", "#" + id);
+    document.querySelectorAll("#rail a").forEach(function (a) { a.classList.toggle("on", a.dataset.id === id); });
+    Object.keys(S.frames).forEach(function (k) { S.frames[k].hidden = k !== S.space + ":" + id; });
+    $("#home").hidden = id !== "home";
+    if (id === "home") return S.space === "dept" ? homeDept() : homeTeam();
+    var m = MENU[S.space].filter(function (x) { return x.id === id; })[0];
+    var key = S.space + ":" + id;
+    if (!S.frames[key]) {
+      var f = document.createElement("iframe");
+      f.title = m.n;
+      if (m.skin) window.AIXSkin.attach(f, id, AIX.theme, AIX.me, AIX.READ_ONLY);
+      f.src = "apps/" + id + ".html";
+      $("#stage").appendChild(f); S.frames[key] = f;
+    }
+    S.frames[key].hidden = false;
+  }
+
+  /* ---------- 홈 공통 ---------- */
+  function hello(lines, quick) {
+    var d = new Date(), wd = "일월화수목금토"[d.getDay()];
+    return '<section class="card hero hello span2' + (S.space === "team" ? " tall" : "") + '"><div>' +
+      '<div class="muted">' + (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + wd + "요일 · " + (S.space === "dept" ? "3부서" : "3-1팀") + "</div>" +
+      "<h2>" + greet() + ",<br>" + esc(AIX.me.name || "") + "님</h2><p>" + lines + "</p></div>" +
+      '<div class="quick">' + quick.map(function (q) { return '<button type="button" data-go="' + q[0] + '">' + q[1] + "</button>"; }).join("") + "</div></section>";
+  }
+  function greet() { var h = new Date().getHours(); return h < 11 ? "좋은 아침이에요" : h < 18 ? "오늘도 수고 많으세요" : "오늘 하루 고생하셨어요"; }
+  function stat(id, k, unit, tone) { return '<a href="#" class="stat" data-go="' + (tone || "") + '"><span class="k">' + k + '</span><span class="v load" id="' + id + '">…<small>' + unit + "</small></span></a>"; }
+  function setStat(id, v, unit, color) { var el = document.getElementById(id); if (!el) return; el.className = "v"; el.style.color = color || ""; el.innerHTML = (v == null ? "—" : v) + "<small>" + unit + "</small>"; }
+  function failStat(id, unit) { setStat(id, "—", unit); var el = document.getElementById(id); if (el) el.title = "읽지 못했습니다"; }
+  $("#home").addEventListener("click", function (e) {
+    var g = e.target.closest("[data-go]"); if (!g || !g.dataset.go) return;
+    e.preventDefault(); open(g.dataset.go);
+  });
+
+  /* ---------- 3부서 홈 ---------- */
+  async function homeDept() {
+    $("#home").innerHTML = '<div class="bento">' +
+      hello('오늘 챙길 일이 <b id="todoN">…</b> 있어요', [["students", "수강생 찾기"], ["quote", "견적서 만들기"], ["notice", "공지 확인"]]) +
+      '<section class="card span2"><div class="card-head"><h2>최근 공지</h2><button type="button" data-go="notice">전체 보기</button></div><div id="noticeList"><div class="blank">불러오는 중…</div></div></section>' +
+      stat("sCare", "특별관리 학생", "명", "students") +
+      stat("sNotice", "안 읽은 공지", "개", "notice") +
+      stat("sKuk", "국취 미완료 접수", "건", "kuk") +
+      stat("sQuote", "오늘 만든 견적서", "건", "quote") +
+      '<section class="card span3"><div class="card-head"><h2>특별관리 학생</h2><button type="button" data-go="students">수강생 관리</button></div><div id="careList"><div class="blank">불러오는 중…</div></div></section>' +
+      '<section class="card soft sidecard"><div class="t">국취 사전접수</div><div class="b" id="kukSide">불러오는 중…</div><div class="quick"><button type="button" data-go="kuk">접수 목록</button></div></section>' +
+      "</div>";
+    var todo = 0, done = 0, total = 4;
+    var tick = function (n) { todo += n || 0; if (++done === total) document.getElementById("todoN").textContent = todo + "건"; };
+
+    /* 학생 */
+    AIX.helper("student").then(function (h) { return h.db.collection("students").get(); }).then(function (snap) {
+      var care = [];
+      snap.forEach(function (d) { var s = d.data(); if (s.requiresCare && !s.isCompleted && !s.isRefunded) care.push(s); });
+      setStat("sCare", care.length, "명", care.length ? "var(--warn)" : ""); tick(care.length);
+      document.getElementById("careList").innerHTML = care.length ? care.slice(0, 6).map(function (s) {
+        return '<div class="list-row"><div class="avatar" style="color:var(--warn)">' + esc((s.name || "?").slice(0, 1)) + '</div>' +
+          '<div style="flex:1 1 180px;min-width:0"><b>' + esc(s.name || "이름 없음") + '</b> <span class="muted">· ' + esc(s.course || "과정 미정") + " · " + esc(s.mentor || "멘토 미정") + "</span></div>" +
+          (s.isOnLeave ? '<span class="tag info">휴학</span>' : "") + '<span class="tag warn">특별관리</span></div>';
+      }).join("") + (care.length > 6 ? '<div class="muted" style="padding-top:10px">외 ' + (care.length - 6) + "명</div>" : "") : '<div class="blank">특별관리 학생이 없습니다.</div>';
+    }).catch(function () { failStat("sCare", "명"); document.getElementById("careList").innerHTML = '<div class="blank">학생 정보를 읽지 못했습니다. 수강생 화면에서 로그인해 주세요.</div>'; tick(); });
+
+    /* 공지 */
+    AIX.helper("notice").then(function (h) { return h.db.collection("noticeboard_notices").get(); }).then(function (snap) {
+      var me = AIX.me.name, rows = [];
+      snap.forEach(function (d) { var n = d.data(); rows.push({ t: n.title || "(제목 없음)", at: n.createdAt || 0, date: n.date || "", read: !!(n.read && n.read[me]), cat: n.cat || n.category || "" }); });
+      var unread = rows.filter(function (r) { return !r.read; });
+      setStat("sNotice", unread.length, "개", unread.length ? "var(--info)" : ""); tick(unread.length);
+      rows.sort(function (a, b) { return (b.date || "").localeCompare(a.date || "") || (b.at - a.at); });
+      document.getElementById("noticeList").innerHTML = rows.length ? rows.slice(0, 4).map(function (r) {
+        return '<div class="list-row"><span class="num muted" style="width:52px">' + esc((r.date || "").slice(5).replace("-", "/")) + '</span><span style="flex:1 1 200px;min-width:0">' + esc(r.t) + "</span>" +
+          (r.read ? '<span class="tag">확인</span>' : '<span class="tag info">미확인</span>') + "</div>";
+      }).join("") : '<div class="blank">공지가 없습니다.</div>';
+    }).catch(function () { failStat("sNotice", "개"); document.getElementById("noticeList").innerHTML = '<div class="blank">공지를 읽지 못했습니다.</div>'; tick(); });
+
+    /* 국취 */
+    AIX.helper("gov").then(function (h) { return h.db.collection("sbs_score_checks").get(); }).then(function (snap) {
+      var pend = 0, today = 0, k = AIX.iso(new Date());
+      snap.forEach(function (d) { var r = d.data(); if (r.status !== "done") pend++; if (r.savedAt && AIX.iso(new Date(r.savedAt)) === k) today++; });
+      setStat("sKuk", pend, "건", pend ? "var(--violet)" : ""); tick(pend);
+      document.getElementById("kukSide").textContent = today ? "오늘 새로 들어온 접수가 " + today + "건 있어요" : "오늘 새로 들어온 접수는 없어요";
+    }).catch(function () { failStat("sKuk", "건"); document.getElementById("kukSide").textContent = "접수 목록을 읽지 못했습니다"; tick(); });
+
+    /* 견적서 */
+    AIX.helper("cash").then(function (h) { return h.db.collection("sbs_quotes").orderBy("savedAt", "desc").limit(100).get(); }).then(function (snap) {
+      var k = AIX.iso(new Date()), n = 0;
+      snap.forEach(function (d) { var q = d.data(); if (q.savedAt && AIX.iso(new Date(q.savedAt)) === k) n++; });
+      setStat("sQuote", n, "건", n ? "var(--accent-text)" : ""); tick();
+    }).catch(function () { failStat("sQuote", "건"); tick(); });
+  }
+
+  /* ---------- 3-1팀 홈 ---------- */
+  async function homeTeam() {
+    $("#home").innerHTML = '<div class="bento">' +
+      hello('오늘 퇴근보고 <b id="repN">…</b> 제출됐어요', [["report", "퇴근보고 쓰기"], ["sales", "상담 입력"], ["cod", "COD 대장"]]) +
+      '<section class="card span2"><div class="card-head"><h2>이번 달 순매출</h2><button type="button" data-go="report">자세히</button></div>' +
+      '<div class="num" style="font-size:38px;font-weight:700" id="monRev">…</div><div class="bars" id="bars"></div><div class="bars-x" id="barsX"></div><div class="muted" style="font-size:12px;margin-top:6px">퇴근보고에 입력된 매출 − 환불 기준</div></section>' +
+      stat("tReg", "이번 달 등록", "건", "report") +
+      stat("tVisit", "이번 달 방문", "건", "report") +
+      '<section class="card span3"><div class="card-head"><h2>오늘 제출된 퇴근보고</h2><button type="button" data-go="report">퇴근보고</button></div><div id="repList"><div class="blank">불러오는 중…</div></div></section>' +
+      '<section class="card soft sidecard"><div class="t">내 퇴근보고</div><div class="b" id="mySide">불러오는 중…</div><div class="quick"><button type="button" data-go="report">작성하기</button></div></section>' +
+      "</div>";
+    try {
+      var h = await AIX.helper("home");
+      var snap = await h.db.collection("team31").doc("main").collection("reports").get();
+      var now = new Date(), today = AIX.iso(now), ym = today.slice(0, 7), me = AIX.me.name;
+      var mon = { rev: 0, reg: 0, visit: 0 }, todayRows = [], byDay = {}, mine = null;
+      snap.forEach(function (d) {
+        var r = d.data(); if (!r.date) return;
+        var net = (Number(r.rev) || 0) - (Number(r.refund) || 0);
+        if (r.date.slice(0, 7) === ym) { mon.rev += net; mon.reg += Number(r.reg) || 0; mon.visit += Number(r.visit) || 0; }
+        byDay[r.date] = (byDay[r.date] || 0) + net;
+        if (r.date === today) { todayRows.push(r); if (r.mentor === me) mine = r; }
+      });
+      document.getElementById("monRev").textContent = AIX.won(mon.rev) + "원";
+      setStat("tReg", mon.reg, "건"); setStat("tVisit", mon.visit, "건");
+      document.getElementById("repN").textContent = todayRows.length + "건";
+      var days = [], max = 1;
+      for (var i = 9; i >= 0; i--) { var x = new Date(now); x.setDate(now.getDate() - i); var k = AIX.iso(x); days.push([k, byDay[k] || 0]); max = Math.max(max, byDay[k] || 0); }
+      document.getElementById("bars").innerHTML = days.map(function (d, i) { return '<i class="' + (i === days.length - 1 ? "now" : "") + '" style="height:' + Math.max(4, Math.round(d[1] / max * 100)) + '%" title="' + d[0] + " · " + AIX.won(d[1]) + '원"></i>'; }).join("");
+      document.getElementById("barsX").innerHTML = days.map(function (d) { return "<span>" + Number(d[0].slice(8)) + "</span>"; }).join("");
+      document.getElementById("repList").innerHTML = todayRows.length ? todayRows.map(function (r) {
+        return '<div class="list-row"><div class="avatar">' + esc((r.mentor || "?").slice(0, 1)) + '</div><div style="flex:1 1 160px"><b>' + esc(r.mentor || "") + "</b></div>" +
+          '<span class="num">' + AIX.won((Number(r.rev) || 0) - (Number(r.refund) || 0)) + '원</span><span class="muted">등록 ' + (Number(r.reg) || 0) + "</span>" +
+          (r.pmDone ? '<span class="tag ok">퇴근보고 완료</span>' : '<span class="tag warn">작성 중</span>') + "</div>";
+      }).join("") : '<div class="blank">아직 제출된 보고가 없습니다.</div>';
+      document.getElementById("mySide").textContent = mine ? (mine.pmDone ? "오늘 보고를 마쳤어요" : "오늘 보고를 작성 중이에요") : "오늘 보고를 아직 작성하지 않았어요";
+    } catch (e) {
+      ["monRev"].forEach(function (id) { var el = document.getElementById(id); if (el) el.textContent = "—"; });
+      failStat("tReg", "건"); failStat("tVisit", "건");
+      document.getElementById("repN").textContent = "—";
+      document.getElementById("repList").innerHTML = '<div class="blank">퇴근보고를 읽지 못했습니다. 퇴근보고 화면에서 로그인해 주세요.</div>';
+      document.getElementById("mySide").textContent = "보고 상태를 읽지 못했습니다";
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
