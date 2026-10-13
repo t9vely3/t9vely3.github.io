@@ -3,6 +3,7 @@
 <head>
 <!-- AIX v2: 원본 COD/index.html 복사본. 기능 코드는 원본 그대로이고, 아래 잠금 한 줄만 추가됨 -->
 <script src="../shared/lock.js"></script>
+<script src="../shared/dialog.js"></script>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -386,13 +387,14 @@ input.search::placeholder{color:var(--ink-3)}
      Firebase 콘솔 → 프로젝트 설정 → 내 앱 → 웹 앱의 firebaseConfig 값을
      그대로 옮겨 넣으십시오. 비워 두면 이 브라우저에만 저장하는 모드로 돕니다.
      ══════════════════════════════════════════════════════════════ */
+  /* AIX v2: 3-1팀 공용 저장소(상담 매출과 같은 곳)에 연결. 인트라넷 로그인 그대로 이어짐 */
   var FIREBASE_CONFIG = {
-    apiKey: "",
-    authDomain: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
+    apiKey: "AIzaSyCQofo_Tp-5W5CdNWGD0tu1yuU62rE4pWY",
+    authDomain: "complete-55019.firebaseapp.com",
+    projectId: "complete-55019",
+    storageBucket: "complete-55019.firebasestorage.app",
+    messagingSenderId: "157946979859",
+    appId: "1:157946979859:web:e0e6012454622defe441e6"
   };
   var COLLECTION = "records";   // Firestore 하위 컬렉션 이름. 바꾸려면 보안 규칙도 같이 바꾸십시오.
   /* ════════════════════════════════════════════════════════════ */
@@ -958,7 +960,7 @@ input.search::placeholder{color:var(--ink-3)}
         diag("세션 확인됨 · uid " + user.uid);
         local = false;
         try {
-          col = fbStore.collection("users").doc(user.uid).collection(COLLECTION);
+          col = fbStore.collection("cod_" + COLLECTION);   /* AIX v2: 사람마다 따로 → 팀 공용 한 곳 */
         } catch(e){
           gateErr.textContent = "Firestore 경로를 만들지 못했습니다.";
           diag("Firestore 오류 · " + (e && e.message ? e.message : String(e)));

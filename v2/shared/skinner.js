@@ -17,10 +17,15 @@
      css   : 화면 안에서 숨길 것 (자체 로그아웃·테마 버튼 등) */
   var APP_SKIN = {
     students: { native: "light", brand: [239, 244, 262, 270], attr: ["data-theme", "light"], drop: /data-theme=["']?dark/,
-      css: ".theme-toggle,#themeToggle,#mmLogout{display:none!important}" },
+      css: ".theme-toggle,#themeToggle,#themeDarkBtn,#themeLightBtn,#mmLogout{display:none!important}" },
     schedule: { native: "dark", brand: [221], attr: ["data-mode", "dark"], drop: /data-mode=["']?light/,
-      css: ".themebtn{display:none!important}" },
-    quote: { native: "light", brand: [217], keep: /\.quotation|\.q-|\.x-btn/, keepEl: ".quotation" },
+      css: ".themebtn{display:none!important}" +
+        /* 휴대폰: 시간표는 옆으로 밀어서 보기, 위쪽 버튼은 줄바꿈 */
+        "@media(max-width:700px){.work>*:not(.rail):not(.stulist){width:100%;overflow-x:auto}.grid{min-width:620px}header,.topbar,.top{flex-wrap:wrap!important;gap:6px!important}}" },
+    quote: { native: "light", brand: [217], keep: /\.quotation|\.q-|\.x-btn/, keepEl: ".quotation",
+      css: "button[onclick*='logout']{display:none!important}" +
+        /* 휴대폰: 입력칸은 한 줄씩, 견적서 종이는 여백을 줄이고 표는 옆으로 밀어서 보기 */
+        "@media(max-width:640px){.row2,.addon-row{grid-template-columns:1fr!important}.quotation{padding:26px 18px!important}.quotation table{display:block;overflow-x:auto}.q-info{grid-template-columns:1fr!important;gap:10px!important}input,select,textarea{font-size:16px!important}}" },
     notice: { native: "light", brand: [228], keep: /\.lb\b|\.lb-/, keepEl: "#lb", attr: ["data-theme", "light"], drop: /data-theme=["']?dark/,
       css: "#themeBtn,#logoutBtn{display:none!important}" },
     viral: { native: "dark", brand: [258, 262],
@@ -40,7 +45,8 @@
           ".hero-copy .btn{background:#C2DD6A!important;border-color:#C2DD6A!important;color:#1A1D12!important}";
       } },
     sales: { native: "light", brand: [], accVars: ["--navy", "--navy-2"], css: "#userChip{display:none!important}" },
-    cod: { native: "light", brand: [218], attr: ["data-theme", "light"], drop: /data-theme=["']?dark|:not\(\[data-theme=["']?light/ }
+    cod: { native: "light", brand: [218], attr: ["data-theme", "light"], drop: /data-theme=["']?dark|:not\(\[data-theme=["']?light/,
+      css: "#logout{display:none!important}" }
   };
 
   var h2r = function (h) { h = h.replace("#", ""); if (h.length < 6) h = h.split("").map(function (c) { return c + c; }).join(""); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; };
@@ -232,6 +238,7 @@
     }
     function doEl(el) {
       if (el.nodeType !== 1) return;
+      if (el.closest && el.closest("[data-aix-ui]")) return;
       if (meta.keepEl && el.closest(meta.keepEl)) return;
       if (el.hasAttribute("style")) {
         var cur = el.getAttribute("style");
@@ -257,6 +264,7 @@
       if (root.matches && root.matches(FIX_SEL)) list.push(root);
       if (root.querySelectorAll) Array.prototype.push.apply(list, root.querySelectorAll(FIX_SEL));
       list.forEach(function (el) {
+        if (el.closest("[data-aix-ui]")) return;
         if (meta.keepEl && el.closest(meta.keepEl)) return;
         var cs = win.getComputedStyle(el), bg = parseColor(cs.backgroundColor || ""), fg = parseColor(cs.color || "");
         if (!bg || !fg || bg.a < .6) { if (fixed.has(el)) { el.style.removeProperty("color"); fixed.delete(el); } return; }

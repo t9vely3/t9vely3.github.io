@@ -3,6 +3,7 @@
 <head>
 <!-- AIX v2: 원본 t9vely3.github.io/apps/viral.html 복사본. 기능 코드는 원본 그대로이고, 아래 잠금 한 줄만 추가됨 -->
 <script src="../shared/lock.js"></script>
+<script src="../shared/dialog.js"></script>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -260,9 +261,11 @@
     const ADMINS = ["김태욱"];
     const LOGIN_KEY = "viral_login_name";
 
+    /* AIX v2: 이름을 고르는 대신 인트라넷에 로그인한 사람 이름을 씀 (인트라넷 밖에서는 못 들어옴) */
+    function aixMe(){ try{ const p = window.parent && window.parent !== window && window.parent.AIX && window.parent.AIX.me; return p && p.name ? String(p.name) : ""; }catch(_){ return ""; } }
     const state = {
       tab: "전체 현황",
-      me: localStorage.getItem(LOGIN_KEY) || "",
+      me: aixMe(),
       employees: [], keywords: [], records: [], hiddenDefaults: [],
       status: "Firestore 연결 중", statusError: false,
       selectedDate: today(), month: today().slice(0,7),
@@ -358,12 +361,8 @@
       return `<div class="login-wrap"><div class="login-card">
         <div class="login-eyebrow">VIRAL MARKETING</div>
         <div class="login-title">로그인</div>
-        <div class="login-sub">선택한 이름으로만 작성 기록이 저장됩니다.</div>
-        <div class="form-field">
-          <label class="form-label">이름</label>
-          <select class="form-select" id="loginName">${opts}</select>
-        </div>
-        <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px" onclick="window.app.login()">로그인</button>
+        <div class="login-sub">인트라넷에 로그인한 뒤 왼쪽 메뉴의 '바이럴'로 들어와 주세요. 로그인한 이름으로 기록이 저장됩니다.</div>
+        <a class="btn btn-primary" href="../" target="_top" style="display:block;text-align:center;width:100%;padding:11px;font-size:14px;text-decoration:none;box-sizing:border-box">인트라넷으로 가기</a>
       </div></div>`;
     }
 
@@ -1050,7 +1049,7 @@
         localStorage.setItem(LOGIN_KEY, v);
         render();
       },
-      logout(){ localStorage.removeItem(LOGIN_KEY); state.me = ""; render(); },
+      logout(){ state.me = aixMe(); render(); },   /* AIX v2: 로그아웃은 인트라넷에서 */
       setTab(v){ state.tab = v; render(); },
       setDate(v){ state.selectedDate = v; render(); },
       setMonth(v){ state.month = v; state.selectedDate = v+"-01"; render(); },

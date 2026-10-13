@@ -150,13 +150,15 @@ html, body { height: 100%; }
       { id: "kuk", n: "국취 접수", i: "check" },
       { id: "notice", n: "공지 체크", i: "bell", skin: 1 },
       { id: "viral", n: "바이럴", i: "mega", skin: 1 },
-      { id: "guide", n: "안내 편집", i: "gear", skin: 1 }
+      { id: "guide", n: "안내 편집", i: "book", skin: 1 },
+      { id: "settings", n: "설정", i: "gear" }
     ],
     team: [
       { id: "home", n: "홈", i: "home" },
       { id: "report", n: "퇴근보고", i: "pen", skin: 1 },
       { id: "sales", n: "상담 매출", i: "chart", skin: 1 },
-      { id: "cod", n: "COD 대장", i: "wallet", skin: 1 }
+      { id: "cod", n: "COD 대장", i: "wallet", skin: 1 },
+      { id: "settings", n: "설정", i: "gear" }
     ]
   };
   var OTHERS = ["student", "cash", "gov", "guide", "home", "sales"];
@@ -236,7 +238,7 @@ html, body { height: 100%; }
     $("#meName").textContent = nm; $("#meMail").textContent = AIX.me.email; $("#meAvatar").textContent = nm.slice(0, 1);
     var hash = (location.hash || "").slice(1);
     if (hash === "team" || hash === "dept") { S.space = hash; hash = "home"; }   /* 예전 3-1팀 주소로 들어오면 3-1팀 공간으로 */
-    paintTheme(); paintSpace();
+    paintTheme(); paintSpace(); loadAccess();
     if (hash && hash !== "home" && MENU[S.space].some(function (m) { return m.id === hash; })) open(hash); else open("home");
   }
 
@@ -251,7 +253,25 @@ html, body { height: 100%; }
     window.AIXSkin.retheme(Object.keys(S.frames).map(function (k) { return S.frames[k]; }), AIX.theme());
   });
 
+  /* ---------- 3-1팀 출입 (명단은 설정 › 팀원·권한에서 김태욱님만 바꿈) ---------- */
+  var OWNER = "t9vely@gmail.com";
+  S.teamOK = true;
+  async function loadAccess() {
+    try {
+      var h = await AIX.helper("notice");
+      var d = await h.db.doc("noticeboard_meta/aix_access").get();
+      var list = d.exists && Array.isArray(d.data().team31) ? d.data().team31.map(function (x) { return String(x).toLowerCase(); }) : null;
+      var em = (AIX.me.email || "").toLowerCase();
+      S.teamOK = list === null || em === OWNER || list.indexOf(em) >= 0;   /* 명단이 아직 없으면 모두 허용 */
+    } catch (e) { S.teamOK = true; }
+    if (!S.teamOK && S.space === "team") { S.space = "dept"; try { localStorage.setItem("aix-v2-space", "dept"); } catch (er) {} open("home"); }
+    paintSpace();
+  }
+  window.AIX_refreshAccess = loadAccess;
+
   function paintSpace() {
+    var teamBtn = document.querySelector('#spaceTabs button[data-space="team"]');
+    if (teamBtn) teamBtn.hidden = !S.teamOK;
     document.querySelectorAll("#spaceTabs button").forEach(function (b) {
       var on = b.dataset.space === S.space; b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false");
     });
@@ -264,6 +284,7 @@ html, body { height: 100%; }
   }
   $("#spaceTabs").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.space === "team" && !S.teamOK) return;
     S.space = b.dataset.space; try { localStorage.setItem("aix-v2-space", S.space); } catch (er) {}
     S.view = "home"; paintSpace(); open("home");
   });

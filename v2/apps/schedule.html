@@ -3,6 +3,7 @@
 <head>
 <!-- AIX v2: 원본 t9vely3.github.io/apps/schedule.html 복사본. 기능 코드는 원본 그대로이고, 아래 잠금 한 줄만 추가됨 -->
 <script src="../shared/lock.js"></script>
+<script src="../shared/dialog.js"></script>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -814,10 +815,10 @@ function topbar(){
     '<button class="btn" data-act="export">내보내기</button>' +
     '<button class="themebtn" data-act="mode" title="'+(UI.mode==='dark'?'밝은 화면으로':'어두운 화면으로')+'">' +
       (UI.mode==='dark'?'☾':'☀') + '</button>' +
-    '<button class="btn" data-act="publish" id="pubbtn" title="이 사이트에만 저장합니다. 관리파일로는 넘어가지 않습니다.">' +
-      (UI.standalone ? '이 사이트 저장' : '이 사이트 저장') + '</button>' +
+    '<button class="btn" data-act="publish" id="pubbtn" title="학사일정에만 저장합니다. 수강생 화면은 바뀌지 않습니다.">' +
+      '일정만 저장' + '</button>' +
     '<button class="btn pri" data-act="sync" id="syncbtn" ' +
-      'title="관리파일로 넘깁니다.">' + (UI.syncing ? '넘기는 중' : '연동 저장' + syncBadge()) + '</button>' +
+      'title="학사일정과 수강생 화면 배정표에 함께 저장합니다.">' + (UI.syncing ? '저장 중' : '동시 저장' + syncBadge()) + '</button>' +
   '</div>';
 }
 

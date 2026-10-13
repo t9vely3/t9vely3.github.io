@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>팀원 · 권한 · AIX</title>
+<script src="../shared/lock.js"></script>
+<link rel="stylesheet" href="../shared/theme.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="../shared/aix.js"></script>
+<style>
+.layout { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.layout > .card:first-child { flex: 3 1 520px; }
+.layout > aside { flex: 2 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.who { width: 38px; height: 38px; border-radius: 12px; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+.mrow { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
+.mrow .nm { flex: 1; min-width: 0; }
+.mrow .nm small { display: block; color: var(--sub); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.role { font-size: 12px; color: var(--sub); width: 90px; }
+.switch { width: 48px; height: 28px; border-radius: 28px; border: 0; background: var(--rail); position: relative; cursor: pointer; flex-shrink: 0; padding: 0; }
+.switch::after { content: ""; position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--sub); transition: left .15s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { left: 24px; background: var(--on-accent); }
+.switch:disabled { cursor: not-allowed; opacity: .55; }
+.owner-chip { font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 9px; background: var(--accent-soft); color: var(--accent-text); }
+.lock { display: flex; gap: 12px; align-items: center; background: var(--chip); border-radius: 14px; padding: 14px; font-size: 13px; line-height: 1.5; }
+.lock b.i { width: 32px; height: 32px; border-radius: 10px; background: var(--accent-soft); color: var(--warn); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.adm { display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); }
+.adm span:last-child { font-size: 12px; font-weight: 700; color: var(--accent-text); }
+.savebar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head"><h1>팀원 · 권한</h1></div>
+  <div class="layout">
+    <section class="card">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+        <div><h2 style="margin:0">3-1팀 공간 출입</h2><div class="muted" style="font-size:13px">켠 사람만 위쪽에 '3-1팀' 버튼이 보이고 퇴근보고 · 상담 매출 · COD 대장에 들어갈 수 있어요</div></div>
+        <span class="owner-chip" id="ownerChip"></span>
+      </div>
+      <div id="list"><div class="blank">팀원 목록을 불러오는 중…</div></div>
+      <div class="savebar" id="saveBar" hidden>
+        <span class="muted" id="saveNote" style="font-size:13px"></span>
+        <button class="btn primary" type="button" id="saveBtn">저장</button>
+      </div>
+    </section>
+    <aside>
+      <section class="card" id="lockCard" hidden>
+        <h2>보기만 할 수 있어요</h2>
+        <div class="lock"><b class="i">!</b><span>3-1팀 출입은 <b>김태욱님만</b> 바꿀 수 있어요.<br><span class="muted">스위치가 잠겨서 보기만 됩니다.</span></span></div>
+      </section>
+      <section class="card">
+        <h2>관리 메뉴</h2>
+        <div class="muted" style="font-size:13px;margin-bottom:6px">우리 팀원(승인된 계정)은 모두 수정할 수 있어요</div>
+        <div class="adm"><span>수강생 안내 편집</span><span>모든 팀원</span></div>
+        <div class="adm"><span>국취 사전접수 관리</span><span>모든 팀원</span></div>
+        <div class="adm"><span>공지 분류 · 팀원 이름</span><span>모든 팀원</span></div>
+        <div class="adm"><span>가입 승인</span><span><a href="../../old.html" target="_top" style="color:inherit">예전 화면에서</a></span></div>
+      </section>
+    </aside>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var OWNER = "t9vely@gmail.com";            /* 3-1팀 출입을 바꿀 수 있는 유일한 계정 */
+  var ACCESS_DOC = "noticeboard_meta/aix_access";
+  var $ = function (s) { return document.querySelector(s); }, esc = AIX.esc;
+  var C = AIX.connect("notice"), db = C.db;
+  var users = [], allow = null, dirty = false, me = null;
+
+  $("#ownerChip").textContent = "바꿀 수 있는 사람: 김태욱 (" + OWNER + ")";
+
+  function canEdit() { return !!me && (me.email || "").toLowerCase() === OWNER; }
+
+  function render() {
+    var edit = canEdit();
+    $("#lockCard").hidden = edit;
+    if (!users.length) { $("#list").innerHTML = '<div class="blank">승인된 팀원이 없습니다.</div>'; return; }
+    $("#list").innerHTML = users.map(function (u, i) {
+      var on = u.email === OWNER || allow === null || allow.indexOf(u.email) >= 0;
+      var fixed = u.email === OWNER;
+      return '<div class="mrow"><span class="who">' + esc((u.name || u.email).slice(0, 1)) + '</span>' +
+        '<span class="nm"><b>' + esc(u.name || "(이름 없음)") + '</b><small>' + esc(u.email) + '</small></span>' +
+        '<span class="role">' + (fixed ? "팀장 · 관리자" : (u.role === "admin" ? "관리자" : "팀원")) + '</span>' +
+        '<button type="button" class="switch" role="switch" aria-label="' + esc(u.name || u.email) + ' 3-1팀 출입" aria-checked="' + on + '" data-i="' + i + '"' + (edit && !fixed ? "" : " disabled") + '></button></div>';
+    }).join("");
+    $("#saveBar").hidden = !edit;
+    $("#saveNote").textContent = allow === null ? "아직 명단이 없어 지금은 모두 들어갈 수 있어요. 저장하면 켠 사람만 들어갈 수 있어요." : (dirty ? "바꾼 내용이 있어요. 저장을 눌러야 반영됩니다." : "저장된 상태입니다.");
+  }
+
+  $("#list").addEventListener("click", function (e) {
+    var b = e.target.closest(".switch"); if (!b || b.disabled || !canEdit()) return;
+    var u = users[+b.dataset.i];
+    if (allow === null) allow = users.map(function (x) { return x.email; });
+    var k = allow.indexOf(u.email);
+    if (k >= 0) allow.splice(k, 1); else allow.push(u.email);
+    dirty = true; render();
+  });
+
+  $("#saveBtn").addEventListener("click", async function () {
+    if (!canEdit()) return;
+    var list = (allow || users.map(function (x) { return x.email; })).slice();
+    if (list.indexOf(OWNER) < 0) list.push(OWNER);
+    this.disabled = true;
+    try {
+      await db.doc(ACCESS_DOC).set({ team31: list, updatedAt: Date.now(), updatedBy: me.email }, { merge: true });
+      allow = list; dirty = false; render(); AIX.toast("저장했어요");
+      try { if (window.parent && window.parent.AIX_refreshAccess) window.parent.AIX_refreshAccess(); } catch (er) {}
+    } catch (err) { AIX.toast("저장하지 못했어요 (" + (err.code || "오류") + ")"); }
+    this.disabled = false;
+  });
+
+  C.auth.onAuthStateChanged(async function (u) {
+    if (!u) { $("#list").innerHTML = '<div class="blank">인트라넷에 로그인한 뒤 열어 주세요.</div>'; return; }
+    me = { email: (u.email || "").toLowerCase() };
+    try {
+      var snap = await db.collection("noticeboard_users").get();
+      users = [];
+      snap.forEach(function (d) { var x = d.data() || {}; if (x.status === "approved" && x.email) users.push({ name: x.name || "", email: String(x.email).toLowerCase(), role: x.role || "" }); });
+      users.sort(function (a, b) { return (a.email === OWNER ? -1 : b.email === OWNER ? 1 : 0) || (a.name || "").localeCompare(b.name || "", "ko"); });
+      var acc = await db.doc(ACCESS_DOC).get();
+      allow = acc.exists && Array.isArray(acc.data().team31) ? acc.data().team31.map(function (x) { return String(x).toLowerCase(); }) : null;
+      render();
+    } catch (err) { $("#list").innerHTML = '<div class="blank">팀원 목록을 읽지 못했어요 (' + esc(err.code || "오류") + ')</div>'; }
+  });
+})();
+</script>
+</body>
+</html>
