@@ -169,6 +169,7 @@ html, body { height: 100%; }
     ]
   };
   var OTHERS = ["student", "cash", "gov", "guide", "home", "sales"];
+  var VER = "20261014b";   /* 화면 파일을 고쳐 올릴 때마다 바꾸면 모두에게 새 화면이 바로 보임 */
   var S = { space: "dept", view: "home", frames: {} };
   try { S.space = localStorage.getItem("aix-v2-space") === "team" ? "team" : "dept"; } catch (e) {}
 
@@ -321,7 +322,7 @@ html, body { height: 100%; }
       f.title = base.n;
       if (base.skin) window.AIXSkin.attach(f, app, AIX.theme, AIX.me, AIX.READ_ONLY);
       f.addEventListener("load", function () { sendView(f); });
-      f.src = "apps/" + app + ".html";
+      f.src = "apps/" + app + ".html?v=" + VER;   /* 새로 올린 화면이 바로 보이도록 (예전 화면이 남아 보이는 것 방지) */
       $("#stage").appendChild(f); S.frames[key] = f;
     }
     S.frames[key].hidden = false;

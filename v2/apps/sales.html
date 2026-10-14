@@ -632,6 +632,15 @@
         <!-- 1. 분류 -->
         <div class="form-card">
           <h3 class="form-title">분류</h3>
+          <div class="field" style="margin-bottom:10px"><label>어느 칸에 쓸까요?</label>
+            <div class="chipset" id="kindWrap">
+              <button type="button" class="toggle" data-kind="완납" onclick="setKind('완납')">완납</button>
+              <button type="button" class="toggle" data-kind="COD" onclick="setKind('COD')">COD</button>
+              <button type="button" class="toggle" data-kind="미등록" onclick="setKind('미등록')">미등록</button>
+              <button type="button" class="toggle" data-kind="추등" onclick="setKind('추등')">추등</button>
+            </div>
+            <div class="field-hint" id="kindHint">고르면 그 칸에 맞게 입력 칸이 바뀌어요. 안 고르면 입금액을 보고 자동으로 나눠요.</div>
+          </div>
           <div class="grid-3">
             <div class="field"><label>상담 날짜</label><input id="date" type="date" class="input" /></div>
             <div class="field"><label>납부기한</label><input id="deadline" type="date" class="input" /></div>
@@ -760,11 +769,37 @@ let syncing = false;
 let pendingOps = 0;
 let lastSyncAt = 0;
 let currentMonth = '전체';
+let monthPicked = false;   /* 직접 고르기 전에는 언제나 현재 진행월을 먼저 보여 줌 */
+function currentSalesMonth(){ const m = salesMonthFromDate(todayStr()); return m && m !== '미분류' ? m : ''; }
 let currentResult = '전체';
 /* 인트라넷 왼쪽 메뉴의 칸(완납·COD·미등록·추등). 기록은 모두 같은 곳(consults)에 쌓이고 칸은 보여 주는 범위만 다름 */
 let currentView = '전체';
 let currentViewName = '';
 const VIEW_SETS = { '전체': null, '등록': ['등록'], 'COD': ['COD','미완료'], '미등록': ['미등록'], '추등': ['추등'] };
+let currentKind = '';   /* 입력 창에서 고른 칸: 완납 · COD · 미등록 · 추등 ('' = 자동) */
+const KIND_HINT = {
+  '': '고르면 그 칸에 맞게 입력 칸이 바뀌어요. 안 고르면 입금액을 보고 자동으로 나눠요.',
+  '완납': '입금 칸을 비워 두면 실결제 금액 전체가 입금된 것으로 저장돼요.',
+  'COD': '일부만 입금된 상담이에요. 입금된 금액을 꼭 넣어 주세요. 나머지는 잔액으로 남아요.',
+  '미등록': '입금 없이 상담만 기록해요. 입금 칸은 0원으로 저장돼요.',
+  '추등': '추가 등록 상담으로 저장돼요.'
+};
+const VIEW_TO_KIND = { '등록': '완납', 'COD': 'COD', '미등록': '미등록', '추등': '추등' };
+const DISPLAY_TO_KIND = { '등록': '완납', 'COD': 'COD', '미완료': 'COD', '미등록': '미등록', '추등': '추등' };
+function setKind(kind){
+  currentKind = currentKind === kind ? '' : kind;
+  document.querySelectorAll('#kindWrap [data-kind]').forEach(b => b.classList.toggle('active', b.dataset.kind === currentKind));
+  document.getElementById('kindHint').textContent = KIND_HINT[currentKind];
+  const p = document.getElementById('paid');
+  if(p){
+    p.disabled = currentKind === '미등록';
+    if(currentKind === '미등록') p.value = '';
+    p.placeholder = currentKind === '완납' ? '비워 두면 실결제 전체' : currentKind === 'COD' ? '입금된 금액' : currentKind === '미등록' ? '입금 없음 (0원)' : '';
+  }
+  if(currentKind === '추등') result.value = '추등';
+  else if(result.value === '추등') result.value = 'auto';
+  if(typeof updateRemain === 'function') try{ updateRemain(); }catch(e){}
+}
 function inView(r){ const set = VIEW_SETS[currentView]; return !set || set.includes(r.displayResult || '미등록'); }
 let currentSort = 'desc';
 let selectedCourseValue = '';
@@ -1398,7 +1433,7 @@ function getAutoResult(obj){
   return 'COD';
 }
 
-function getMonths(){ const labels = [...new Set(rows.map(r=>salesMonthFromDate(r.date)).filter(Boolean))]; const ordered = salesPeriods.map(p=>p.label).filter(l=>labels.includes(l)); const extra = labels.filter(l=>!ordered.includes(l)); return ['전체', ...ordered, ...extra]; }
+function getMonths(){ const cur = currentSalesMonth(); const labels = [...new Set(rows.map(r=>salesMonthFromDate(r.date)).concat(cur ? [cur] : []).filter(Boolean))]; const ordered = salesPeriods.map(p=>p.label).filter(l=>labels.includes(l)); const extra = labels.filter(l=>!ordered.includes(l)); return ['전체', ...ordered, ...extra]; }
 function getFilteredRows(){
   const keyword = document.getElementById('search').value.trim();
   return rows.filter(r => {
@@ -1412,12 +1447,15 @@ function getFilteredRows(){
 function renderMonthTabs(){
   const wrap = document.getElementById('monthTabs');
   const months = getMonths();
+  const cur = currentSalesMonth();
+  if(!monthPicked && cur) currentMonth = cur;
+  if(!months.includes(currentMonth)) currentMonth = '전체';
   const counts = {};
   const vrows = rows.filter(inView);
   vrows.forEach(r => { const m = salesMonthFromDate(r.date); counts[m] = (counts[m]||0)+1; });
   counts['전체'] = vrows.length;
   wrap.innerHTML = months.map(month =>
-    `<button class="side-item ${currentMonth===month?'active':''}" onclick="setMonth('${month}')"><span>${month}</span><span class="count">${format(counts[month]||0)}</span></button>`
+    `<button class="side-item ${currentMonth===month?'active':''}" onclick="setMonth('${month}')"><span>${month}${month===cur?' <small style="font-size:11px;font-weight:700;opacity:.75">진행 중</small>':''}</span><span class="count">${format(counts[month]||0)}</span></button>`
   ).join('');
 }
 function renderResultFilters(){
@@ -1674,7 +1712,7 @@ function renderAll(){
   document.getElementById('sortDescBtn').classList.toggle('active', currentSort==='desc');
   document.getElementById('sortAscBtn').classList.toggle('active', currentSort==='asc');
 }
-function setMonth(month){ currentMonth = month; renderAll(); }
+function setMonth(month){ currentMonth = month; monthPicked = true; renderAll(); }
 function setResult(result){ currentResult = result; renderAll(); }
 
 const VIEW_TEXT = {
@@ -1698,6 +1736,12 @@ function setView(view, name){
   }
   renderAll();
 }
+/* 인트라넷이 정해 둔 칸을 직접 읽기 (메시지를 놓쳐도 칸이 맞게 보이도록) */
+function readViewFromParent(){
+  try{ const f = window.frameElement; if(f && f.aixView && f.aixView !== currentView) setView(f.aixView, f.aixViewName); }catch(e){ console.warn(e); }
+}
+setTimeout(readViewFromParent, 0);
+window.addEventListener('focus', readViewFromParent);
 window.addEventListener('message', e => {
   if(e.origin !== location.origin || !e.data || !e.data.aixSalesView) return;
   setView(e.data.aixSalesView, e.data.name);
@@ -1854,9 +1898,9 @@ function openModal(){
   resetForm(); editIndex = null;
   modalTitle.innerText = currentView === '전체' ? '상담 입력' : (currentViewName || currentView) + ' 상담 입력';
   saveButton.innerText='저장하기';
-  if(currentView === '추등') result.value = '추등';
-  const p = document.getElementById('paid');
-  if(p) p.placeholder = currentView === '등록' ? '비워 두면 실결제 금액 전체로 저장' : currentView === '미등록' ? '입금 전이면 비워 두세요' : '';
+  currentKind = '';
+  setKind(VIEW_TO_KIND[currentView] || '');
+  if(!VIEW_TO_KIND[currentView]) setKind('');
   modal.classList.add('flex');
 }
 function closeModal(){ modal.classList.remove('flex'); }
@@ -1909,7 +1953,9 @@ function buildRowFromForm(){
     memo: memo.value.trim()
   };
   /* 완납 칸에서 새로 쓸 때 입금을 비워 두면 실결제 전체를 입금으로 봄 */
-  if(editIndex === null && currentView === '등록' && !String(paid.value||'').trim()) obj.paid = obj.finalPrice;
+  if(currentKind === '완납' && !String(paid.value||'').trim()) obj.paid = obj.finalPrice;
+  if(currentKind === '미등록') obj.paid = 0;
+  if(currentKind === '추등') obj.result = '추등';
   obj.displayResult = getAutoResult(obj);
   return obj;
 }
@@ -2121,6 +2167,9 @@ function manualRefresh(){ syncFromServer({silent:false}); }
 async function saveData(){
   const obj = buildRowFromForm();
   const isEdit = editIndex !== null;
+  if(currentKind === 'COD' && !(Number(obj.paid) > 0)){ alert('COD는 입금된 금액을 넣어 주세요.\n입금이 없으면 \'미등록\'을 골라 주세요.'); return; }
+  if(currentKind === 'COD' && Number(obj.paid) >= Number(obj.finalPrice) && Number(obj.finalPrice) > 0){ alert('입금액이 실결제 금액과 같거나 많아요.\n다 입금됐다면 \'완납\'을 골라 주세요.'); return; }
+  const landed = DISPLAY_TO_KIND[obj.displayResult] || obj.displayResult;
 
   // 중복 학생명 경고 (신규 저장 시만)
   if(!isEdit && obj.student){
@@ -2156,7 +2205,7 @@ async function saveData(){
         saveLocal();
       }
     }
-    toast(isEdit ? '수정 저장했습니다' : '새 상담을 저장했습니다', {type:'success', duration:2000});
+    toast((isEdit ? '수정 저장했습니다' : '새 상담을 저장했습니다') + ' · ' + landed + ' 칸', {type:'success', duration:2600});
   }catch(err){
     console.error('저장 반영 실패', err);
     if(isEdit && prevSnapshot){
@@ -2173,6 +2222,7 @@ async function saveData(){
 function editRow(index){
   const r = rows[index]; if(!r) return;
   editIndex = index; modalTitle.innerText='상담 수정'; saveButton.innerText='수정 저장'; modal.classList.add('flex');
+  currentKind = ''; setTimeout(() => { setKind(''); }, 0);
   date.value = r.date || todayStr();
   deadline.value = r.deadline || todayStr();
   student.value = r.student || '';
