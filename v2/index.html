@@ -22,7 +22,7 @@ html, body { height: 100%; }
 .rail a.on { background: var(--accent); color: var(--on-accent); }
 .rail svg { width: 20px; height: 20px; }
 .rail .gap { flex: 1; }
-.rail a.sub { flex-direction: row; justify-content: center; gap: 6px; padding: 6px 0; font-size: 12px; font-weight: 700; }
+.rail a.sub { flex-direction: row; justify-content: center; gap: 6px; padding: 6px 0; font-size: 11.5px; font-weight: 700; line-height: 1.2; }
 .rail a.sub i { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .rail a.sub.on i { box-shadow: 0 0 0 2px var(--on-accent); }
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
@@ -158,7 +158,13 @@ html, body { height: 100%; }
     ],
     team: [
       { id: "home", n: "홈", i: "home" },
-      { id: "report", n: "퇴근보고", i: "pen", skin: 1 },
+      { id: "report", n: "출퇴근보고", i: "pen", skin: 1, view: "dash" },
+      /* 출퇴근보고 화면 안의 메뉴를 여기로 꺼냄 (화면 안 왼쪽 메뉴는 숨겨서 캘린더 등을 넓게 씀) */
+      { id: "report-write", n: "보고 작성", frame: "report", view: "write", sub: 1 },
+      { id: "report-cal", n: "캘린더", frame: "report", view: "cal", sub: 1 },
+      { id: "report-biz", n: "월간 입력표", frame: "report", view: "biz", sub: 1 },
+      { id: "report-log", n: "일자별 기록", frame: "report", view: "log", sub: 1 },
+      { id: "report-set", n: "보고 설정", frame: "report", view: "set", sub: 1 },
       { id: "sales", n: "상담 매출", i: "chart", skin: 1, view: "전체" },
       /* 상담 매출 아래 칸: 같은 상담 기록을 결과별로 나눠 보여 줌 (기록은 한 곳에 쌓이고 '상담 매출'에서 모두 합산) */
       { id: "sales-paid", n: "완납", dot: "#3F8F4E", frame: "sales", view: "등록" },
@@ -169,7 +175,7 @@ html, body { height: 100%; }
     ]
   };
   var OTHERS = ["student", "cash", "gov", "guide", "home", "sales"];
-  var VER = "20261014b";   /* 화면 파일을 고쳐 올릴 때마다 바꾸면 모두에게 새 화면이 바로 보임 */
+  var VER = "20261014f";   /* 화면 파일을 고쳐 올릴 때마다 바꾸면 모두에게 새 화면이 바로 보임 */
   var S = { space: "dept", view: "home", frames: {} };
   try { S.space = localStorage.getItem("aix-v2-space") === "team" ? "team" : "dept"; } catch (e) {}
 
@@ -286,8 +292,8 @@ html, body { height: 100%; }
     });
     var html = '<div class="logo">aix<span>.</span></div>';
     MENU[S.space].forEach(function (m) {
-      if (m.dot) {
-        html += '<a href="#' + m.id + '" data-id="' + m.id + '" class="sub' + (S.view === m.id ? " on" : "") + '"><i style="background:' + m.dot + '" aria-hidden="true"></i>' + esc(m.n) + "</a>";
+      if (m.dot || m.sub) {
+        html += '<a href="#' + m.id + '" data-id="' + m.id + '" class="sub' + (S.view === m.id ? " on" : "") + '">' + (m.dot ? '<i style="background:' + m.dot + '" aria-hidden="true"></i>' : "") + esc(m.n) + "</a>";
         return;
       }
       html += '<a href="#' + m.id + '" data-id="' + m.id + '" class="' + (S.view === m.id ? "on" : "") + '">' +
@@ -330,8 +336,18 @@ html, body { height: 100%; }
   }
   function sendView(f) {
     if (!f.aixView) return;
-    try { f.contentWindow.postMessage({ aixSalesView: f.aixView, name: f.aixViewName }, location.origin); } catch (e) {}
+    try { f.contentWindow.postMessage({ aixSalesView: f.aixView, aixView: f.aixView, name: f.aixViewName }, location.origin); } catch (e) {}
   }
+  /* 출퇴근보고 화면 안에서 다른 메뉴로 옮겨 가면 왼쪽 메뉴 표시도 맞춤 */
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin || !e.data || !e.data.aixReportView) return;
+    var v = e.data.aixReportView;
+    var m = MENU[S.space].filter(function (x) { return (x.frame === "report" || x.id === "report") && x.view === v; })[0];
+    if (!m || S.view === m.id) return;
+    S.view = m.id; history.replaceState(null, "", "#" + m.id);
+    var f = S.frames[S.space + ":report"]; if (f) f.aixView = v;
+    document.querySelectorAll("#rail a").forEach(function (a) { a.classList.toggle("on", a.dataset.id === m.id); });
+  });
 
   /* ---------- 홈 공통 ---------- */
   function hello(lines, quick) {
@@ -409,13 +425,13 @@ html, body { height: 100%; }
   /* ---------- 3-1팀 홈 ---------- */
   async function homeTeam() {
     $("#home").innerHTML = '<div class="bento">' +
-      hello('오늘 퇴근보고 <b id="repN">…</b> 제출됐어요', [["report", "퇴근보고 쓰기"], ["sales", "상담 입력"], ["sales-cod", "COD 보기"]]) +
+      hello('오늘 출퇴근보고 <b id="repN">…</b> 들어왔어요', [["report", "출퇴근보고 쓰기"], ["sales", "상담 입력"], ["sales-cod", "COD 보기"]]) +
       '<section class="card span2"><div class="card-head"><h2>이번 달 순매출</h2><button type="button" data-go="report">자세히</button></div>' +
-      '<div class="num" style="font-size:38px;font-weight:700" id="monRev">…</div><div class="bars" id="bars"></div><div class="bars-x" id="barsX"></div><div class="muted" style="font-size:12px;margin-top:6px">퇴근보고에 입력된 매출 − 환불 기준</div></section>' +
+      '<div class="num" style="font-size:38px;font-weight:700" id="monRev">…</div><div class="bars" id="bars"></div><div class="bars-x" id="barsX"></div><div class="muted" style="font-size:12px;margin-top:6px">출퇴근보고에 입력된 매출 − 환불 기준</div></section>' +
       stat("tReg", "이번 달 등록", "건", "report") +
       stat("tVisit", "이번 달 방문", "건", "report") +
-      '<section class="card span3"><div class="card-head"><h2>오늘 제출된 퇴근보고</h2><button type="button" data-go="report">퇴근보고</button></div><div id="repList"><div class="blank">불러오는 중…</div></div></section>' +
-      '<section class="card soft sidecard"><div class="t">내 퇴근보고</div><div class="b" id="mySide">불러오는 중…</div><div class="quick"><button type="button" data-go="report">작성하기</button></div></section>' +
+      '<section class="card span3"><div class="card-head"><h2>오늘 들어온 출퇴근보고</h2><button type="button" data-go="report">출퇴근보고</button></div><div id="repList"><div class="blank">불러오는 중…</div></div></section>' +
+      '<section class="card soft sidecard"><div class="t">내 출퇴근보고</div><div class="b" id="mySide">불러오는 중…</div><div class="quick"><button type="button" data-go="report">작성하기</button></div></section>' +
       "</div>";
     try {
       var h = await AIX.helper("home");
@@ -446,7 +462,7 @@ html, body { height: 100%; }
       ["monRev"].forEach(function (id) { var el = document.getElementById(id); if (el) el.textContent = "—"; });
       failStat("tReg", "건"); failStat("tVisit", "건");
       document.getElementById("repN").textContent = "—";
-      document.getElementById("repList").innerHTML = '<div class="blank">퇴근보고를 읽지 못했습니다. 퇴근보고 화면에서 로그인해 주세요.</div>';
+      document.getElementById("repList").innerHTML = '<div class="blank">출퇴근보고를 읽지 못했습니다. 출퇴근보고 화면에서 로그인해 주세요.</div>';
       document.getElementById("mySide").textContent = "보고 상태를 읽지 못했습니다";
     }
   }

@@ -32,7 +32,7 @@
       css: ".login-wrap{background:var(--bg)!important}.logout-btn{display:none!important}" },
     guide: { native: "light", brand: [213], css: ".sidebar-footer-link{display:none!important}" },
     /* 퇴근보고 상단 큰 카드: 원래 남색 그라데이션 + 흰 글자 구조 → 색만 짙은 올리브로 바꾸고 흰 글자는 유지 */
-    report: { native: "light", brand: [239, 215], accVars: ["--ink"], keep: /\.dash-hero|\.hero-|\.rail|\.nav button/,
+    report: { native: "light", brand: [239, 215], accVars: ["--ink"], keep: /\.dash-hero|\.hero-|\.rail|\.nav button|\.eb\b|\.cnt\b|\.lgb\b/,
       css: function (pal) {
         return "#btnOut{display:none!important}" +
           ".rail{background:" + (pal.dark ? "#1C1D21" : "#232B0E") + "!important;border-right:1px solid " + (pal.dark ? "#2C2E33" : "transparent") + "}" +
@@ -42,7 +42,9 @@
           ".dash-hero{background:linear-gradient(128deg," + (pal.dark ? "#1C2014 0%,#262D18 52%,#36421F 100%" : "#2F400A 0%,#3E550B 52%,#5F7E1C 100%") + ")!important;box-shadow:none!important}" +
           ".dash-hero::before{border-color:rgba(194,221,106,.10)!important}.dash-hero::after{background:#C2DD6A!important;opacity:.12!important}" +
           ".hero-kicker,.hero-copy h2 em{color:#C2DD6A!important}" +
-          ".hero-copy .btn{background:#C2DD6A!important;border-color:#C2DD6A!important;color:#1A1D12!important}";
+          ".hero-copy .btn{background:#C2DD6A!important;border-color:#C2DD6A!important;color:#1A1D12!important}" +
+          /* 보고문 미리보기 머리줄 버튼: 진한 바탕 위 흰 버튼에 흰 글자가 되어 안 보이던 것 */
+          ".write-preview .hd .btn{background:" + (pal.dark ? "rgba(0,0,0,.14)" : "rgba(255,255,255,.14)") + "!important;border-color:" + (pal.dark ? "rgba(0,0,0,.22)" : "rgba(255,255,255,.28)") + "!important;color:" + (pal.dark ? "#1A1D12" : "#fff") + "!important}";
       } },
     sales: { native: "light", brand: [], accVars: ["--navy", "--navy-2"], css: "#userChip{display:none!important}" },
     cod: { native: "light", brand: [218], attr: ["data-theme", "light"], drop: /data-theme=["']?dark|:not\(\[data-theme=["']?light/,

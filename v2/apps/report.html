@@ -7,7 +7,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>3-1팀 퇴근보고</title>
+<title>3-1팀 출퇴근보고</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,6 +60,10 @@ button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit
 
 /* ─────────────── shell ─────────────── */
 .app{display:grid;grid-template-columns:252px 1fr;min-height:100vh}
+/* 인트라넷 안에서 열면: 메뉴는 인트라넷 왼쪽에 있으니 화면 안 메뉴를 숨기고 넓게 씀 */
+.in-aix .app{grid-template-columns:minmax(0,1fr)}
+.in-aix .rail{display:none!important}
+.in-aix .topbar .syncb{margin-left:8px;background:var(--card-2)!important;color:var(--tx-2)!important;border:1px solid var(--line-2)}
 
 .rail{
   background:linear-gradient(180deg,#090E1D 0%,#111A32 66%,#132039 100%);color:#fff;display:flex;flex-direction:column;
@@ -237,6 +241,18 @@ table.t tfoot td:first-child{font-family:var(--sans);text-align:left;letter-spac
 
 /* ─────────────── form ─────────────── */
 .fs{border:0;margin:0;padding:0}
+/* 자동 계산 줄: 입력 칸이 아니라 결과만 보여 줌 */
+.autorow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin-top:12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--card-2);border:1px dashed var(--line-2)}
+.autorow .autot{flex:0 0 100%;font-size:12px;font-weight:700;color:var(--tx-3)}
+.autorow .fld{flex:1 1 150px;min-width:0}
+.autorow .fld label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.autorow .fld label{font-size:11.5px}
+.autorow .ro{height:30px;background:transparent;border:0;justify-content:flex-start;padding:0;font-weight:800;font-size:15px}
+/* 퇴근보고 때 오전 보고는 한 줄 요약으로 접어 둠 */
+.amsum{display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:var(--r-sm);background:var(--card-2);font-size:13px}
+.amsum span{flex:1 1 240px}
+#wAmFs.folded .amsum{display:flex}
+#wAmFs.folded>.fg{display:none}
 .fs+.fs{margin-top:18px;padding-top:18px;border-top:1px solid var(--line-2)}
 .fs>legend{
   padding:0;margin-bottom:11px;font-size:12px;font-weight:700;
@@ -263,7 +279,11 @@ pre.pv{
 pre.pv::-webkit-scrollbar{width:8px} pre.pv::-webkit-scrollbar-thumb{background:#3A4149;border-radius:4px}
 
 /* ─────────────── calendar ─────────────── */
-.calwrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
+.calwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+/* 캘린더를 화면 폭 전체로 쓰고, 날짜 일정 칸은 아래에 (입력 · 목록 나란히) */
+.calwrap>.card:last-child>.bd{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:20px;align-items:start}
+.calwrap>.card:last-child #evList{margin-top:0!important}
+@media (max-width:900px){.calwrap>.card:last-child>.bd{grid-template-columns:minmax(0,1fr)}}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line-2)}
 .cal .dow{
   height:36px;display:flex;align-items:center;justify-content:center;
@@ -273,7 +293,7 @@ pre.pv::-webkit-scrollbar{width:8px} pre.pv::-webkit-scrollbar-thumb{background:
 .cal .dow:nth-child(7){border-right:0}
 .cal .dow.sun{color:var(--clay)} .cal .dow.sat{color:#3E5C86}
 .cal .cell{
-  min-height:138px;padding:0 7px 7px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
+  min-height:150px;padding:0 8px 8px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
   background:var(--card);cursor:pointer;overflow:hidden;position:relative;transition:background .12s
 }
 .cal .cell:nth-child(7n){border-right:0}
@@ -291,7 +311,7 @@ pre.pv::-webkit-scrollbar{width:8px} pre.pv::-webkit-scrollbar-thumb{background:
   display:flex;align-items:center;justify-content:space-between;gap:4px;
   height:26px;margin:0 -7px 5px;padding:0 7px;border-bottom:1px solid var(--line-2)
 }
-.cal .dn .tg{display:flex;align-items:center;gap:4px}
+.cal .dn .tg{display:flex;align-items:center;gap:3px;flex-wrap:nowrap}
 .cal .cell.today .dn>span:first-child{background:var(--ink);color:#fff;border-radius:5px;padding:0 5px}
 .cal .rp{width:6px;height:6px;border-radius:50%;background:var(--teal);flex:0 0 auto}
 .cal .offtag{font-size:10px;font-weight:700;color:var(--tx-3);letter-spacing:.2px;font-family:var(--sans)}
@@ -304,20 +324,29 @@ pre.pv::-webkit-scrollbar{width:8px} pre.pv::-webkit-scrollbar-thumb{background:
   box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3px var(--ink)}
 .calbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line-2);background:var(--card-2)}
 .ev{
-  margin-top:3px;font-size:11.5px;line-height:1.45;padding:3px 6px;border-radius:4px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2.5px solid;
+  margin-top:3px;font-size:12px;line-height:20px;height:22px;padding:0 6px 0 2px;border-radius:6px;box-sizing:border-box;
+  display:flex;align-items:center;gap:5px;min-width:0;
+  white-space:nowrap;overflow:hidden;border:1px solid var(--line-2);background:var(--card);
   cursor:grab;transition:filter .1s
 }
+.ev .eb{flex:0 0 auto;width:17px;height:17px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;
+  font-style:normal;font-size:10.5px;font-weight:800;color:#fff}
+.ev .et{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.ev.t1 .eb{background:#2F6FD0}.ev.t2 .eb{background:#C27A1E}.ev.t3 .eb{background:#2E8B6E}.ev.t4 .eb{background:#6F7682}
+.cal .cnt{font-style:normal;font-size:10px;font-weight:800;padding:0 3px;border-radius:5px;color:#fff;line-height:17px;white-space:nowrap}
+.cal .cnt.t1{background:#2F6FD0}.cal .cnt.t2{background:#C27A1E}.cal .cnt.t3{background:#2E8B6E}.cal .cnt.t4{background:#6F7682}
 .ev:hover{filter:brightness(.965)}
 .ev:active{cursor:grabbing}
 .ev.dragging{opacity:.35}
+.lgb.t1{background:#2F6FD0}.lgb.t2{background:#C27A1E}.lgb.t3{background:#2E8B6E}.lgb.t4{background:#6F7682}
+.lgb{flex:0 0 auto;display:inline-flex;width:18px;height:18px;border-radius:5px;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;margin-right:5px}
 .ev.onedit{box-shadow:inset 0 0 0 1.5px var(--ink-3)}
-.ev>b.num{opacity:.72;font-weight:600;margin-right:1px}
-.ev .who{opacity:.6;font-size:10px;margin-left:3px}
-.ev.t1{background:#EEF2F7;border-color:var(--steel);color:#2E4560}
-.ev.t2{background:#F3EDE1;border-color:var(--brass);color:#7A5E2E}
-.ev.t3{background:#E9F0ED;border-color:var(--teal);color:#215449}
-.ev.t4{background:#F1F2F4;border-color:#8A9099;color:#565C66}
+.ev>b.num{flex:0 0 auto;opacity:.7;font-weight:600;font-size:11.5px}
+.ev .who{flex:0 0 auto;opacity:.6;font-size:10.5px}
+
+
+
+
 .more{margin-top:3px;font-size:10.5px;font-weight:600;color:var(--tx-3)}
 .evrow{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line-2);min-width:0}
 .evrow.editing{background:var(--brass-soft);border-radius:8px;padding:9px 8px;margin:0 -8px}
@@ -587,7 +616,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
   <aside class="rail">
     <div class="brand">
       <div class="brand-head"><div class="brand-mark">3—1</div><div>
-        <div class="bt">3-1팀 퇴근보고</div>
+        <div class="bt">3-1팀 출퇴근보고</div>
         <div class="bs eyebrow en">daily close report</div>
       </div></div>
     </div>
@@ -712,7 +741,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
       <div class="grid write-layout">
         <div class="card write-editor">
           <div class="hd">
-            <h2>퇴근보고 입력</h2><div class="sp"></div>
+            <h2>출퇴근보고 입력</h2><div class="sp"></div>
             <div class="pillbar" id="wModePills">
               <button class="pill" data-m="am">오전보고</button>
               <button class="pill on" data-m="pm">퇴근보고</button>
@@ -734,8 +763,12 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
               </div>
             </fieldset>
 
-            <fieldset class="fs">
+            <fieldset class="fs folded" id="wAmFs">
               <legend>오전 보고 <span class="subtle" id="wAmFrom"></span></legend>
+              <div class="amsum" id="wAmSum">
+                <span id="wAmSumTx">—</span>
+                <button type="button" class="btn sm gh" id="wAmOpen">오전 내용 고치기</button>
+              </div>
               <div class="fg">
                 <div class="fld"><label for="wInRev">들어온 매출</label><input type="text" inputmode="numeric" id="wInRev" class="f n money" value="0"><span class="hint" id="wInRevH">0 원</span></div>
                 <div class="fld"><label for="wExpRev">예정 매출</label><input type="text" inputmode="numeric" id="wExpRev" class="f n money" value="0"><span class="hint" id="wExpRevH">0 원</span></div>
@@ -757,18 +790,19 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
             </fieldset>
 
             <fieldset class="fs" data-sec="pm">
-              <legend>당일 실적</legend>
+              <legend>① 오늘 결과 <span class="subtle">상담 · 등록 · 매출</span></legend>
               <div class="fg">
                 <div class="fld"><label for="wVisit">방문상담</label><input type="number" min="0" id="wVisit" class="f n" value="0"></div>
                 <div class="fld"><label for="wProxy">대리 상담</label><input type="number" min="0" id="wProxy" class="f n" value="0"></div>
+                <div class="fld"><label for="wReg">완납</label><input type="number" min="0" id="wReg" class="f n" value="0"></div>
+                <div class="fld"><label for="wCod">COD <span class="subtle">등록률 포함</span></label><input type="number" min="0" id="wCod" class="f n" value="0"></div>
+                <div class="fld"><label for="wRev">금일매출</label><input type="text" inputmode="numeric" id="wRev" class="f n money" value="0"><span class="hint" id="wRevH">0 원</span></div>
+                <div class="fld"><label for="wRefund">환불 <span class="subtle">선택</span></label><input type="text" inputmode="numeric" id="wRefund" class="f n money" value="0"></div>
+              </div>
+              <div class="autorow" aria-label="자동 계산">
+                <span class="autot">자동 계산</span>
                 <div class="fld"><label>상담률 <span class="subtle">방문/오늘진행</span></label><div class="ro" id="wRate1">—</div></div>
                 <div class="fld"><label>등록률 <span class="subtle">(완납＋COD)/방문</span></label><div class="ro" id="wRate2">—</div></div>
-              </div>
-            </fieldset>
-
-            <fieldset class="fs" data-sec="pm">
-              <legend>달성률 <span class="subtle">퇴근 실적 ÷ 오전 목표</span></legend>
-              <div class="fg c3">
                 <div class="fld"><label>상담 달성률 <span class="subtle">방문/오늘진행</span></label><div class="ro" id="wAch1">—</div></div>
                 <div class="fld"><label>등록 달성률 <span class="subtle">(완납＋COD)/확정</span></label><div class="ro" id="wAch2">—</div></div>
                 <div class="fld"><label>매출 달성률 <span class="subtle">금일매출/총계</span></label><div class="ro" id="wAch3">—</div></div>
@@ -776,30 +810,8 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
             </fieldset>
 
             <fieldset class="fs" data-sec="pm">
-              <legend>통화량 <span class="subtle">개인 · 내선 따로 입력</span></legend>
+              <legend>② 내일 준비</legend>
               <div class="fg">
-                <div class="fld"><label for="wCallT">개인 통화시간</label>
-                  <input type="text" id="wCallT" class="f n" value="00:00:00" placeholder="00:00:00"></div>
-                <div class="fld"><label for="wCallC">개인 통화 건수</label>
-                  <input type="number" min="0" id="wCallC" class="f n" value="0"></div>
-                <div class="fld"><label>개인 건당 평균 <span class="subtle">시간/건수</span></label><div class="ro" id="wCallAvg">00:00:00</div></div>
-                <div class="fld"><label>&nbsp;</label><div class="subtle" style="height:34px;display:flex;align-items:center">숫자만 쳐도 됩니다 (002139 → 00:21:39)</div></div>
-                <div class="fld"><label for="wExtT">내선 통화시간</label>
-                  <input type="text" id="wExtT" class="f n" value="00:00:00" placeholder="00:00:00"></div>
-                <div class="fld"><label for="wExtC">내선 통화 건수</label>
-                  <input type="number" min="0" id="wExtC" class="f n" value="0"></div>
-                <div class="fld"><label>내선 건당 평균 <span class="subtle">시간/건수</span></label><div class="ro" id="wExtAvg">00:00:00</div></div>
-                <div class="fld"><label>합계 <span class="subtle">개인＋내선</span></label><div class="ro" id="wCallSum">00:00:00 · 0건</div></div>
-              </div>
-            </fieldset>
-
-            <fieldset class="fs" data-sec="pm">
-              <legend>등록 · 매출</legend>
-              <div class="fg">
-                <div class="fld"><label for="wReg">완납</label><input type="number" min="0" id="wReg" class="f n" value="0"></div>
-                <div class="fld"><label for="wCod">COD <span class="subtle">등록률 포함</span></label><input type="number" min="0" id="wCod" class="f n" value="0"></div>
-                <div class="fld"><label for="wRev">금일매출</label><input type="text" inputmode="numeric" id="wRev" class="f n money" value="0"><span class="hint" id="wRevH">0 원</span></div>
-                <div class="fld"><label for="wRefund">환불 <span class="subtle">선택</span></label><input type="text" inputmode="numeric" id="wRefund" class="f n money" value="0"></div>
                 <div class="fld"><label for="wNext">익일예정 매출</label><input type="text" inputmode="numeric" id="wNext" class="f n money" value="0"><span class="hint" id="wNextH">0 원</span></div>
                 <div class="fld"><label for="wGoal">익일 목표</label><input type="text" inputmode="numeric" id="wGoal" class="f n money" value="0"><span class="hint" id="wGoalH">0 원</span></div>
                 <div class="fld"><label for="wD1">익일 상담</label><input type="number" min="0" id="wD1" class="f n" value="0"></div>
@@ -808,7 +820,27 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
             </fieldset>
 
             <fieldset class="fs" data-sec="pm">
-              <legend>블로그</legend>
+              <legend>③ 통화량 <span class="subtle">숫자만 쳐도 됩니다 (002139 → 00:21:39)</span></legend>
+              <div class="fg">
+                <div class="fld"><label for="wCallT">개인 통화시간</label>
+                  <input type="text" id="wCallT" class="f n" value="00:00:00" placeholder="00:00:00"></div>
+                <div class="fld"><label for="wCallC">개인 통화 건수</label>
+                  <input type="number" min="0" id="wCallC" class="f n" value="0"></div>
+                <div class="fld"><label for="wExtT">내선 통화시간</label>
+                  <input type="text" id="wExtT" class="f n" value="00:00:00" placeholder="00:00:00"></div>
+                <div class="fld"><label for="wExtC">내선 통화 건수</label>
+                  <input type="number" min="0" id="wExtC" class="f n" value="0"></div>
+              </div>
+              <div class="autorow" aria-label="자동 계산">
+                <span class="autot">자동 계산</span>
+                <div class="fld"><label>개인 건당 평균 <span class="subtle">시간/건수</span></label><div class="ro" id="wCallAvg">00:00:00</div></div>
+                <div class="fld"><label>내선 건당 평균 <span class="subtle">시간/건수</span></label><div class="ro" id="wExtAvg">00:00:00</div></div>
+                <div class="fld"><label>합계 <span class="subtle">개인＋내선</span></label><div class="ro" id="wCallSum">00:00:00 · 0건</div></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="fs" data-sec="pm">
+              <legend>④ 블로그</legend>
               <div class="fg c3">
                 <div class="fld"><label for="wBlog">작성 건수</label><input type="number" min="0" id="wBlog" class="f n" value="0"></div>
                 <div class="fld span2"><label for="wBlogN">내용</label><input type="text" id="wBlogN" class="f" placeholder="예) 포토샵 기초 과정 후기 1건 작성완료"></div>
@@ -816,7 +848,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
             </fieldset>
 
             <fieldset class="fs" data-sec="pm">
-              <legend>학사일지</legend>
+              <legend>⑤ 학사일지</legend>
               <div class="fg">
                 <div class="fld spanall"><label for="wJournal">작성 대상 <span class="subtle">한 줄에 한 명</span></label>
                   <textarea id="wJournal" class="f" rows="4" placeholder="백은재&#10;최문진"></textarea></div>
@@ -824,7 +856,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
             </fieldset>
 
             <fieldset class="fs" data-sec="pm">
-              <legend>비고</legend>
+              <legend>⑥ 비고</legend>
               <div class="fg">
                 <div class="fld spanall"><label for="wNote">특이사항</label>
                   <textarea id="wNote" class="f" rows="3" placeholder="이슈 · 인수인계 · 클레임 등"></textarea></div>
@@ -956,10 +988,10 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
           </div>
           <div class="bd" style="border-top:1px solid var(--line-2)">
             <div class="legend">
-              <span><i style="background:var(--steel)"></i>상담예정</span>
-              <span><i style="background:var(--brass)"></i>면담</span>
-              <span><i style="background:var(--teal)"></i>수업 · 특강</span>
-              <span><i style="background:#8A9099"></i>기타</span>
+              <span><b class="lgb t1">상</b>상담예정</span>
+              <span><b class="lgb t2">면</b>면담</span>
+              <span><b class="lgb t3">수</b>수업 · 특강</span>
+              <span><b class="lgb t4">기</b>기타</span>
               <span><i style="background:var(--teal);border-radius:50%"></i>보고 제출됨</span>
               <span><i style="background:repeating-linear-gradient(135deg,#F5F6F8,#F5F6F8 3px,#E4E7EB 3px,#E4E7EB 6px);border:1px solid #DADEE3"></i>영업일 아님</span>
             </div>
@@ -970,6 +1002,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
           <div class="hd"><h2 id="evTitle">일정</h2><div class="sp"></div>
             <span class="eyebrow" id="evMode" hidden>수정 중</span></div>
           <div class="bd">
+            <div class="evform">
             <div class="fg c2" style="gap:10px">
               <div class="fld"><label for="evDate">날짜</label><input type="date" id="evDate" class="f"></div>
               <div class="fld"><label for="evTime">시간</label><input type="time" id="evTime" class="f"></div>
@@ -984,6 +1017,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
             <div style="display:flex;gap:8px;margin-top:12px">
               <button class="btn pri" id="evAdd" style="flex:1 1 auto">일정 추가</button>
               <button class="btn gh" id="evCancel" hidden>취소</button>
+            </div>
             </div>
             <div style="margin-top:16px" id="evList"></div>
           </div>
@@ -1114,7 +1148,7 @@ table.mxt tfoot td.mx{font-variant-numeric:tabular-nums;font-size:12.5px}
 <div class="ovl solid" id="loginOvl">
   <div class="login-shell" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <section class="login-story">
-      <div class="login-brand"><div class="brand-mark">3—1</div><span>3-1팀 퇴근보고</span></div>
+      <div class="login-brand"><div class="brand-mark">3—1</div><span>3-1팀 출퇴근보고</span></div>
       <span class="login-kicker">TEAM OPERATIONS · DAILY SIGNAL</span>
       <h1 id="loginTitle">하루의 숫자를<br><em>팀의 방향으로.</em></h1>
       <p>흩어진 보고를 한 화면에 모아 오늘의 성과와 내일의 움직임을 더 빠르게 판단하세요.</p>
@@ -1402,6 +1436,7 @@ const DOW=["일","월","화","수","목","금","토"];
 const dowOf=s=>DOW[parse(s).getDay()];
 const kdate=s=>{const d=parse(s);return `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;};
 const EVN={1:"상담예정",2:"면담",3:"수업·특강",4:"기타"};
+const EVB={1:"상",2:"면",3:"수",4:"기"};   /* 캘린더 뱃지 글자 */
 
 let tT;
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),2100);}
@@ -1513,10 +1548,21 @@ const scNum=v=>(Math.round((Number(v)||0)*10)/10).toLocaleString("ko-KR");
 
 /* ══════════════════ nav ══════════════════ */
 const TITLES={dash:"대시보드",write:"보고 작성",biz:"월간 입력표",log:"일자별 기록",cal:"캘린더",set:"설정 · 데이터"};
+/* 인트라넷 안에서 열렸는지 */
+if(window.parent!==window){
+  document.documentElement.classList.add("in-aix");
+  /* 숨긴 메뉴 아래쪽에 있던 동기화 표시를 위쪽 제목 옆으로 */
+  try{ const sb=$("#syncBadge"), h1=$("#vtitle"); if(sb&&h1) h1.insertAdjacentElement("afterend",sb); }catch(e){}
+}
+/* 인트라넷 왼쪽 메뉴에서 고른 화면으로 */
+function viewFromParent(v){ if(v&&TITLES[v]&&!$("#v-"+v).classList.contains("on")) go(v); }
+window.addEventListener("message",e=>{ if(e.origin===location.origin&&e.data&&e.data.aixView) viewFromParent(e.data.aixView); });
+setTimeout(()=>{ try{ const f=window.frameElement; if(f&&f.aixView) viewFromParent(f.aixView); }catch(e){} },0);
 $("#nav").addEventListener("click",e=>{
   const b=e.target.closest("button[data-v]"); if(!b) return; go(b.dataset.v);
 });
 function go(v){
+  try{ if(window.parent!==window) window.parent.postMessage({aixReportView:v},location.origin); }catch(e){}
   if(v!=="write") flushDraft();
   $$("#nav button").forEach(x=>x.classList.toggle("on",x.dataset.v===v));
   $$(".view").forEach(x=>x.classList.remove("on"));
@@ -1944,6 +1990,7 @@ function reportText(r){
   return gapSections(L).join("\n");
 }
 function refreshForm(){
+  setTimeout(()=>{ try{ amSummary(); }catch(e){} },0);
   const r=formData();
   $("#wRate1").textContent=rt(r.visit,r.plan);
   $("#wRate2").textContent=rt(tot(r),r.visit);
@@ -2026,8 +2073,18 @@ function setWMode(m){
   $$('#v-write [data-sec="am"]').forEach(el=>el.hidden=(m!=="am"));
   if(m==="am") syncPrev();
   $("#wSave").textContent=m==="am"?"오전보고 저장":"퇴근보고 저장";
+  $("#wAmFs").classList.toggle("folded",m!=="am");
   refreshForm();
+  amSummary();
 }
+/* 퇴근보고 화면에서 오전에 쓴 목표를 한 줄로 */
+function amSummary(){
+  const el=$("#wAmSumTx"); if(!el) return;
+  const v=id=>($("#"+id)||{}).value||"0";
+  el.textContent=`오전 목표 · 총계 ${$("#wTotRev")?$("#wTotRev").textContent:"0"} · 오늘 상담 ${v("wPlan")}건 · 확정 ${v("wConfirm")}건`;
+}
+document.addEventListener("click",e=>{ if(e.target&&e.target.id==="wAmOpen"){ $("#wAmFs").classList.remove("folded"); } });
+document.addEventListener("input",e=>{ if(e.target&&e.target.closest&&e.target.closest("#wAmFs")) amSummary(); });
 /* 직전 영업일 찾기 */
 function prevBizDay(d){
   let c=shift(d,-1);
@@ -2247,10 +2304,10 @@ function renderCal(){
     const evs=S.events.filter(e=>e.date===ds&&calHit(e.mentor)).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
     const hasRep=S.reports.some(r=>r.date===ds&&calHit(r.mentor));
     const biz=isBiz(ds);
-    const show=evs.slice(0,4), rest=evs.length-show.length;
+    const show=evs.slice(0,5), rest=evs.length-show.length;
     h+=`<div class="cell${out?" out":""}${biz?" biz":" nb"}${ds===today()?" today":""}${ds===calSel?" sel":""}" data-d="${ds}">
-      <div class="dn"><span>${dt.getDate()}</span><span class="tg">${biz?"":'<em class="offtag">휴무</em>'}${hasRep?'<i class="rp" title="보고 제출됨"></i>':""}</span></div>
-      ${show.map(e=>`<div class="ev t${e.type}${e.id===evEdit?" onedit":""}" draggable="${calBiz?"false":"true"}" data-evc="${esc(e.id)}" title="${esc((e.time?e.time+" ":"")+e.title+(e.mentor?" · "+e.mentor:""))} — 끌어서 날짜 이동 · 클릭해서 수정">${e.time?`<b class="num">${esc(e.time)}</b> `:""}${esc(e.title)}${e.mentor&&calWho==="__ALL__"?`<span class="who">${esc(e.mentor)}</span>`:""}</div>`).join("")}
+      <div class="dn"><span>${dt.getDate()}</span><span class="tg">${evs.length>5?[1,2,3,4].map(t=>{const n=evs.filter(e=>String(e.type)===String(t)).length;return n?`<em class="cnt t${t}">${EVB[t]}${n}</em>`:""}).join(""):""}${biz?"":'<em class="offtag">휴무</em>'}${hasRep?'<i class="rp" title="보고 제출됨"></i>':""}</span></div>
+      ${show.map(e=>`<div class="ev t${e.type}${e.id===evEdit?" onedit":""}" draggable="${calBiz?"false":"true"}" data-evc="${esc(e.id)}" title="${esc(EVN[e.type]+" · "+(e.time?e.time+" ":"")+e.title+(e.mentor?" · "+e.mentor:""))} — 끌어서 날짜 이동 · 클릭해서 수정"><i class="eb">${EVB[e.type]||"기"}</i>${e.time?`<b class="num">${esc(e.time)}</b>`:""}<span class="et">${esc(e.title)}</span>${e.mentor&&calWho==="__ALL__"?`<span class="who">${esc(e.mentor)}</span>`:""}</div>`).join("")}
       ${rest>0?`<div class="more">+${rest}</div>`:""}
     </div>`;
   }
@@ -2271,7 +2328,7 @@ function renderEvList(){
   const rep=byDate(d).filter(r=>calHit(r.mentor));
   $("#evList").innerHTML=(evs.length?evs.map(e=>`<div class="evrow${e.id===evEdit?" editing":""}">
       <span class="tm">${esc(e.time||"—")}</span>
-      <span class="bdy"><span class="tt"><span class="tag t${e.type}">${EVN[e.type]}</span>${esc(e.title)}</span>
+      <span class="bdy"><span class="tt"><b class="lgb t${e.type}" title="${EVN[e.type]}">${EVB[e.type]}</b>${esc(e.title)}</span>
       <span class="mt">${esc(e.mentor||"담당 미지정")}</span></span>
       <span class="acts">
         <button class="ib" data-evedit="${e.id}" title="수정" aria-label="일정 수정">✎</button>
@@ -3056,6 +3113,7 @@ async function boot(keep){
   $("#evDate").value=$("#evDate").value||calSel;
   calWho=S.ui.calWho||"__ALL__";
   syncMentorSelects(); loadForm(); renderDash(); renderSet();
+  try{ const f=window.frameElement; if(f&&f.aixView&&TITLES[f.aixView]&&f.aixView!=="dash") go(f.aixView); }catch(e){}
   if(!keep){
     if(Cloud.configured()){ await Cloud.boot(); }
     else{ setSync("local"); $("#lgMode").textContent="local mode"; $("#lgHint").textContent="Firebase 설정 전"; }
