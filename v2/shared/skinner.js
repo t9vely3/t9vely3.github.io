@@ -32,7 +32,7 @@
       css: ".login-wrap{background:var(--bg)!important}.logout-btn{display:none!important}" },
     guide: { native: "light", brand: [213], css: ".sidebar-footer-link{display:none!important}" },
     /* 퇴근보고 상단 큰 카드: 원래 남색 그라데이션 + 흰 글자 구조 → 색만 짙은 올리브로 바꾸고 흰 글자는 유지 */
-    report: { native: "light", brand: [239, 215], accVars: ["--ink"], keep: /\.dash-hero|\.hero-|\.rail|\.nav button|\.eb\b|\.cnt\b|\.lgb\b/,
+    report: { native: "light", brand: [239, 215], accVars: ["--ink"], keep: /\.dash-hero|\.hero-|\.rail|\.nav button|\.eb\b|\.cnt\b|\.lgb\b|\.evpop-bg/,
       css: function (pal) {
         return "#btnOut{display:none!important}" +
           ".rail{background:" + (pal.dark ? "#1C1D21" : "#232B0E") + "!important;border-right:1px solid " + (pal.dark ? "#2C2E33" : "transparent") + "}" +
