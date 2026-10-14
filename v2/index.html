@@ -22,6 +22,9 @@ html, body { height: 100%; }
 .rail a.on { background: var(--accent); color: var(--on-accent); }
 .rail svg { width: 20px; height: 20px; }
 .rail .gap { flex: 1; }
+.rail a.sub { flex-direction: row; justify-content: center; gap: 6px; padding: 6px 0; font-size: 12px; font-weight: 700; }
+.rail a.sub i { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rail a.sub.on i { box-shadow: 0 0 0 2px var(--on-accent); }
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 0; }
 .top .row { gap: 10px; }
@@ -156,8 +159,12 @@ html, body { height: 100%; }
     team: [
       { id: "home", n: "홈", i: "home" },
       { id: "report", n: "퇴근보고", i: "pen", skin: 1 },
-      { id: "sales", n: "상담 매출", i: "chart", skin: 1 },
-      { id: "cod", n: "COD 대장", i: "wallet", skin: 1 },
+      { id: "sales", n: "상담 매출", i: "chart", skin: 1, view: "전체" },
+      /* 상담 매출 아래 칸: 같은 상담 기록을 결과별로 나눠 보여 줌 (기록은 한 곳에 쌓이고 '상담 매출'에서 모두 합산) */
+      { id: "sales-paid", n: "완납", dot: "#3F8F4E", frame: "sales", view: "등록" },
+      { id: "sales-cod", n: "COD", dot: "#C98A1B", frame: "sales", view: "COD" },
+      { id: "sales-fail", n: "미등록", dot: "#B4474F", frame: "sales", view: "미등록" },
+      { id: "sales-promote", n: "추등", dot: "#3F63B0", frame: "sales", view: "추등" },
       { id: "settings", n: "설정", i: "gear" }
     ]
   };
@@ -237,7 +244,8 @@ html, body { height: 100%; }
     var nm = AIX.me.name || AIX.me.email.split("@")[0];
     $("#meName").textContent = nm; $("#meMail").textContent = AIX.me.email; $("#meAvatar").textContent = nm.slice(0, 1);
     var hash = (location.hash || "").slice(1);
-    if (hash === "team" || hash === "dept") { S.space = hash; hash = "home"; }   /* 예전 3-1팀 주소로 들어오면 3-1팀 공간으로 */
+    if (hash === "team" || hash === "dept") { S.space = hash; hash = "home"; }
+    if (hash === "cod") { S.space = "team"; hash = "sales-cod"; }   /* 예전 COD 대장 주소 → 상담 매출 · COD 칸 */   /* 예전 3-1팀 주소로 들어오면 3-1팀 공간으로 */
     paintTheme(); paintSpace(); loadAccess();
     if (hash && hash !== "home" && MENU[S.space].some(function (m) { return m.id === hash; })) open(hash); else open("home");
   }
@@ -277,6 +285,10 @@ html, body { height: 100%; }
     });
     var html = '<div class="logo">aix<span>.</span></div>';
     MENU[S.space].forEach(function (m) {
+      if (m.dot) {
+        html += '<a href="#' + m.id + '" data-id="' + m.id + '" class="sub' + (S.view === m.id ? " on" : "") + '"><i style="background:' + m.dot + '" aria-hidden="true"></i>' + esc(m.n) + "</a>";
+        return;
+      }
       html += '<a href="#' + m.id + '" data-id="' + m.id + '" class="' + (S.view === m.id ? "on" : "") + '">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICON[m.i] + '"></path></svg>' + esc(m.n) + "</a>";
     });
@@ -297,19 +309,27 @@ html, body { height: 100%; }
     S.view = id;
     history.replaceState(null, "", "#" + id);
     document.querySelectorAll("#rail a").forEach(function (a) { a.classList.toggle("on", a.dataset.id === id); });
-    Object.keys(S.frames).forEach(function (k) { S.frames[k].hidden = k !== S.space + ":" + id; });
+    var m = MENU[S.space].filter(function (x) { return x.id === id; })[0];
+    var app = (m && m.frame) || id;                       /* 완납·COD·미등록·추등은 상담 매출 화면 하나를 같이 씀 */
+    var key = S.space + ":" + app;
+    Object.keys(S.frames).forEach(function (k) { S.frames[k].hidden = k !== key; });
     $("#home").hidden = id !== "home";
     if (id === "home") return S.space === "dept" ? homeDept() : homeTeam();
-    var m = MENU[S.space].filter(function (x) { return x.id === id; })[0];
-    var key = S.space + ":" + id;
+    var base = MENU[S.space].filter(function (x) { return x.id === app; })[0] || m;
     if (!S.frames[key]) {
       var f = document.createElement("iframe");
-      f.title = m.n;
-      if (m.skin) window.AIXSkin.attach(f, id, AIX.theme, AIX.me, AIX.READ_ONLY);
-      f.src = "apps/" + id + ".html";
+      f.title = base.n;
+      if (base.skin) window.AIXSkin.attach(f, app, AIX.theme, AIX.me, AIX.READ_ONLY);
+      f.addEventListener("load", function () { sendView(f); });
+      f.src = "apps/" + app + ".html";
       $("#stage").appendChild(f); S.frames[key] = f;
     }
     S.frames[key].hidden = false;
+    if (m && m.view) { S.frames[key].aixView = m.view; S.frames[key].aixViewName = m.n; sendView(S.frames[key]); }
+  }
+  function sendView(f) {
+    if (!f.aixView) return;
+    try { f.contentWindow.postMessage({ aixSalesView: f.aixView, name: f.aixViewName }, location.origin); } catch (e) {}
   }
 
   /* ---------- 홈 공통 ---------- */
@@ -388,7 +408,7 @@ html, body { height: 100%; }
   /* ---------- 3-1팀 홈 ---------- */
   async function homeTeam() {
     $("#home").innerHTML = '<div class="bento">' +
-      hello('오늘 퇴근보고 <b id="repN">…</b> 제출됐어요', [["report", "퇴근보고 쓰기"], ["sales", "상담 입력"], ["cod", "COD 대장"]]) +
+      hello('오늘 퇴근보고 <b id="repN">…</b> 제출됐어요', [["report", "퇴근보고 쓰기"], ["sales", "상담 입력"], ["sales-cod", "COD 보기"]]) +
       '<section class="card span2"><div class="card-head"><h2>이번 달 순매출</h2><button type="button" data-go="report">자세히</button></div>' +
       '<div class="num" style="font-size:38px;font-weight:700" id="monRev">…</div><div class="bars" id="bars"></div><div class="bars-x" id="barsX"></div><div class="muted" style="font-size:12px;margin-top:6px">퇴근보고에 입력된 매출 − 환불 기준</div></section>' +
       stat("tReg", "이번 달 등록", "건", "report") +

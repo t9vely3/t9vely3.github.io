@@ -407,7 +407,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark">S</span>
-      <span>상담 매출 관리<small>SBS Academy 3-1</small></span>
+      <span><b id="viewTitle" style="font-weight:inherit">상담 매출 관리</b><small>SBS Academy 3-1</small></span>
     </div>
     <div class="topbar-search">
       <span class="icon">⌕</span>
@@ -442,6 +442,12 @@
 
   <!-- ===== Main ===== -->
   <main class="main">
+    <!-- 완납 · COD · 미등록 · 추등 칸에서만 보이는 안내 -->
+    <div id="viewBanner" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);font-size:13px;line-height:1.5">
+      <span id="viewBannerText" style="flex:1 1 300px"></span>
+      <button id="codImportBtn" class="btn btn-sm" onclick="openCodImport()" style="display:none">COD 대장 기록 가져오기</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal()" id="viewAddBtn">＋ 새로 쓰기</button>
+    </div>
     <!-- KPI -->
     <div class="kpi">
       <div class="kpi-cell"><span class="l">총 상담</span><span class="v" id="totalCount">0</span><span class="d" id="kpiCountSub">이번 기간</span></div>
@@ -580,6 +586,27 @@
     <div style="padding:14px 20px;border-top:1px solid var(--line-soft);display:flex;gap:8px;background:#fff">
       <button onclick="closeSalesPeriodModal()" class="btn" style="flex:1">취소</button>
       <button onclick="saveSalesPeriodSettings()" class="btn btn-primary" style="flex:1">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COD 대장 기록 가져오기 ===== -->
+<div id="codImportModal" class="modal-backdrop">
+  <div class="modal-panel" style="max-width:860px">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <p style="font-size:11px;color:var(--muted);font-weight:700">COD 대장 → 상담 매출</p>
+        <h2 style="font-size:18px;font-weight:800;margin-top:2px">COD 대장 기록 가져오기</h2>
+      </div>
+      <button onclick="closeCodImport()" class="btn btn-sm">닫기</button>
+    </div>
+    <div style="padding:14px 20px;max-height:62vh;overflow:auto">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6">예전 COD 대장에 따로 적은 기록입니다. 체크한 기록만 상담 매출에 복사돼요. COD 대장 원본은 지우지 않고, 한 번 가져온 기록은 다시 나오지 않습니다.<br>'같은 이름 있음'은 이미 상담 매출에 같은 학생이 있다는 뜻이라 체크를 빼 두었어요. 다른 사람이면 체크해서 가져오세요.</div>
+      <div id="codImportList"></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--line-soft);display:flex;gap:8px">
+      <button onclick="closeCodImport()" class="btn" style="flex:1">취소</button>
+      <button id="codImportRun" onclick="runCodImport()" class="btn btn-primary" style="flex:1">체크한 기록 가져오기</button>
     </div>
   </div>
 </div>
@@ -734,6 +761,11 @@ let pendingOps = 0;
 let lastSyncAt = 0;
 let currentMonth = '전체';
 let currentResult = '전체';
+/* 인트라넷 왼쪽 메뉴의 칸(완납·COD·미등록·추등). 기록은 모두 같은 곳(consults)에 쌓이고 칸은 보여 주는 범위만 다름 */
+let currentView = '전체';
+let currentViewName = '';
+const VIEW_SETS = { '전체': null, '등록': ['등록'], 'COD': ['COD','미완료'], '미등록': ['미등록'], '추등': ['추등'] };
+function inView(r){ const set = VIEW_SETS[currentView]; return !set || set.includes(r.displayResult || '미등록'); }
 let currentSort = 'desc';
 let selectedCourseValue = '';
 let currentDiscountType = '';
@@ -1371,7 +1403,7 @@ function getFilteredRows(){
   const keyword = document.getElementById('search').value.trim();
   return rows.filter(r => {
     const monthOk = currentMonth === '전체' || salesMonthFromDate(r.date) === currentMonth;
-    const resultOk = currentResult === '전체' || r.displayResult === currentResult;
+    const resultOk = inView(r) && (currentResult === '전체' || r.displayResult === currentResult);
     const searchOk = !keyword || [r.student, r.mentor, r.course].some(v => String(v||'').includes(keyword));
     return monthOk && resultOk && searchOk;
   }).sort((a,b)=> currentSort==='desc' ? isoTime(b.date)-isoTime(a.date) : isoTime(a.date)-isoTime(b.date));
@@ -1381,8 +1413,9 @@ function renderMonthTabs(){
   const wrap = document.getElementById('monthTabs');
   const months = getMonths();
   const counts = {};
-  rows.forEach(r => { const m = salesMonthFromDate(r.date); counts[m] = (counts[m]||0)+1; });
-  counts['전체'] = rows.length;
+  const vrows = rows.filter(inView);
+  vrows.forEach(r => { const m = salesMonthFromDate(r.date); counts[m] = (counts[m]||0)+1; });
+  counts['전체'] = vrows.length;
   wrap.innerHTML = months.map(month =>
     `<button class="side-item ${currentMonth===month?'active':''}" onclick="setMonth('${month}')"><span>${month}</span><span class="count">${format(counts[month]||0)}</span></button>`
   ).join('');
@@ -1391,8 +1424,10 @@ function renderResultFilters(){
   const wrap = document.getElementById('resultFilters');
   const dotColor = { 전체:'transparent', 등록:'#16a34a', COD:'#f59e0b', 미등록:'#e11d48', 추등:'#2563eb', 미완료:'#111827' };
   const counts = {전체:0,등록:0,COD:0,미등록:0,추등:0,미완료:0};
-  rows.forEach(r => { counts[r.displayResult] = (counts[r.displayResult]||0)+1; counts.전체 += 1; });
-  wrap.innerHTML = ['전체','등록','COD','미등록','추등','미완료'].map(item =>
+  rows.filter(inView).forEach(r => { counts[r.displayResult] = (counts[r.displayResult]||0)+1; counts.전체 += 1; });
+  const items = VIEW_SETS[currentView] ? ['전체', ...VIEW_SETS[currentView]] : ['전체','등록','COD','미등록','추등','미완료'];
+  const parent = wrap.closest('.side-section'); if(parent) parent.style.display = (VIEW_SETS[currentView] && VIEW_SETS[currentView].length === 1) ? 'none' : '';
+  wrap.innerHTML = items.map(item =>
     `<button class="side-item ${currentResult===item?'active':''}" onclick="setResult('${item}')"><span style="display:flex;align-items:center;gap:8px">${dotColor[item]!=='transparent'?`<span class="dot" style="background:${dotColor[item]}"></span>`:'<span class="dot" style="background:#cbd5e1"></span>'}${item}</span><span class="count">${format(counts[item]||0)}</span></button>`
   ).join('');
 }
@@ -1641,6 +1676,32 @@ function renderAll(){
 }
 function setMonth(month){ currentMonth = month; renderAll(); }
 function setResult(result){ currentResult = result; renderAll(); }
+
+const VIEW_TEXT = {
+  '등록': '입금이 다 끝난(잔액 0원) 상담만 모았어요. 여기서 쓴 기록도 \'상담 매출\'에 자동으로 합쳐집니다. 입금 칸을 비워 두면 실결제 금액 전체가 입금된 것으로 저장돼요.',
+  'COD': '입금이 일부만 된 상담(COD)과, 납부기한이 지난 COD(미완료)를 모았어요. 여기서 쓴 기록도 \'상담 매출\'에 자동으로 합쳐집니다.',
+  '미등록': '아직 입금이 없는 상담만 모았어요. 금액 없이 상담 내용만 적어도 됩니다. 나중에 입금하면 수정에서 입금액을 넣으면 완납이나 COD로 자동으로 옮겨져요.',
+  '추등': '추가 등록 상담만 모았어요. 여기서 새로 쓰면 결과가 \'추등\'으로 저장되고, \'상담 매출\'에 자동으로 합쳐집니다.'
+};
+function setView(view, name){
+  if(!(view in VIEW_SETS)) view = '전체';
+  currentView = view; currentViewName = name || '';
+  currentResult = '전체';
+  const t = document.getElementById('viewTitle');
+  if(t) t.textContent = view === '전체' ? '상담 매출 관리' : '상담 매출 · ' + (name || view);
+  const b = document.getElementById('viewBanner');
+  if(b){
+    b.style.display = view === '전체' ? 'none' : 'flex';
+    document.getElementById('viewBannerText').textContent = VIEW_TEXT[view] || '';
+    document.getElementById('codImportBtn').style.display = view === 'COD' ? '' : 'none';
+    document.getElementById('viewAddBtn').textContent = '＋ ' + (name || view) + ' 상담 쓰기';
+  }
+  renderAll();
+}
+window.addEventListener('message', e => {
+  if(e.origin !== location.origin || !e.data || !e.data.aixSalesView) return;
+  setView(e.data.aixSalesView, e.data.name);
+});
 function setSort(sort){ currentSort = sort; renderAll(); }
 
 function renderCourseButtons(){
@@ -1789,7 +1850,15 @@ function resetForm(){
   renderDiscountPane();
   updatePaymentPreview();
 }
-function openModal(){ resetForm(); editIndex = null; modalTitle.innerText='상담 입력'; saveButton.innerText='저장하기'; modal.classList.add('flex'); }
+function openModal(){
+  resetForm(); editIndex = null;
+  modalTitle.innerText = currentView === '전체' ? '상담 입력' : (currentViewName || currentView) + ' 상담 입력';
+  saveButton.innerText='저장하기';
+  if(currentView === '추등') result.value = '추등';
+  const p = document.getElementById('paid');
+  if(p) p.placeholder = currentView === '등록' ? '비워 두면 실결제 금액 전체로 저장' : currentView === '미등록' ? '입금 전이면 비워 두세요' : '';
+  modal.classList.add('flex');
+}
 function closeModal(){ modal.classList.remove('flex'); }
 
 function buildRowFromForm(){
@@ -1839,9 +1908,71 @@ function buildRowFromForm(){
     result: result.value === 'auto' ? '' : result.value,
     memo: memo.value.trim()
   };
+  /* 완납 칸에서 새로 쓸 때 입금을 비워 두면 실결제 전체를 입금으로 봄 */
+  if(editIndex === null && currentView === '등록' && !String(paid.value||'').trim()) obj.paid = obj.finalPrice;
   obj.displayResult = getAutoResult(obj);
   return obj;
 }
+
+/* ===== COD 대장 기록 가져오기 =====
+   예전 'COD 대장'(cod_records)에 따로 적은 기록을 상담 기록으로 복사합니다.
+   COD 대장 기록은 지우지 않고, 한 번 가져온 기록은 다시 가져오지 않습니다(fromCod). */
+let codCandidates = [];
+async function openCodImport(){
+  const fb = window.__fb;
+  const box = document.getElementById('codImportList');
+  document.getElementById('codImportModal').classList.add('flex');
+  box.innerHTML = '<div class="panel-empty">COD 대장을 읽는 중...</div>';
+  try{
+    const snap = await fb.getDocs(fb.collection(fb.db, 'cod_records'));
+    const done = new Set(rows.map(r => r.fromCod).filter(Boolean));
+    const names = new Set(rows.map(r => String(r.student||'').replace(/\s/g,'')).filter(Boolean));
+    codCandidates = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(c => !done.has(c.id) && String(c.name||'').trim())
+      .map(c => {
+        const amount = Number(c.amount||0), cod = Number(c.cod||0);
+        const bal = (c.balanceManual !== null && c.balanceManual !== undefined) ? Number(c.balanceManual) : amount - cod;
+        return { ...c, amount, paidAmt: Math.max(amount - bal, 0), bal: Math.max(bal,0), same: names.has(String(c.name).replace(/\s/g,'')) };
+      })
+      .sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
+    if(!codCandidates.length){ box.innerHTML = '<div class="panel-empty">가져올 기록이 없어요. COD 대장 기록이 모두 상담 매출에 들어와 있습니다.</div>'; return; }
+    box.innerHTML = codCandidates.map((c,i) => `
+      <label style="display:grid;grid-template-columns:24px 92px 1fr 90px 120px 120px;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid var(--line-soft);font-size:13px;cursor:pointer">
+        <input type="checkbox" data-i="${i}" ${c.same ? '' : 'checked'} style="width:18px;height:18px">
+        <span>${displayDate(c.date)||'-'}</span>
+        <span><b>${escapeHtml(c.name)}</b>${c.same ? ' <span style="font-size:11px;font-weight:700;color:#9A5414">같은 이름 있음 · 확인 필요</span>' : ''}</span>
+        <span style="color:var(--muted)">${escapeHtml(c.mentor||'-')}</span>
+        <span style="text-align:right">금액 ${format(c.amount)}</span>
+        <span style="text-align:right">잔액 ${format(c.bal)}</span>
+      </label>`).join('');
+  }catch(err){
+    box.innerHTML = '<div class="panel-empty">COD 대장을 읽지 못했어요 (' + escapeHtml(err.code || err.message || '오류') + ')</div>';
+  }
+}
+function closeCodImport(){ document.getElementById('codImportModal').classList.remove('flex'); }
+async function runCodImport(){
+  const picks = [...document.querySelectorAll('#codImportList input[type=checkbox]:checked')].map(x => codCandidates[+x.dataset.i]).filter(Boolean);
+  if(!picks.length){ toast('가져올 기록을 골라 주세요'); return; }
+  const btn = document.getElementById('codImportRun'); btn.disabled = true;
+  let ok = 0;
+  for(const c of picks){
+    const row = {
+      date: c.date || todayStr(), deadline: c.payDate || c.date || todayStr(),
+      student: String(c.name||'').trim(), mentor: String(c.mentor||'').trim(), course: '',
+      price: c.amount, payableAmount: c.amount, payableManual: false, specialDiscount: 0,
+      ddazuaPrice: 0, acpPrice: 0, bonusTotal: 0, discountType: '', discountRate: 0,
+      supportPaidCount: 0, supportFreeCount: 0,
+      finalPrice: c.amount, paid: c.paidAmt, payer: '', purpose: '', result: '',
+      memo: [c.memo, c.phone ? '연락처 ' + c.phone : ''].filter(Boolean).join(' / '),
+      fromCod: c.id
+    };
+    row.displayResult = getAutoResult(row);
+    try{ await apiCall('create', { row }); ok++; }catch(e){ console.error('COD 가져오기 실패', e); }
+  }
+  btn.disabled = false; closeCodImport();
+  toast(ok + '건을 가져왔어요' + (ok < picks.length ? ' (' + (picks.length-ok) + '건 실패)' : ''), {type: ok ? 'success' : 'error'});
+}
+function escapeHtml(v){ return String(v==null?'':v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 
 async function postToSheet(obj){
   // (레거시 호환 - 더이상 사용하지 않음. apiCall 사용)

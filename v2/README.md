@@ -23,7 +23,7 @@ apps/*.html         기존 화면 복사본 (기능 코드는 원본 그대로, 
 | 안내 편집 | apps/guide.html | apps/guide-admin.html |
 | 퇴근보고 (3-1팀) | apps/report.html | team31/apps/report.html |
 | 상담 매출 (3-1팀) | apps/sales.html | team31/apps/sales.html |
-| COD 대장 (3-1팀) | apps/cod.html | -COD-/index.html |
+| COD 대장 (3-1팀 · 메뉴에서 뺌) | apps/cod.html | -COD-/index.html · 이제 상담 매출 › COD 칸에서 관리하고, 예전 기록은 "COD 대장 기록 가져오기"로 옮김 |
 
 ## 화면 하나를 고칠 때
 apps/ 안의 그 파일만 고쳐 올리면 됩니다. 메뉴 이름·순서는 index.html 의 MENU 에서 바꿉니다.
