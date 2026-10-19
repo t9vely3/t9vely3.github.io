@@ -10717,22 +10717,112 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     });
     return { name: name, blocks: blocks };
   }
-  function smsText(b){
-    return '[SBS아카데미 AIX 학원 홍대점]\n' +
-      '안녕하세요~ 개강 안내 드립니다 :)\n' +
-      '수업 변동사항 있으시다면 카톡 부탁드립니다!\n\n' +
-      '✔수강과목: ' + b.ttName + '\n' +
-      '* 수업일정: ' + (b.when || '-') + '\n' +
-      '* 수업요일: ' + (b.days || '-') + '\n' +
-      '* 수강시간: ' + (b.time || '-') + '\n' +
-      '* 강의실: ' + (b.room || '-') + '\n' +
-      (b.teacher ? '* 담당강사: ' + b.teacher + ' 강사님\n' : '') +
-      '* 비대면줌: ' + (b.zoom || '-') + '\n' +
-      '* 체크사항: ' + (b.note || '-') + '\n\n' +
-      '* 학사일정은 공지 사이트 참고바랍니다.\n' +
-      '[SBS 수강안내 사이트]\n' +
-      'https://t9vely3.github.io/3-1Notice/#\n' +
-      '학사일정 / 준비물안내 / 특강안내 / 비대면 / 온라인강의';
+  var BTPL_KEY = 'studentMgmt_v3_briefTpl2';
+  var BTPL_DEFAULT = [
+    '[SBS아카데미 AIX 학원 홍대점]',
+    '안녕하세요 {이름}님~ 개강 안내 드립니다 :)',
+    '수업 변동사항 있으시다면 카톡 부탁드립니다!',
+    '',
+    '✔수강과목: {과목}',
+    '* 수업일정: {수업일정}',
+    '* 수업요일: {수업요일}',
+    '* 수강시간: {수강시간}',
+    '* 강의실: {강의실}',
+    '* 담당강사: {담당강사}',
+    '* 비대면줌: {비대면줌}',
+    '* 체크사항: {체크사항}',
+    '',
+    '* 학사일정은 공지 사이트 참고바랍니다.',
+    '[SBS 수강안내 사이트]',
+    'https://t9vely3.github.io/3-1Notice/#',
+    '학사일정 / 준비물안내 / 특강안내 / 비대면 / 온라인강의'
+  ].join('\n');
+  function btpl(){
+    try{ var v = localStorage.getItem(BTPL_KEY); return (v && v.replace(/\s/g,'')) ? v : BTPL_DEFAULT; }
+    catch(e){ return BTPL_DEFAULT; }
+  }
+  function smsText(b, name){
+    var map = {
+      '이름': name || '',
+      '과목': b.ttName || b.subject || '',
+      '수업일정': b.when || '-',
+      '수업요일': b.days || '-',
+      '수강시간': b.time || '-',
+      '강의실': b.room || '-',
+      '담당강사': b.teacher ? (b.teacher + ' 강사님') : '미정',
+      '비대면줌': b.zoom || '-',
+      '체크사항': b.note || '-',
+      '월': b.month || ''
+    };
+    var t = btpl().replace(/\{([^{}]+)\}/g, function(all, k){
+      k = k.replace(/\s/g, '');
+      return Object.prototype.hasOwnProperty.call(map, k) ? map[k] : all;
+    });
+    return t.replace(/\n{3,}/g, '\n\n');
+  }
+
+  /* 학생 한 명의 해당 월 배정을 문자 블록으로 */
+  function blocksFor(stu, monthStr){
+    var list = ((stu && stu.assignedClasses) || []).filter(function(a){
+      return !monthStr || a.month === monthStr;
+    });
+    var conf = list.filter(function(a){ return a.confirmed; });
+    if (conf.length) list = conf;
+    var seen = {};
+    list = list.filter(function(a){
+      var k = (a.subject || '') + '|' + (a.time || '');
+      if (seen[k]) return false; seen[k] = 1; return true;
+    });
+    return list.map(function(a){
+      var term = termOfMonth(a.month);
+      var r = findRow(a.subject, a.time, term);
+      var room = (r && r.r) ? r.r : (a.room || '');
+      var letter = String(room).charAt(0).toUpperCase();
+      return {
+        subject: a.subject, ttName: toTT(a.subject), room: letter, roomFull: room,
+        zoom: ZOOM[letter] || '', note: NOTE[toTT(a.subject)] || NOTE[a.subject] || '',
+        when: r ? (fmtDate(r.o) + ' ~ ' + fmtDate(r.c)) : '',
+        time: r ? fmtTime(r.t1, r.t2) : String(a.time || ''),
+        month: a.month, found: !!r, teacher: (r && r.tc) ? r.tc : '', days: r ? dayText(r.w) : ''
+      };
+    });
+  }
+
+  /* 예전 '문구 편집' / '복사'를 새 양식으로 교체 */
+  function hookBrief(){
+    window.v9CopyBrief = function(id, ym){
+      var stu = (globalStudentData || []).filter(function(s){ return s.id === id; })[0];
+      if (!stu){ try{ showToast('학생을 찾지 못했습니다', 'warning'); }catch(e){} return; }
+      var monthStr;
+      if (ym){ var y = Math.floor((ym - 1) / 12); monthStr = (ym - y * 12) + '월'; }
+      else { monthStr = (new Date().getMonth() + 1) + '월'; }
+      var bs = blocksFor(stu, monthStr);
+      if (!bs.length) bs = blocksFor(stu, '');
+      if (!bs.length){ try{ showToast('배정된 과목이 없습니다', 'warning'); }catch(e){} return; }
+      var text = bs.map(function(b){ return smsText(b, stu.name || ''); }).join('\n\n----------\n\n');
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+      if (!ok && navigator.clipboard) navigator.clipboard.writeText(text);
+      ta.remove();
+      try{ showToast('개강안내 문자를 복사했습니다. 보낸 뒤 체크해 주세요', 'success'); }catch(e){}
+    };
+    window.v9EditTpl = function(){
+      var tags = ['이름','과목','수업일정','수업요일','수강시간','강의실','담당강사','비대면줌','체크사항']
+        .map(function(t){ return '<code>{' + t + '}</code>'; }).join(' ');
+      document.getElementById('subjectManageTitle').innerText = '개강안내 문구 편집';
+      document.getElementById('subjectManageBody').innerHTML =
+        '<div class="tt-maphead"><p>아래 표시는 학생마다 시간표에서 자동으로 채워집니다.<br>' + tags + '</p></div>' +
+        '<textarea class="form-control tt-smsbox" id="ttTplInput" style="height:330px">' + esc(btpl()) + '</textarea>' +
+        '<div class="tt-msg" id="ttTplMsg"></div>';
+      var modal = document.getElementById('subjectManageModal');
+      modal.querySelector('.modal-actions').innerHTML =
+        '<button class="btn btn-outline" data-tt="tplreset">기본 문구로</button>' +
+        '<button class="btn btn-outline" data-tt="mapclose">취소</button>' +
+        '<button class="btn btn-brand" data-tt="tplsave">저장</button>';
+      modal.classList.add('show');
+    };
   }
   function openSms(){
     var d = buildSms();
@@ -10743,7 +10833,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
             '<div class="tt-smsh"><b>' + esc(b.ttName) + '</b>' +
             (b.found ? '' : '<span class="tt-st no">시간표에서 못 찾음</span>') +
             '<button class="btn btn-brand btn-sm" data-tt="copy" data-i="' + i + '">복사</button></div>' +
-            '<textarea class="form-control tt-smsbox" id="ttSms' + i + '">' + esc(smsText(b)) + '</textarea></div>';
+            '<textarea class="form-control tt-smsbox" id="ttSms' + i + '">' + esc(smsText(b, d.name)) + '</textarea></div>';
         }).join('')
       : '<div class="tt-empty">배정된 과목이 없습니다. 배정관리에서 과목을 넣어 주세요.</div>';
     document.getElementById('subjectManageTitle').innerText = d.name + ' 개강안내 문자';
@@ -10785,7 +10875,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     sec.id = 'ttSection';
     sec.innerHTML =
       '<div class="tt-bar"><button class="tt-toggle" data-tt="toggle"><span id="ttArrow">▸</span> 강의장 시간표</button>' +
-      '<span class="tt-hint">개강안내와 배정에 쓰는 시간표입니다</span></div><div id="ttBox"></div>';
+      '<span class="tt-hint">개강안내와 배정에 쓰는 시간표입니다 · <b>연동 v2</b></span></div><div id="ttBox"></div>';
     main.appendChild(sec);
 
     // 상단 도구에 버튼 두 개 — '배정관리' 버튼 옆에 붙인다
@@ -10823,6 +10913,18 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     if (a === 'load'){ openLoad(); return; }
     if (a === 'loadrun'){ runLoad(); return; }
     if (a === 'sms'){ openSms(); return; }
+    if (a === 'tplreset'){
+      var ti = document.getElementById('ttTplInput'); if (ti) ti.value = BTPL_DEFAULT;
+      var tm = document.getElementById('ttTplMsg'); if (tm) tm.innerHTML = '<span class="ok">\uae30\ubcf8 \ubb38\uad6c\ub85c \ub418\ub3cc\ub838\uc2b5\ub2c8\ub2e4. \uc800\uc7a5\uc744 \ub20c\ub7ec \uc8fc\uc138\uc694</span>';
+      return;
+    }
+    if (a === 'tplsave'){
+      var ti2 = document.getElementById('ttTplInput'); if (!ti2) return;
+      try{ localStorage.setItem(BTPL_KEY, ti2.value); }catch(e){}
+      try{ showToast('\uac1c\uac15\uc548\ub0b4 \ubb38\uad6c\ub97c \uc800\uc7a5\ud588\uc2b5\ub2c8\ub2e4', 'success'); }catch(e){}
+      document.getElementById('subjectManageModal').classList.remove('show');
+      return;
+    }
     if (a === 'copy'){
       var t = document.getElementById('ttSms' + b.dataset.i); if (!t) return;
       t.select(); var ok = false;
@@ -10836,6 +10938,8 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
   function boot(){
     mount();
     hookAssign();
+    hookBrief();
+    setTimeout(hookBrief, 1500);
     pull();
     var n = 0, t = setInterval(function(){ if (hookAssign() || ++n > 40) clearInterval(t); }, 300);
   }
