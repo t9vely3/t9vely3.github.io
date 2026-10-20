@@ -10455,6 +10455,20 @@ body.v9-sel .sidebar-actions { justify-content:space-between !important; }
 .tt-zi{font-size:12px;padding:5px 8px;height:auto;width:100%}
 .tt-lr.nohit td:first-child{color:#b4463c}
 .tt-rc{font-size:11px;color:var(--text-tertiary,#999);white-space:nowrap}
+.tt-ttl{font-size:14px}
+.tt-acts2{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.tt-x{position:absolute;top:-2px;right:0;border:0;background:none;color:var(--text-tertiary,#999);
+  font-size:26px;line-height:1;cursor:pointer;padding:2px 8px}
+.tt-x:hover{color:var(--text-primary,#111)}
+.tt-tl{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary,#555)}
+.tt-ts{width:auto;display:inline-block;font-size:12px;padding:5px 8px;height:auto}
+.tt-big{font-size:13.5px;padding:8px 10px;height:auto;width:100%}
+.tt-pal{display:block;font-size:13px;font-weight:700}
+.tt-pc{display:block;font-size:10.5px;color:var(--text-tertiary,#999);margin-top:1px}
+.tt-linktable td{padding:5px 8px}
+.tt-linktable td:first-child{min-width:150px}
+.tt-linktable td:nth-child(2){width:30%;min-width:210px}
+.tt-linktable td:nth-child(3){width:34%;min-width:230px}
 
 </style>
 <script id="ttjs">
@@ -10477,6 +10491,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
   var K_TT = 'studentMgmt_v3_timetable', K_MAP = 'studentMgmt_v3_tt_map';
   var K_ZOOM = 'studentMgmt_v3_tt_zoom', K_NOTE = 'studentMgmt_v3_tt_note';
   var ttOpen = false, ttTerm = (TT.terms[0] || {}).k || '';
+  var GRID_OFF = true;   // 시간표 표(그리드)는 일단 끔 — 버튼만 남긴다
 
   /* ---------- 저장 ---------- */
   function lget(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
@@ -10572,6 +10587,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
 
   /* ---------- 화면: 시간표 ---------- */
   function paint(){
+    if (GRID_OFF) return;
     var box = document.getElementById('ttBox'); if (!box) return;
     if (!ttOpen){ box.innerHTML = ''; return; }
     var term = TT.terms.filter(function(t){ return t.k === ttTerm; })[0] || TT.terms[0] || {};
@@ -10638,10 +10654,48 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     Object.keys(ZOOM).forEach(function(L){ o[L] = 1; });
     return Object.keys(o).sort();
   }
+  /* 과목 이름이 얼마나 비슷한지 — 글자 두 개씩 겹치는 수로 센다 */
+  function gram2(x){
+    var t = String(x || '').replace(/[\s_()·\-]/g, ''), o = {};
+    for (var i = 0; i + 1 < t.length; i++) o[t.substr(i, 2)] = 1;
+    return o;
+  }
+  function simScore(a, b){
+    if (!a || !b) return 0;
+    if (a === b) return 999;
+    var A = String(a).replace(/\s/g, ''), B = String(b).replace(/\s/g, '');
+    var base = (A.indexOf(B) >= 0 || B.indexOf(A) >= 0) ? 50 : 0;
+    var g = gram2(A), h = gram2(B), n = 0;
+    Object.keys(g).forEach(function(k){ if (h[k]) n++; });
+    return base + n;
+  }
+  function ttSubjInfo(){
+    var o = {};
+    TT.rows.forEach(function(r){ if (!o[r.s]) o[r.s] = r.d || ''; });
+    return o;
+  }
+  /* 그 과목과 비슷한 시간표 과목만 추려 목록을 만든다 (전부 늘어놓지 않는다) */
+  function nearList(pal, tts, info, id){
+    var scored = tts.map(function(t){ return { t: t, v: simScore(pal, t) }; })
+                    .filter(function(x){ return x.v > 0; })
+                    .sort(function(a, b){ return b.v - a.v; })
+                    .slice(0, 25);
+    var list = scored.length ? scored.map(function(x){ return x.t; }) : tts;
+    return '<datalist id="' + id + '">' + list.map(function(t){
+      var d = info[t] ? (' · ' + info[t]) : '';
+      return '<option value="' + esc(t) + '" label="' + esc(t + d) + '">';
+    }).join('') + '</datalist>';
+  }
+  function palCourse(){
+    var o = {};
+    try{ Object.keys(COURSE_SUBJECTS).forEach(function(c){ (COURSE_SUBJECTS[c] || []).forEach(function(x){ if (!o[x]) o[x] = c; }); }); }catch(e){}
+    return o;
+  }
   function linkSubjRows(){
     var pal = palSubjects(), tts = ttSubjects();
     var inTT = {}; TT.rows.forEach(function(r){ inTT[r.s] = 1; });
-    return pal.map(function(s){
+    var info = ttSubjInfo(), course = palCourse();
+    return pal.map(function(s, n){
       var cur = MAP[s] || '';
       var name = cur || s;
       var same = tts.indexOf(s) >= 0;
@@ -10649,10 +10703,13 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       var state = hit ? (cur ? '연결됨' : '이름 같음') : '시간표에 없음';
       var cls = hit ? (cur ? 'ok' : 'same') : 'no';
       var note = NOTE[name] != null ? NOTE[name] : (NOTE[s] != null ? NOTE[s] : '');
+      var lid = 'ttS' + n;
       return '<tr class="tt-lr' + (hit ? '' : ' nohit') + '">' +
-        '<td>' + esc(s) + '</td>' +
-        '<td><input class="form-control tt-mi" data-s="' + esc(s) + '" list="ttSubjList" value="' + esc(cur) + '" placeholder="' + (same ? esc(s) + ' (이름 같음)' : '연결할 시간표 과목') + '"></td>' +
-        '<td><input class="form-control tt-ni" data-n="' + esc(name) + '" value="' + esc(note) + '" placeholder="엑셀 메모 · 비우면 문자에 - 로 나옵니다"></td>' +
+        '<td><b class="tt-pal">' + esc(s) + '</b>' + (course[s] ? '<span class="tt-pc">' + esc(course[s]) + '</span>' : '') + '</td>' +
+        '<td>' + nearList(s, tts, info, lid) +
+          '<input class="form-control tt-mi tt-big" data-s="' + esc(s) + '" list="' + lid + '" value="' + esc(cur) + '" ' +
+          'placeholder="' + (same ? esc(s) + ' (이름 같음)' : '비슷한 이름이 목록에 뜹니다') + '" autocomplete="off"></td>' +
+        '<td><input class="form-control tt-ni tt-big" data-n="' + esc(name) + '" value="' + esc(note) + '" placeholder="엑셀 메모 · 비우면 - 로 나옵니다"></td>' +
         '<td><span class="tt-st ' + cls + '">' + state + '</span></td></tr>';
     }).join('');
   }
@@ -10706,7 +10763,6 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     document.getElementById('subjectManageBody').innerHTML =
       tabs +
       '<div class="tt-maphead">' + head + '<div class="tt-maptools">' + tools + '</div></div>' +
-      '<datalist id="ttSubjList">' + tts.map(function(s){ return '<option value="' + esc(s) + '">'; }).join('') + '</datalist>' +
       '<div class="tt-maplist">' + table + '</div>' +
       '<div class="tt-msg" id="ttMapMsg"></div>';
 
@@ -10714,7 +10770,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     modal.querySelector('.modal-actions').innerHTML =
       '<button class="btn btn-outline" data-tt="mapclose">닫기</button>' +
       '<button class="btn btn-brand" data-tt="mapsave">저장</button>';
-    modal.classList.add('show');
+    modal.classList.add('show'); addX();
 
     if (linkTab === 'subj'){
       var q = document.getElementById('ttMapQ'),
@@ -10817,6 +10873,9 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       '<div class="tt-maphead"><p>강의장과 개강일·종강일이 비어 있으면 개강안내 문자에 <b>-</b> 로 나옵니다. 아래에서 직접 채워 주세요.<br>' +
         '고친 내용은 <b>저장</b>을 눌러야 반영됩니다. 저장하면 다른 멘토 화면에도 함께 적용됩니다.</p>' +
         '<div class="tt-maptools">' +
+          '<label class="tt-tl">기수 <select class="form-control tt-ts" id="ttEditTerm">' +
+            TT.terms.map(function(t){ return '<option value="' + esc(t.k) + '"' + (t.k === ttTerm ? ' selected' : '') + '>' + esc(t.n) + (t.p ? ' (예상)' : '') + '</option>'; }).join('') +
+          '</select></label>' +
           '<input class="tt-q" id="ttEditQ" placeholder="과목·강의장 찾기">' +
           '<label><input type="checkbox" id="ttEditOnly"' + (blanks ? ' checked' : '') + '> 빈 칸 있는 줄만</label>' +
           '<span class="tt-sum">이 기수 ' + idx.length + '개 · 빈 칸 ' + blanks + '개</span>' +
@@ -10838,7 +10897,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     modal.querySelector('.modal-actions').innerHTML =
       '<button class="btn btn-outline" data-tt="mapclose">닫기</button>' +
       '<button class="btn btn-brand" data-tt="editsave">저장</button>';
-    modal.classList.add('show');
+    modal.classList.add('show'); addX();
 
     var q = document.getElementById('ttEditQ'), only = document.getElementById('ttEditOnly');
     function filt(){
@@ -10852,6 +10911,8 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       });
     }
     q.oninput = filt; only.onchange = filt;
+    var ts = document.getElementById('ttEditTerm');
+    if (ts) ts.onchange = function(){ ttTerm = ts.value; openEdit(); };
     filt();
   }
   function editAdd(subject){
@@ -10929,7 +10990,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     modal.querySelector('.modal-actions').innerHTML =
       '<button class="btn btn-outline" data-tt="mapclose">닫기</button>' +
       '<button class="btn btn-brand" data-tt="loadrun">넣기</button>';
-    modal.classList.add('show');
+    modal.classList.add('show'); addX();
   }
   function runLoad(){
     var text = (document.getElementById('ttPaste').value || '').trim();
@@ -11084,7 +11145,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
         '<button class="btn btn-outline" data-tt="tplreset">기본 문구로</button>' +
         '<button class="btn btn-outline" data-tt="mapclose">취소</button>' +
         '<button class="btn btn-brand" data-tt="tplsave">저장</button>';
-      modal.classList.add('show');
+      modal.classList.add('show'); addX();
     };
   }
   function openSms(){
@@ -11105,7 +11166,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       '못 찾은 과목은 <b>과목 연결</b>에서 이름을 맞춰 주시면 자동으로 채워집니다.</p></div>' + body;
     var modal = document.getElementById('subjectManageModal');
     modal.querySelector('.modal-actions').innerHTML = '<button class="btn btn-outline" data-tt="mapclose">닫기</button>';
-    modal.classList.add('show');
+    modal.classList.add('show'); addX();
     window.__ttSms = d.blocks;
   }
 
@@ -11137,8 +11198,13 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     var sec = document.createElement('section');
     sec.id = 'ttSection';
     sec.innerHTML =
-      '<div class="tt-bar"><button class="tt-toggle" data-tt="toggle"><span id="ttArrow">▸</span> 강의장 시간표</button>' +
-      '<span class="tt-hint">개강안내와 배정에 쓰는 시간표입니다 · <b>연동 v2</b></span></div><div id="ttBox"></div>';
+      '<div class="tt-bar"><b class="tt-ttl">강의장 · 개강안내 관리</b>' +
+      '<span class="tt-hint">연동 v3</span>' +
+      '<span class="tt-acts2">' +
+        '<button class="btn btn-outline btn-sm" type="button" data-tt="map">과목 · 메모 연결</button>' +
+        '<button class="btn btn-outline btn-sm" type="button" data-tt="edit">시간표 편집</button>' +
+        '<button class="btn btn-outline btn-sm" type="button" data-tt="load">시간표 넣기</button>' +
+      '</span></div><div id="ttBox" hidden></div>';
     main.appendChild(sec);
 
     // 상단 도구에 버튼 두 개 — '배정관리' 버튼 옆에 붙인다
@@ -11154,10 +11220,29 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       var b2 = document.createElement('button');
       b2.id = 'ttGoBtn'; b2.className = 'btn btn-outline btn-sm'; b2.type = 'button';
       b2.setAttribute('data-tt', 'go'); b2.textContent = '시간표';
-      tools.insertBefore(b2, anchor.nextSibling);
-      tools.insertBefore(b1, b2.nextSibling);
+      tools.insertBefore(b1, anchor.nextSibling);
     }
   }
+
+  /* 모달 닫기: X 버튼 + ESC */
+  function closeModal(){
+    var m = document.getElementById('subjectManageModal');
+    if (m) m.classList.remove('show');
+  }
+  function addX(){
+    var t = document.getElementById('subjectManageTitle'); if (!t) return;
+    var host = t.parentNode; if (!host || host.querySelector('.tt-x')) return;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    var x = document.createElement('button');
+    x.type = 'button'; x.className = 'tt-x'; x.title = '닫기 (ESC)';
+    x.setAttribute('data-tt', 'x'); x.innerHTML = '&times;';
+    host.appendChild(x);
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    var m = document.getElementById('subjectManageModal');
+    if (m && m.classList.contains('show')){ closeModal(); e.stopPropagation(); }
+  }, true);
 
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-tt]'); if (!b) return;
@@ -11173,7 +11258,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     if (a === 'map'){ openMap('subj'); return; }
     if (a === 'ltab'){ switchLinkTab(b.dataset.k); return; }
     if (a === 'mapsave'){ saveMap(); return; }
-    if (a === 'mapclose'){ document.getElementById('subjectManageModal').classList.remove('show'); return; }
+    if (a === 'mapclose' || a === 'x'){ closeModal(); return; }
     if (a === 'load'){ openLoad(); return; }
     if (a === 'edit'){ openEdit(); return; }
     if (a === 'editadd'){ editAdd(''); return; }
