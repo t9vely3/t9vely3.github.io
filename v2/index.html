@@ -63,7 +63,10 @@ html, body { height: 100%; }
 .login p { margin: 0; color: var(--sub); }
 .login .input { width: 100%; }
 .login .msg { color: var(--bad); font-size: 13px; min-height: 18px; }
+.login .msg.ok { color: var(--accent-text); white-space: pre-line; line-height: 1.6; }
 .login .note { font-size: 12px; color: var(--sub); }
+.login .findpw { background: none; border: 0; padding: 0; font: inherit; font-size: 12px; font-weight: 700; color: var(--accent-text); cursor: pointer; text-decoration: underline; }
+.login .findpw:disabled { opacity: .6; cursor: default; text-decoration: none; }
 
 @media (max-width: 1100px) { .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span3 { grid-column: span 2; } }
 @media (max-width: 720px) {
@@ -92,6 +95,7 @@ html, body { height: 100%; }
     <input class="input" id="pw" type="password" autocomplete="current-password" required>
     <div class="msg" id="loginMsg" role="alert"></div>
     <button class="btn primary" id="loginBtn" type="submit">로그인</button>
+    <div class="note">비밀번호를 잊으셨나요? <button type="button" class="findpw" id="findPwBtn">비밀번호 찾기</button></div>
     <div class="note">처음 오셨나요? <a href="../old.html" style="color:var(--accent-text);font-weight:700">가입 신청 · 팀원 승인은 여기</a>에서 합니다.</div>
   </form>
 </div>
@@ -175,7 +179,7 @@ html, body { height: 100%; }
     ]
   };
   var OTHERS = ["student", "cash", "gov", "guide", "home", "sales"];
-  var VER = "20261014g";   /* 화면 파일을 고쳐 올릴 때마다 바꾸면 모두에게 새 화면이 바로 보임 */
+  var VER = "20261021a";   /* 화면 파일을 고쳐 올릴 때마다 바꾸면 모두에게 새 화면이 바로 보임 */
   var S = { space: "dept", view: "home", frames: {} };
   try { S.space = localStorage.getItem("aix-v2-space") === "team" ? "team" : "dept"; } catch (e) {}
 
@@ -190,6 +194,13 @@ html, body { height: 100%; }
     "auth/unauthorized-domain": "파이어베이스 승인된 도메인에 이 주소가 없습니다."
   };
   function msgOf(e) { return MSG[e && e.code] || ("로그인하지 못했습니다. (" + ((e && (e.code || e.message)) || "오류") + ")"); }
+
+  /* 로그인 화면 안내문 (빨간 글씨 / 초록 글씨) */
+  function sayLogin(text, ok) {
+    var box = $("#loginMsg"); if (!box) return;
+    box.className = "msg" + (ok ? " ok" : "");
+    box.textContent = text || "";
+  }
 
   async function readProfile(h) {
     var u = h.auth.currentUser;
@@ -208,12 +219,12 @@ html, body { height: 100%; }
     } catch (e) { showLogin("계정 정보를 읽지 못했습니다. " + msgOf(e)); }
   }
 
-  function showLogin(msg) { $("#appView").hidden = true; $("#loginView").hidden = false; $("#loginMsg").textContent = msg || ""; }
+  function showLogin(msg) { $("#appView").hidden = true; $("#loginView").hidden = false; sayLogin(msg || "", false); }
 
   $("#loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     var em = $("#em").value.trim(), pw = $("#pw").value, btn = $("#loginBtn");
-    btn.disabled = true; btn.textContent = "확인 중…"; $("#loginMsg").textContent = "";
+    btn.disabled = true; btn.textContent = "확인 중…"; sayLogin("", false);
     try {
       var h = await AIX.helper("notice");
       await h.auth.signInWithEmailAndPassword(em, pw);
@@ -234,9 +245,32 @@ html, body { height: 100%; }
       if (fails.length) AIX.toast("로그인 안 된 곳: " + fails.join(", ") + " · 해당 화면에서 직접 로그인해 주세요");
       enter();
     } catch (err) {
-      $("#loginMsg").textContent = err.code === "x" ? err.message : msgOf(err);
+      sayLogin(err.code === "x" ? err.message : msgOf(err), false);
     }
     btn.disabled = false; btn.textContent = "로그인";
+  });
+
+  /* ---------- 비밀번호 찾기 (가입한 이메일로 재설정 메일) ---------- */
+  var PWMSG = {
+    "auth/user-not-found": "등록되지 않은 이메일입니다. 주소를 다시 확인해 주세요.",
+    "auth/invalid-email": "이메일 형식이 올바르지 않습니다.",
+    "auth/missing-email": "이메일을 적어 주세요.",
+    "auth/too-many-requests": "요청이 너무 많습니다. 몇 분 뒤에 다시 눌러 주세요.",
+    "auth/network-request-failed": "인터넷 연결을 확인해 주세요."
+  };
+  $("#findPwBtn").addEventListener("click", async function () {
+    var inp = $("#em"), em = inp.value.trim(), btn = this;
+    if (!em) { sayLogin("비밀번호를 받을 이메일을 위 칸에 먼저 적어 주세요.", false); inp.focus(); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { sayLogin("이메일 형식이 올바르지 않습니다.", false); inp.focus(); return; }
+    btn.disabled = true; btn.textContent = "보내는 중…"; sayLogin("", false);
+    try {
+      var h = await AIX.helper("notice");
+      await h.auth.sendPasswordResetEmail(em);
+      sayLogin(em + " 로 비밀번호 재설정 메일을 보냈습니다.\n메일의 링크를 눌러 새 비밀번호를 정한 뒤 다시 로그인해 주세요.\n메일이 안 보이면 스팸함도 확인해 주세요.", true);
+    } catch (e) {
+      sayLogin(PWMSG[e && e.code] || ("메일을 보내지 못했습니다. (" + ((e && (e.code || e.message)) || "오류") + ")"), false);
+    }
+    btn.disabled = false; btn.textContent = "비밀번호 찾기";
   });
 
   $("#logoutBtn").addEventListener("click", async function () {
