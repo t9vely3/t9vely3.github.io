@@ -11224,6 +11224,122 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     }
   }
 
+  /* ---------- '학생 정보를 찾을 수 없습니다' 복구 ----------
+     화면 목록에 그 학생이 없으면 알림만 띄우고 끝나던 것을,
+     서버에서 한 번 더 찾아와 열도록 바꾼다. */
+  function hookLoadStudent(){
+    var orig = window.doLoadStudentDetail;
+    if (typeof orig !== 'function' || orig.__tt) return false;
+    window.doLoadStudentDetail = function(id){
+      var list = (typeof globalStudentData !== 'undefined' && globalStudentData) ? globalStudentData : null;
+      var here = !id || !list || list.some(function(x){ return x && x.id === id; });
+      if (here) return orig.apply(this, arguments);
+
+      var d = (typeof firebaseDB !== 'undefined' && firebaseDB) ? firebaseDB : null;
+      if (!d){
+        try{ showToast('학생 정보를 아직 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요', 'warning'); }catch(e){}
+        return;
+      }
+      try{ showToast('학생 정보를 서버에서 다시 찾는 중입니다…', 'brand'); }catch(e){}
+      d.collection('students').doc(id).get().then(function(doc){
+        if (!doc.exists){
+          try{ showToast('이 학생은 목록에 없습니다. 삭제되었거나 다른 사람이 옮겼을 수 있습니다', 'warning'); }catch(e){}
+          return;
+        }
+        var x = JSON.parse(JSON.stringify(doc.data() || {}));
+        delete x._updatedAt; delete x._updatedBy;
+        if (!x.id) x.id = id;
+        var i = list.findIndex(function(y){ return y && y.id === id; });
+        if (i >= 0) list[i] = x; else list.push(x);
+        try{ saveToStorage(); }catch(e){}
+        orig.call(window, id);
+        try{ filterList(); }catch(e){}
+        try{ showToast('학생 정보를 다시 불러왔습니다', 'success'); }catch(e){}
+      }).catch(function(){
+        try{ showToast('학생 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요', 'warning'); }catch(e){}
+      });
+    };
+    window.doLoadStudentDetail.__tt = 1;
+    return true;
+  }
+
+  /* ---------- 로그인: 비밀번호 찾기 (가입한 이메일로 재설정 메일) ---------- */
+  function authMsg(text, good){
+    var box = document.getElementById('authError'); if (!box) return;
+    box.style.display = '';
+    box.style.whiteSpace = 'pre-line';
+    box.style.color = good ? '#2f6b52' : '';
+    box.style.borderColor = good ? 'rgba(47,107,82,.45)' : '';
+    box.style.background = good ? 'rgba(47,107,82,.07)' : '';
+    box.textContent = text;
+  }
+  window.ttResetPw = function(){
+    var inp = document.getElementById('authEmail');
+    var email = inp ? (inp.value || '').trim() : '';
+    if (!email){
+      authMsg('비밀번호를 받을 이메일을 위 칸에 먼저 적어 주세요.', false);
+      if (inp) inp.focus();
+      return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+      authMsg('이메일 형식이 올바르지 않습니다.', false);
+      if (inp) inp.focus();
+      return;
+    }
+    if (typeof firebaseAuth === 'undefined' || !firebaseAuth){
+      authMsg('잠시 뒤 다시 눌러 주세요. 아직 준비 중입니다.', false);
+      return;
+    }
+    var a = document.getElementById('authFooterLink');
+    if (a){ a.dataset.busy = '1'; a.textContent = '보내는 중...'; }
+    firebaseAuth.sendPasswordResetEmail(email).then(function(){
+      authMsg(email + ' 로 비밀번호 재설정 메일을 보냈습니다.\n메일의 링크를 눌러 새 비밀번호를 정한 뒤 다시 로그인해 주세요.\n메일이 안 보이면 스팸함도 확인해 주세요.', true);
+    }).catch(function(e){
+      var code = (e && e.code) || '';
+      var map = {
+        'auth/user-not-found': '등록되지 않은 이메일입니다. 관리자(팀장)에게 계정을 요청해 주세요.',
+        'auth/invalid-email': '이메일 형식이 올바르지 않습니다.',
+        'auth/too-many-requests': '요청이 너무 많습니다. 몇 분 뒤에 다시 눌러 주세요.',
+        'auth/network-request-failed': '인터넷 연결을 확인해 주세요.',
+        'auth/missing-email': '이메일을 적어 주세요.'
+      };
+      authMsg(map[code] || ('메일을 보내지 못했습니다. ' + ((e && e.message) || code)), false);
+    }).then(function(){
+      var b = document.getElementById('authFooterLink');
+      if (b){ delete b.dataset.busy; b.textContent = '비밀번호 찾기'; }
+    });
+  };
+  function mountPwReset(){
+    var a = document.getElementById('authFooterLink'); if (!a) return;
+    if (a.dataset.busy) return;
+    a.textContent = '비밀번호 찾기';
+    a.setAttribute('onclick', 'ttResetPw()');
+    a.title = '가입한 이메일로 재설정 링크를 보냅니다';
+    a.style.cursor = 'pointer';
+    var t = document.getElementById('authFooterText');
+    if (t) t.textContent = '비밀번호를 잊으셨나요?';
+    var f = document.getElementById('authFooter');
+    if (f && !document.getElementById('ttPwHint')){
+      var h = document.createElement('div');
+      h.id = 'ttPwHint';
+      h.style.cssText = 'margin-top:6px;font-size:11.5px;line-height:1.6;color:var(--text-tertiary,#999)';
+      h.textContent = '계정이 필요하면 관리자(팀장)에게 요청하세요.';
+      f.parentNode.insertBefore(h, f.nextSibling);
+    }
+  }
+  function hookPwReset(){
+    mountPwReset();
+    var o = window.switchAuthTab;
+    if (typeof o === 'function' && !o.__tt){
+      window.switchAuthTab = function(){
+        var r = o.apply(this, arguments);
+        try{ mountPwReset(); }catch(e){}
+        return r;
+      };
+      window.switchAuthTab.__tt = 1;
+    }
+  }
+
   /* 모달 닫기: X 버튼 + ESC */
   function closeModal(){
     var m = document.getElementById('subjectManageModal');
@@ -11294,6 +11410,10 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     mount();
     hookAssign();
     hookBrief();
+    hookPwReset();
+    hookLoadStudent();
+    var n2 = 0, t2 = setInterval(function(){ if (hookLoadStudent() || ++n2 > 40) clearInterval(t2); }, 300);
+    setTimeout(hookPwReset, 1500);
     setTimeout(hookBrief, 1500);
     pull();
     var n = 0, t = setInterval(function(){ if (hookAssign() || ++n > 40) clearInterval(t); }, 300);
