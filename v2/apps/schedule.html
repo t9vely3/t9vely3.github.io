@@ -815,8 +815,10 @@ function topbar(){
     '<button class="btn" data-act="export">내보내기</button>' +
     '<button class="themebtn" data-act="mode" title="'+(UI.mode==='dark'?'밝은 화면으로':'어두운 화면으로')+'">' +
       (UI.mode==='dark'?'☾':'☀') + '</button>' +
-    '<button class="btn" data-act="publish" id="pubbtn" title="학사일정에만 저장합니다. 수강생 화면은 바뀌지 않습니다.">' +
-      '일정만 저장' + '</button>' +
+    '<button class="btn" data-act="publish" id="pubbtn" title="' +
+      (UI.standalone ? '지금 보고 계신 이 브라우저에만 저장됩니다. 다른 사람과 수강생 화면에는 반영되지 않습니다.'
+                      : '학사일정에만 저장합니다. 수강생 화면은 바뀌지 않습니다.') + '">' +
+      (UI.standalone ? '이 브라우저에만 저장' : '일정만 저장') + '</button>' +
     '<button class="btn pri" data-act="sync" id="syncbtn" ' +
       'title="학사일정과 수강생 화면 배정표에 함께 저장합니다.">' + (UI.syncing ? '저장 중' : '동시 저장' + syncBadge()) + '</button>' +
   '</div>';
@@ -2585,6 +2587,7 @@ function schedulePush(target){
 }
 function fbPayload(st){
   return {
+    id: st.id,                /* 관리파일이 번호로 찾을 수 있게 같이 넣는다 */
     name: st.name.trim(),
     appNum: st.extId || '',
     contact: st.phone || '',
