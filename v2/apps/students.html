@@ -10588,10 +10588,21 @@ html:not([data-theme="dark"]) input[type="checkbox"]:checked::after{
 }
 html:not([data-theme="dark"]) input[type="checkbox"]:focus-visible{ outline:2px solid #1F4FD1; outline-offset:2px; }
 html:not([data-theme="dark"]) input[type="checkbox"]:disabled{ background:#EEF0F4 !important; border-color:#C3C9D4 !important; cursor:default; }
-/* 배정표 동그란 확정 표시 */
-html:not([data-theme="dark"]) .matrix-subj-pill .pill-ck{ border-color:#8A93A3; background:#fff; }
+/* 배정표 동그란 확정 표시 — 확정이면 옅은 초록 바탕에 '진한 초록 V'.
+   흰 V 로 두면 인트라넷이 바탕을 하얗게 칠할 때 아무것도 안 보인다. */
+html:not([data-theme="dark"]) .matrix-subj-pill .pill-ck{
+  border:1.8px solid #8A93A3 !important; background:#fff !important; color:#8A93A3 !important;
+  width:18px !important; height:18px !important; font-size:12px !important; font-weight:900 !important;
+}
+html:not([data-theme="dark"]) .matrix-subj-pill .pill-ck:hover{
+  border-color:#2F6B52 !important; background:#EAF4EE !important; color:#2F6B52 !important;
+}
 html:not([data-theme="dark"]) .matrix-subj-pill.confirmed .pill-ck{
-  border-color:var(--st-ok); background:var(--st-ok); color:#fff;
+  border-color:#2F6B52 !important; background:#D7EEE0 !important; color:#19462F !important;
+}
+/* 무료 표시도 바래지 않게 */
+html:not([data-theme="dark"]) .matrix-subj-pill .pill-free-tag{
+  background:#1F4FD1 !important; color:#fff !important;
 }
 .tt-ttl{font-size:14px}
 .tt-acts2{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
