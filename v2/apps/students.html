@@ -10458,6 +10458,13 @@ body.v9-sel .sidebar-actions { justify-content:space-between !important; }
 .tt-zi{font-size:12px;padding:5px 8px;height:auto;width:100%}
 .tt-lr.nohit td:first-child{color:#b4463c}
 .tt-rc{font-size:11px;color:var(--text-tertiary,#999);white-space:nowrap}
+/* 중복 학생 정리 */
+.tt-duptable{margin-bottom:14px}
+.tt-dgrp{background:var(--bg-soft,#eef1ef)!important;font-size:12.5px!important;color:var(--text-primary,#111)!important}
+.tt-dlab{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.tt-dkeep td{background:rgba(47,107,82,.06)}
+.tt-dgone td{opacity:.6}
+.tt-did{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--text-tertiary,#999);word-break:break-all}
 .tt-ttl{font-size:14px}
 .tt-acts2{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .tt-x{position:absolute;top:-2px;right:0;border:0;background:none;color:var(--text-tertiary,#999);
@@ -10831,6 +10838,133 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     collectLink();
     openMap(k);
   }
+  /* ---------- 중복 학생 정리 ----------
+     이름+멘토가 같은 기록이 여러 개면, 내용이 가장 많이 채워진 하나만 남기고
+     나머지를 휴지통으로 옮긴다. 완전히 지우지 않으므로 되돌릴 수 있다. */
+  function dupWeight(d){
+    var n = 0;
+    ['appNum','birth','contact','course','purpose','regDate','durationStart','memo',
+     'paidCourse','freeCourse','baseTuition','totalTuition','paymentStatus',
+     'emRel','emContact','pdfSubjects','subMentor'].forEach(function(k){
+      var v = d[k];
+      if (v !== undefined && v !== null && String(v).trim() !== '' && String(v) !== '0') n += 2;
+    });
+    if (Array.isArray(d.assignedClasses)) n += d.assignedClasses.length;
+    if (d.requiresCare || d.isOnLeave || d.isCompleted || d.isRefunded) n += 1;
+    return n;
+  }
+  function dupGroups(){
+    var by = {}, out = [];
+    (globalStudentData || []).forEach(function(s){
+      if (!s) return;
+      var k = String(s.name || '').trim() + '\u0000' + String(s.mentor || '').trim();
+      (by[k] = by[k] || []).push(s);
+    });
+    Object.keys(by).forEach(function(k){
+      var g = by[k];
+      if (g.length < 2) return;
+      g.sort(function(a, b){ return dupWeight(b) - dupWeight(a); });
+      out.push(g);
+    });
+    out.sort(function(a, b){ return b.length - a.length; });
+    return out;
+  }
+  function dupInfo(s){
+    var bits = [];
+    if (s.appNum) bits.push('원서 ' + s.appNum);
+    bits.push('배정 ' + (Array.isArray(s.assignedClasses) ? s.assignedClasses.length : 0) + '개');
+    if (s.contact) bits.push(s.contact);
+    if (s.course) bits.push(s.course);
+    if (s.memo && s.memo !== '[]') bits.push('메모 있음');
+    return bits.join(' · ');
+  }
+  function openDupe(){
+    var groups = dupGroups();
+    var total = 0;
+    groups.forEach(function(g){ total += g.length - 1; });
+
+    var body;
+    if (!groups.length){
+      body = '<div class="tt-empty">이름이 겹치는 학생이 없습니다. 정리할 것이 없습니다.</div>';
+    } else {
+      body = groups.map(function(g){
+        var head = g[0];
+        return '<table class="tt-maptable tt-duptable"><thead>' +
+          '<tr><th colspan="3" class="tt-dgrp">' + esc(head.name || '(이름 없음)') +
+            (head.mentor ? ' · ' + esc(head.mentor) + ' 멘토' : '') + ' — ' + g.length + '개</th></tr>' +
+          '<tr><th>처리</th><th>이 기록에 들어 있는 내용</th><th>학생 번호</th></tr></thead><tbody>' +
+          g.map(function(s, i){
+            return '<tr class="' + (i ? 'tt-dgone' : 'tt-dkeep') + '">' +
+              '<td><label class="tt-dlab"><input type="checkbox" class="tt-dchk" data-id="' + esc(s.id) + '"' +
+                (i ? ' checked' : '') + '> ' +
+                '<span class="tt-st ' + (i ? 'no' : 'ok') + '">' + (i ? '치움' : '남김') + '</span></label></td>' +
+              '<td>' + esc(dupInfo(s)) + '</td>' +
+              '<td class="tt-did">' + esc(s.id) + '</td></tr>';
+          }).join('') +
+          '</tbody></table>';
+      }).join('');
+    }
+
+    document.getElementById('subjectManageTitle').innerText = '중복 학생 정리';
+    document.getElementById('subjectManageBody').innerHTML =
+      '<div class="tt-maphead"><p>이름과 멘토가 같은 기록이 여러 개 있으면 아래에 묶어서 보여 줍니다.<br>' +
+        '<b>내용이 가장 많이 채워진 하나를 남기고</b> 나머지에 체크해 두었습니다. 체크를 바꾸셔도 됩니다.<br>' +
+        '치우는 기록은 <b>휴지통</b>으로 옮깁니다. 완전히 지우는 것이 아니라 되돌릴 수 있습니다.</p>' +
+        '<div class="tt-maptools"><span class="tt-sum" id="ttDupSum">겹치는 묶음 ' + groups.length +
+          '개 · 치울 기록 ' + total + '개</span></div></div>' +
+      body + '<div class="tt-msg" id="ttDupMsg"></div>';
+
+    var modal = document.getElementById('subjectManageModal');
+    modal.querySelector('.modal-actions').innerHTML =
+      '<button class="btn btn-outline" data-tt="mapclose">닫기</button>' +
+      (groups.length ? '<button class="btn btn-brand" data-tt="dupgo">체크한 기록 치우기</button>' : '');
+    modal.classList.add('show'); addX();
+
+    var box = document.getElementById('subjectManageBody');
+    box.addEventListener('change', function(e){
+      if (!e.target.classList || !e.target.classList.contains('tt-dchk')) return;
+      var tr = e.target.closest('tr'), on = e.target.checked;
+      tr.className = on ? 'tt-dgone' : 'tt-dkeep';
+      var tag = tr.querySelector('.tt-st');
+      if (tag){ tag.className = 'tt-st ' + (on ? 'no' : 'ok'); tag.textContent = on ? '치움' : '남김'; }
+      var n = box.querySelectorAll('.tt-dchk:checked').length;
+      var sum = document.getElementById('ttDupSum');
+      if (sum) sum.textContent = '치울 기록 ' + n + '개';
+    });
+  }
+  function runDupe(){
+    var ids = [].map.call(document.querySelectorAll('#subjectManageBody .tt-dchk:checked'),
+                          function(i){ return i.dataset.id; });
+    var msg = document.getElementById('ttDupMsg');
+    if (!ids.length){ if (msg) msg.innerHTML = '<span class="bad">체크한 기록이 없습니다</span>'; return; }
+    if (!confirm(ids.length + '개 기록을 휴지통으로 옮깁니다.\n계속할까요?')) return;
+
+    var trash = [];
+    try{ trash = getTrashedStudents() || []; }catch(e){ trash = []; }
+    var moved = 0;
+    ids.forEach(function(id){
+      var s = (globalStudentData || []).filter(function(x){ return x && x.id === id; })[0];
+      if (!s) return;
+      var copy = JSON.parse(JSON.stringify(s));
+      copy.deletedAt = new Date().toISOString();
+      trash.push(copy);
+      moved++;
+      try{ deleteStudentFromFirestore(id); }catch(e){}
+      try{ syncTrashToFirestore(copy); }catch(e){}
+    });
+    try{ saveTrashedStudents(trash); }catch(e){}
+    var keepIds = {};
+    ids.forEach(function(id){ keepIds[id] = 1; });
+    globalStudentData = (globalStudentData || []).filter(function(x){ return !(x && keepIds[x.id]); });
+    try{ saveToStorage(); }catch(e){}
+    try{ filterList(); }catch(e){}
+    try{ updateQuickStats(); }catch(e){}
+    try{ if (typeof v5RenderHome === 'function') v5RenderHome(); }catch(e){}
+    if (msg) msg.innerHTML = '<span class="ok">' + moved + '개를 휴지통으로 옮겼습니다. 휴지통에서 되돌릴 수 있습니다.</span>';
+    try{ showToast(moved + '개 기록을 휴지통으로 옮겼습니다', 'success'); }catch(e){}
+    setTimeout(function(){ openDupe(); }, 800);
+  }
+
   /* ---------- 화면: 시간표 편집 (강의장·일정 직접 수정) ---------- */
   var EDIT_ADD = 0;
   function rowBlank(r){
@@ -11206,6 +11340,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       '<span class="tt-acts2">' +
         '<button class="btn btn-outline btn-sm" type="button" data-tt="map">과목 · 메모 연결</button>' +
         '<button class="btn btn-outline btn-sm" type="button" data-tt="edit">시간표 편집</button>' +
+        '<button class="btn btn-outline btn-sm" type="button" data-tt="dupe">중복 학생 정리</button>' +
         '<button class="btn btn-outline btn-sm" type="button" data-tt="load">시간표 넣기</button>' +
       '</span></div><div id="ttBox" hidden></div>';
     main.appendChild(sec);
@@ -11422,6 +11557,8 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     if (a === 'mapclose' || a === 'x'){ closeModal(); return; }
     if (a === 'load'){ openLoad(); return; }
     if (a === 'edit'){ openEdit(); return; }
+    if (a === 'dupe'){ openDupe(); return; }
+    if (a === 'dupgo'){ runDupe(); return; }
     if (a === 'editadd'){ editAdd(''); return; }
     if (a === 'editnew'){ editAdd(toTT(b.dataset.s || '')); return; }
     if (a === 'editdel'){ editDel(b); return; }
