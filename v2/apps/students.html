@@ -11365,84 +11365,6 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
   /* ---------- '학생 정보를 찾을 수 없습니다' 복구 ----------
      화면 목록에 그 학생이 없으면 알림만 띄우고 끝나던 것을,
      서버에서 한 번 더 찾아와 열도록 바꾼다. */
-  function ttFind(list, id){
-    for (var i = 0; i < list.length; i++) if (list[i] && list[i].id === id) return list[i];
-    return null;
-  }
-  function hookLoadStudent(){
-    var orig = window.doLoadStudentDetail;
-    if (typeof orig !== 'function' || orig.__tt) return false;
-
-    window.doLoadStudentDetail = function(id){
-      var list = (typeof globalStudentData !== 'undefined' && globalStudentData) ? globalStudentData : null;
-      if (!id || !list || ttFind(list, id)) return orig.apply(this, arguments);
-
-      var d = (typeof firebaseDB !== 'undefined' && firebaseDB) ? firebaseDB : null;
-      if (!d){
-        try{ showToast('학생 정보를 아직 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요', 'warning'); }catch(e){}
-        return;
-      }
-      var open = function(){
-        orig.call(window, id);
-        try{ filterList(); }catch(e){}
-        try{ showToast('학생 정보를 다시 불러왔습니다', 'success'); }catch(e){}
-      };
-      var put = function(data, docId){
-        var x = JSON.parse(JSON.stringify(data || {}));
-        delete x._updatedAt; delete x._updatedBy;
-        x.id = id;
-        var k = list.findIndex(function(y){ return y && y.id === id; });
-        if (k >= 0) list[k] = x; else list.push(x);
-        try{ saveToStorage(); }catch(e){}
-        console.log('[복구] 학생 되살림', id, docId || '');
-        open();
-      };
-      var giveUp = function(why){
-        console.warn('[복구 실패] 학생 번호:', id, why || '');
-        try{
-          showToast('이 학생을 찾지 못했습니다 · 번호 ' + id + ' · 화면을 새로고침(Ctrl+Shift+R)한 뒤 다시 눌러 주세요', 'warning');
-        }catch(e){}
-      };
-
-      try{ showToast('학생 정보를 서버에서 다시 찾는 중입니다…', 'brand'); }catch(e){}
-
-      /* 1) 문서 번호로 바로 찾기 */
-      d.collection('students').doc(id).get().then(function(doc){
-        if (doc.exists) return put(doc.data(), id);
-
-        /* 2) 문서 번호와 안쪽 번호가 다를 수 있으니 번호로 한 번 더 찾기 */
-        return d.collection('students').where('id', '==', id).limit(1).get().then(function(snap){
-          if (snap && !snap.empty){
-            var hit = snap.docs[0];
-            return put(hit.data(), hit.id);
-          }
-
-          /* 3) 화면 목록 자체가 오래된 것일 수 있으니 전체를 다시 받아 본다 */
-          return d.collection('students').get().then(function(all){
-            var fresh = [];
-            all.forEach(function(doc2){
-              var x = JSON.parse(JSON.stringify(doc2.data() || {}));
-              delete x._updatedAt; delete x._updatedBy;
-              if (!x.id) x.id = doc2.id;
-              fresh.push(x);
-            });
-            console.log('[복구] 서버 학생 수', fresh.length, '· 찾는 번호', id);
-            if (!fresh.length) return giveUp('서버 목록이 비어 있음');
-            if (!ttFind(fresh, id)) return giveUp('서버 ' + fresh.length + '명 중에 없음');
-            globalStudentData.length = 0;
-            fresh.forEach(function(x){ globalStudentData.push(x); });
-            try{ saveToStorage(); }catch(e){}
-            open();
-          });
-        });
-      }).catch(function(e){
-        giveUp((e && (e.code || e.message)) || '읽기 오류');
-      });
-    };
-    window.doLoadStudentDetail.__tt = 1;
-    return true;
-  }
-
   /* ---------- 로그인: 비밀번호 찾기 (가입한 이메일로 재설정 메일) ---------- */
   function authMsg(text, good){
     var box = document.getElementById('authError'); if (!box) return;
@@ -11593,8 +11515,6 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     hookAssign();
     hookBrief();
     hookPwReset();
-    hookLoadStudent();
-    var n2 = 0, t2 = setInterval(function(){ if (hookLoadStudent() || ++n2 > 40) clearInterval(t2); }, 300);
     setTimeout(hookPwReset, 1500);
     setTimeout(hookBrief, 1500);
     pull();
