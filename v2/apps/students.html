@@ -3984,6 +3984,24 @@ window.addEventListener('beforeunload', (e) => { if (typeof hasRealChanges === '
    연도 헬퍼 + 마이그레이션
 ================================================================= */
 const DEFAULT_YEAR = '2026';
+/* 다음 해까지 옆으로 이어서 볼지 (배정관리 표) */
+let assignSpanNext = (function(){ try{ return localStorage.getItem('studentMgmt_v3_spanNext') === '1'; }catch(e){ return false; } })();
+let currentEditYear = '';
+function setAssignSpanNext(on){
+  assignSpanNext = !!on;
+  try{ localStorage.setItem('studentMgmt_v3_spanNext', on ? '1' : '0'); }catch(e){}
+  renderAssignmentMatrix();
+}
+/* 표에 그릴 칸 목록: [{y:'2026', m:'11월'}, ...] */
+function assignCols(months){
+  const y1 = getCurrentAssignYear();
+  const cols = months.map(m => ({ y: y1, m: m }));
+  if (assignSpanNext){
+    const y2 = String(parseInt(y1, 10) + 1);
+    months.forEach(m => cols.push({ y: y2, m: m }));
+  }
+  return cols;
+}
 
 function getCurrentAssignYear() {
   const sel = document.getElementById('assignYear');
@@ -5403,20 +5421,34 @@ function renderAssignmentMatrix() {
     return;
   }
 
-  // 행 = 시간대, 열 = 월
-  html += '<div style="overflow-x:auto;"><table class="matrix-table"><thead><tr><th class="time-col">시간/월</th>';
-  months.forEach(m => html += `<th>${m}</th>`);
+  // 행 = 시간대, 열 = 월 (다음 해까지 이어 볼 수 있음)
+  const cols = assignCols(months);
+  const yearSpans = [];
+  cols.forEach(c => {
+    const last = yearSpans[yearSpans.length - 1];
+    if (last && last.y === c.y) last.n++;
+    else yearSpans.push({ y: c.y, n: 1 });
+  });
+  html += '<div style="overflow-x:auto;"><table class="matrix-table"><thead>';
+  if (yearSpans.length > 1) {
+    html += '<tr><th class="time-col"></th>';
+    yearSpans.forEach(g => html += `<th class="matrix-yhead" colspan="${g.n}">${g.y}년</th>`);
+    html += '</tr>';
+  }
+  html += '<tr><th class="time-col">시간/월</th>';
+  cols.forEach(c => html += `<th${c.y !== currentYear ? ' class="matrix-next"' : ''}>${c.m}</th>`);
   html += '</tr></thead><tbody>';
   ALL_TIMES_LIST.forEach(t => {
     // 빈 시간대 숨기기 옵션
     if (hideEmptyTimes) {
-      const any = assignedClasses.some(a => (a.year || DEFAULT_YEAR) === currentYear && a.time === t && months.includes(a.month));
+      const any = assignedClasses.some(a => a.time === t &&
+        cols.some(c => (a.year || DEFAULT_YEAR) === c.y && a.month === c.m));
       if (!any) return;
     }
     html += `<tr><td class="time-col">${t}</td>`;
-    months.forEach(m => {
-      // 현재 선택된 연도의 데이터만 필터링
-      const items = assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === currentYear && a.month === m && a.time === t);
+    cols.forEach(c => {
+      const m = c.m, cy = c.y;
+      const items = assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === cy && a.month === m && a.time === t);
       // 셀 상태: empty / partial(노랑) / confirmed(초록)
       let cellState = 'empty';
       if (items.length > 0) {
@@ -5434,14 +5466,14 @@ function renderAssignmentMatrix() {
           <span class="pill-ck" role="button" title="${a.confirmed ? '확정 해제' : '확정하기'}" onclick="event.stopPropagation(); toggleConfirmMatrixItem('${a.id}', ${a.confirmed ? 'false' : 'true'})">${a.confirmed ? '✓' : ''}</span>${freeTag}<span class="pill-text">${escapeHTML(a.subject)}</span>
         </span>`;
       });
-      html += `<td class="matrix-cell state-${cellState}" onclick="openAssignModal('${m}', '${t}')" ondragover="allowDrop(event, this)" ondragleave="leaveDrop(event, this)" ondrop="handleDrop(event, '${m}', '${t}', this)">${cellHtml}</td>`;
+      html += `<td class="matrix-cell state-${cellState}${cy !== currentYear ? ' matrix-next' : ''}" onclick="openAssignModal('${m}', '${t}', '${cy}')" ondragover="allowDrop(event, this)" ondragleave="leaveDrop(event, this)" ondrop="handleDrop(event, '${m}', '${t}', this, '${cy}')">${cellHtml}</td>`;
     });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
 
   // 빈 시간대 숨김으로 표시할 행이 없으면 안내
-  if (hideEmptyTimes && !assignedClasses.some(a => (a.year || DEFAULT_YEAR) === currentYear && months.includes(a.month))) {
+  if (hideEmptyTimes && !assignedClasses.some(a => assignCols(months).some(c => (a.year || DEFAULT_YEAR) === c.y && a.month === c.m))) {
     html = renderMonthToggleBar(ALL_MONTHS, currentYear) +
       `<div class="empty-state" style="padding:30px;">표시할 배정이 없습니다<br><span style="font-size:11px; color:var(--text-soft);">‘빈 시간대 숨김’을 해제하면 입력할 수 있습니다</span></div>`;
   }
@@ -5478,12 +5510,12 @@ function updateAllSubjectsDatalist() {
 function startMatrixDrag(ev, month, time, subj, id) { ev.dataTransfer.setData('text/plain', JSON.stringify({ from: 'matrix', id, subj })); }
 function allowDrop(ev, el) { ev.preventDefault(); if (el) el.classList.add('drag-over'); }
 function leaveDrop(ev, el) { if (el) el.classList.remove('drag-over'); }
-function handleDrop(ev, targetMonth, targetTime, el) {
+function handleDrop(ev, targetMonth, targetTime, el, targetYear) {
   ev.preventDefault();
   if (el) el.classList.remove('drag-over');
   let data;
   try { data = JSON.parse(ev.dataTransfer.getData('text/plain')); } catch { return; }
-  const currentYear = getCurrentAssignYear();
+  const currentYear = targetYear || getCurrentAssignYear();
   pushHistory();
   if (data.from === 'matrix') {
     const item = assignedClasses.find(a => a.id === data.id);
@@ -5581,9 +5613,10 @@ function toggleConfirmMatrixItem(id, checked) {
   const a = assignedClasses.find(x => x.id === id);
   if (a) { a.confirmed = checked; renderAssignmentMatrix(); markDirty(); }
 }
-function openAssignModal(month, time) {
+function openAssignModal(month, time, year) {
   currentEditMonth = month; currentEditTime = time;
-  const currentYear = getCurrentAssignYear();
+  const currentYear = year || getCurrentAssignYear();
+  currentEditYear = currentYear;
   document.getElementById('assignModalTitle').innerText = `${currentYear}년 ${month} · ${time} 배정`;
   const items = assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === currentYear && a.month === month && a.time === time);
   document.getElementById('assignSubj1').value = items[0]?.subject || '';
@@ -5595,7 +5628,7 @@ function closeAssignModal() { document.getElementById('assignModal').classList.r
 function saveAssignModal() {
   const s1 = document.getElementById('assignSubj1').value.trim();
   const s2 = document.getElementById('assignSubj2').value.trim();
-  const currentYear = getCurrentAssignYear();
+  const currentYear = currentEditYear || getCurrentAssignYear();
   pushHistory();
   // 같은 셀에 있던 과목의 확정 체크는 기억해 둔다 (같은 과목이면 그대로 유지)
   const prevCell = assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === currentYear && a.month === currentEditMonth && a.time === currentEditTime);
@@ -7225,7 +7258,8 @@ function renderMonthToggleBar(allMonths, year) {
       <button type="button" class="mtb-btn" onclick="showAssignedMonthsOnly()">배정된 월만</button>
       <button type="button" class="mtb-btn" onclick="showCurrentQuarter()">최근 3개월</button>
       <label class="mtb-chk"><input type="checkbox" ${hideEmptyTimes ? 'checked' : ''} onchange="toggleHideEmptyTimes(this.checked)"> 빈 시간대 숨김</label>
-      <span class="mtb-count">${shown}/12개월</span>
+      <label class="mtb-chk" title="선택한 해 오른쪽에 다음 해 열두 달을 이어서 보여 줍니다"><input type="checkbox" ${assignSpanNext ? 'checked' : ''} onchange="setAssignSpanNext(this.checked)"> ${parseInt(year,10)+1}년 이어 보기</label>
+      <span class="mtb-count">${shown}/12개월${assignSpanNext ? ' × 2년' : ''}</span>
     </div>
   </div>`;
 }
@@ -10465,6 +10499,11 @@ body.v9-sel .sidebar-actions { justify-content:space-between !important; }
 .tt-dkeep td{background:rgba(47,107,82,.06)}
 .tt-dgone td{opacity:.6}
 .tt-did{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--text-tertiary,#999);word-break:break-all}
+/* 배정표 · 다음 해 이어 보기 */
+.matrix-table .matrix-yhead{text-align:center;font-size:11.5px;font-weight:800;letter-spacing:.02em;
+  border-bottom:2px solid var(--border,#ddd)}
+.matrix-table th.matrix-next,.matrix-table td.matrix-next{background-image:linear-gradient(rgba(127,168,223,.07),rgba(127,168,223,.07))}
+.matrix-table th.matrix-next{color:var(--text-secondary,#555)}
 .tt-ttl{font-size:14px}
 .tt-acts2{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .tt-x{position:absolute;top:-2px;right:0;border:0;background:none;color:var(--text-tertiary,#999);
