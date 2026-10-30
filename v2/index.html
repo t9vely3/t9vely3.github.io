@@ -179,7 +179,9 @@ html, body { height: 100%; }
     ]
   };
   var OTHERS = ["student", "cash", "gov", "guide", "home", "sales"];
-  var VER = "20261021a";   /* 화면 파일을 고쳐 올릴 때마다 바꾸면 모두에게 새 화면이 바로 보임 */
+  /* 화면 파일을 새로 올리면 바로 보이게 — 1분마다 값이 바뀐다.
+     예전에는 이 값을 손으로 고쳐야 해서, 파일을 올려도 브라우저가 예전 화면을 계속 보여 주는 일이 있었다. */
+  var VER = String(Math.floor(Date.now() / 60000));
   var S = { space: "dept", view: "home", frames: {} };
   try { S.space = localStorage.getItem("aix-v2-space") === "team" ? "team" : "dept"; } catch (e) {}
 
