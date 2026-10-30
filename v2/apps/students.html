@@ -3998,13 +3998,9 @@ function assignYearsShown(){
   return assignSpanNext ? [y1, String(parseInt(y1, 10) + 1)] : [y1];
 }
 /* 표에 그릴 칸 목록: [{y:'2026', m:'11월'}, ...] */
-function assignCols(months){
-  const y1 = getCurrentAssignYear();
-  const cols = months.map(m => ({ y: y1, m: m }));
-  if (assignSpanNext){
-    const y2 = String(parseInt(y1, 10) + 1);
-    months.forEach(m => cols.push({ y: y2, m: m }));
-  }
+function assignCols(){
+  const cols = [];
+  assignYearsShown().forEach(y => monthsOf(y).forEach(m => cols.push({ y: y, m: m })));
   return cols;
 }
 
@@ -5412,13 +5408,13 @@ function renderAssignmentMatrix() {
     return;
   }
   const currentYear = getCurrentAssignYear();
-  const ALL_MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const months = ALL_MONTHS.filter(m => !hiddenMonths.has(m));
+  const ALL_MONTHS = MONTHS_12;
+  const months = monthsOf(currentYear);
 
   // 월 표시 토글 바
   let html = renderMonthToggleBar(ALL_MONTHS, currentYear);
 
-  if (months.length === 0) {
+  if (assignCols().length === 0) {
     html += `<div class="empty-state" style="padding:30px;">모든 월이 숨겨져 있습니다<br><span style="font-size:11px; color:var(--text-soft);">위에서 월을 다시 표시하세요</span></div>`;
     container.innerHTML = html;
     renderPalette();
@@ -5427,7 +5423,7 @@ function renderAssignmentMatrix() {
   }
 
   // 행 = 시간대, 열 = 월 (다음 해까지 이어 볼 수 있음)
-  const cols = assignCols(months);
+  const cols = assignCols();
   const yearSpans = [];
   cols.forEach(c => {
     const last = yearSpans[yearSpans.length - 1];
@@ -5478,7 +5474,7 @@ function renderAssignmentMatrix() {
   html += '</tbody></table></div>';
 
   // 빈 시간대 숨김으로 표시할 행이 없으면 안내
-  if (hideEmptyTimes && !assignedClasses.some(a => assignCols(months).some(c => (a.year || DEFAULT_YEAR) === c.y && a.month === c.m))) {
+  if (hideEmptyTimes && !assignedClasses.some(a => assignCols().some(c => (a.year || DEFAULT_YEAR) === c.y && a.month === c.m))) {
     html = renderMonthToggleBar(ALL_MONTHS, currentYear) +
       `<div class="empty-state" style="padding:30px;">표시할 배정이 없습니다<br><span style="font-size:11px; color:var(--text-soft);">‘빈 시간대 숨김’을 해제하면 입력할 수 있습니다</span></div>`;
   }
@@ -7225,80 +7221,127 @@ function clearAllFilters() {
    학사일정 — 월 표시/숨기기
 ================================================================= */
 const HIDDEN_MONTHS_KEY = 'studentMgmt_v3_hiddenMonths';
+const HIDDEN_COLS_KEY = 'studentMgmt_v3_hiddenCols';
 const HIDE_EMPTY_TIMES_KEY = 'studentMgmt_v3_hideEmptyTimes';
-let hiddenMonths = new Set();
+const MONTHS_12 = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+/* 연도마다 따로 숨긴다. 열쇠는 "2026|11월" 모양 */
+let hiddenCols = new Set();
 let hideEmptyTimes = false;
+
+function colKey(y, m) { return y + '|' + m; }
+function isColHidden(y, m) { return hiddenCols.has(colKey(y, m)); }
+function monthsOf(y) { return MONTHS_12.filter(m => !isColHidden(y, m)); }
 
 function loadMonthPrefs() {
   try {
-    const h = localStorage.getItem(HIDDEN_MONTHS_KEY);
-    if (h) hiddenMonths = new Set(JSON.parse(h));
+    const c = localStorage.getItem(HIDDEN_COLS_KEY);
+    if (c) {
+      hiddenCols = new Set(JSON.parse(c));
+    } else {
+      // 예전에는 달 이름만 저장했다 → 지금 보는 해에만 옮겨 준다
+      const h = localStorage.getItem(HIDDEN_MONTHS_KEY);
+      if (h) {
+        const y = (typeof getCurrentAssignYear === 'function') ? getCurrentAssignYear() : DEFAULT_YEAR;
+        JSON.parse(h).forEach(m => hiddenCols.add(colKey(y, m)));
+      }
+    }
     hideEmptyTimes = localStorage.getItem(HIDE_EMPTY_TIMES_KEY) === '1';
   } catch (e) {}
 }
 function saveMonthPrefs() {
   try {
-    localStorage.setItem(HIDDEN_MONTHS_KEY, JSON.stringify([...hiddenMonths]));
+    localStorage.setItem(HIDDEN_COLS_KEY, JSON.stringify([...hiddenCols]));
     localStorage.setItem(HIDE_EMPTY_TIMES_KEY, hideEmptyTimes ? '1' : '0');
   } catch (e) {}
 }
 
 function renderMonthToggleBar(allMonths, year) {
-  const shown = allMonths.length - hiddenMonths.size;
-  const chips = allMonths.map(m => {
-    const off = hiddenMonths.has(m);
-    // 해당 월에 배정이 있는지 (숨겨도 표시해줌)
-    const years = assignYearsShown();
-    const per = years.map(y => ({ y: y, n: assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === y && a.month === m).length }));
-    const cnt = per.reduce((t, x) => t + x.n, 0);
-    const detail = per.filter(x => x.n).map(x => x.y + '년 ' + x.n + '과목').join(' · ');
-    const num = m.replace('월','');
-    return `<button type="button" class="mon-chip ${off ? 'off' : ''}${cnt ? ' has' : ''}" onclick="toggleMonth('${m}')" title="${escapeHTML(m)}${detail ? ' · ' + detail : ''} — 클릭하면 ${off ? '표시' : '숨김'}">
-      <span class="mon-num">${num}</span>${cnt ? `<span class="mon-dot">${cnt}</span>` : ''}
-    </button>`;
+  const years = assignYearsShown();
+  const rows = years.map(y => {
+    const chips = MONTHS_12.map(m => {
+      const off = isColHidden(y, m);
+      const cnt = assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === y && a.month === m).length;
+      const num = m.replace('월','');
+      return `<button type="button" class="mon-chip ${off ? 'off' : ''}${cnt ? ' has' : ''}" onclick="toggleMonthOf('${y}','${m}')" title="${y}년 ${escapeHTML(m)}${cnt ? ' · 배정 ' + cnt + '과목' : ''} — 클릭하면 ${off ? '표시' : '숨김'}">
+        <span class="mon-num">${num}</span>${cnt ? `<span class="mon-dot">${cnt}</span>` : ''}
+      </button>`;
+    }).join('');
+    const shownN = monthsOf(y).length;
+    return `<div class="mtb-row">
+      <span class="mtb-year">${y}년</span>
+      <div class="mon-chips">${chips}</div>
+      <span class="mtb-ycount">${shownN}/12</span>
+      <button type="button" class="mtb-btn sm" onclick="yearAll('${y}')" title="${y}년 열두 달 모두 표시">전체</button>
+      <button type="button" class="mtb-btn sm" onclick="yearAssigned('${y}')" title="${y}년에 배정이 있는 달만 표시">배정만</button>
+      <button type="button" class="mtb-btn sm" onclick="yearNone('${y}')" title="${y}년 전부 숨김">숨김</button>
+    </div>`;
   }).join('');
 
-  return `<div class="month-toggle-bar">
-    <span class="mtb-label">표시 월</span>
-    <div class="mon-chips">${chips}</div>
-    <div class="mtb-actions">
-      <button type="button" class="mtb-btn" onclick="showAllMonths()">전체</button>
-      <button type="button" class="mtb-btn" onclick="showAssignedMonthsOnly()">배정된 월만</button>
-      <button type="button" class="mtb-btn" onclick="showCurrentQuarter()">최근 3개월</button>
-      <label class="mtb-chk"><input type="checkbox" ${hideEmptyTimes ? 'checked' : ''} onchange="toggleHideEmptyTimes(this.checked)"> 빈 시간대 숨김</label>
-      <label class="mtb-chk" title="선택한 해 오른쪽에 다음 해 열두 달을 이어서 보여 줍니다"><input type="checkbox" ${assignSpanNext ? 'checked' : ''} onchange="setAssignSpanNext(this.checked)"> ${parseInt(year,10)+1}년 이어 보기</label>
-      <span class="mtb-count">${shown}/12개월${assignSpanNext ? ' × 2년' : ''}</span>
+  return `<div class="month-toggle-bar mtb-multi">
+    <div class="mtb-head">
+      <span class="mtb-label">표시 월</span>
+      <div class="mtb-actions">
+        <button type="button" class="mtb-btn" onclick="showAllMonths()">전체 표시</button>
+        <button type="button" class="mtb-btn" onclick="showAssignedMonthsOnly()">배정된 월만</button>
+        <button type="button" class="mtb-btn" onclick="showCurrentQuarter()">이번 달부터 3개월</button>
+        <label class="mtb-chk"><input type="checkbox" ${hideEmptyTimes ? 'checked' : ''} onchange="toggleHideEmptyTimes(this.checked)"> 빈 시간대 숨김</label>
+        <label class="mtb-chk" title="선택한 해 오른쪽에 다음 해를 이어서 보여 줍니다"><input type="checkbox" ${assignSpanNext ? 'checked' : ''} onchange="setAssignSpanNext(this.checked)"> ${parseInt(year,10)+1}년 같이 보기</label>
+      </div>
     </div>
+    ${rows}
   </div>`;
 }
 
-function toggleMonth(m) {
-  if (hiddenMonths.has(m)) hiddenMonths.delete(m);
-  else hiddenMonths.add(m);
+/* 한 칸(연도+월) 켜고 끄기 */
+function toggleMonthOf(y, m) {
+  const k = colKey(y, m);
+  if (hiddenCols.has(k)) hiddenCols.delete(k); else hiddenCols.add(k);
   saveMonthPrefs();
   renderAssignmentMatrix();
 }
+/* 한 해 단위 */
+function yearAll(y) {
+  MONTHS_12.forEach(m => hiddenCols.delete(colKey(y, m)));
+  saveMonthPrefs(); renderAssignmentMatrix();
+}
+function yearNone(y) {
+  MONTHS_12.forEach(m => hiddenCols.add(colKey(y, m)));
+  saveMonthPrefs(); renderAssignmentMatrix();
+}
+function yearAssigned(y) {
+  const used = new Set(assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === y).map(a => a.month));
+  if (used.size === 0) { showToast(y + '년에 배정된 과목이 없습니다', 'warning'); return; }
+  MONTHS_12.forEach(m => { if (used.has(m)) hiddenCols.delete(colKey(y, m)); else hiddenCols.add(colKey(y, m)); });
+  saveMonthPrefs(); renderAssignmentMatrix();
+}
+/* 보이는 해 전체에 적용 */
 function showAllMonths() {
-  hiddenMonths.clear();
-  saveMonthPrefs();
-  renderAssignmentMatrix();
+  assignYearsShown().forEach(y => MONTHS_12.forEach(m => hiddenCols.delete(colKey(y, m))));
+  saveMonthPrefs(); renderAssignmentMatrix();
 }
 function showAssignedMonthsOnly() {
-  const years = assignYearsShown();   /* 이어 보기 중이면 다음 해까지 같이 본다 */
-  const ALL = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const used = new Set(assignedClasses.filter(a => years.indexOf(a.year || DEFAULT_YEAR) >= 0).map(a => a.month));
-  if (used.size === 0) { showToast(years.join('·') + '년에 배정된 과목이 없습니다', 'warning'); return; }
-  hiddenMonths = new Set(ALL.filter(m => !used.has(m)));
-  saveMonthPrefs();
-  renderAssignmentMatrix();
+  const years = assignYearsShown();
+  const any = assignedClasses.some(a => years.indexOf(a.year || DEFAULT_YEAR) >= 0);
+  if (!any) { showToast(years.join('·') + '년에 배정된 과목이 없습니다', 'warning'); return; }
+  years.forEach(y => {
+    const used = new Set(assignedClasses.filter(a => (a.year || DEFAULT_YEAR) === y).map(a => a.month));
+    MONTHS_12.forEach(m => { if (used.has(m)) hiddenCols.delete(colKey(y, m)); else hiddenCols.add(colKey(y, m)); });
+  });
+  saveMonthPrefs(); renderAssignmentMatrix();
 }
+/* 오늘부터 세 달 — 해가 바뀌어도 이어서 */
 function showCurrentQuarter() {
-  const ALL = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const now = new Date().getMonth(); // 0-based
-  const keep = new Set([ALL[now], ALL[(now + 1) % 12], ALL[(now + 2) % 12]]);
-  hiddenMonths = new Set(ALL.filter(m => !keep.has(m)));
-  saveMonthPrefs();
-  renderAssignmentMatrix();
+  const years = assignYearsShown();
+  const now = new Date();
+  const keep = new Set();
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    keep.add(colKey(String(d.getFullYear()), (d.getMonth() + 1) + '월'));
+  }
+  years.forEach(y => MONTHS_12.forEach(m => {
+    if (keep.has(colKey(y, m))) hiddenCols.delete(colKey(y, m)); else hiddenCols.add(colKey(y, m));
+  }));
+  saveMonthPrefs(); renderAssignmentMatrix();
 }
 function toggleHideEmptyTimes(v) {
   hideEmptyTimes = v;
@@ -10513,31 +10556,40 @@ body.v9-sel .sidebar-actions { justify-content:space-between !important; }
 .matrix-table th.matrix-next,.matrix-table td.matrix-next{background-image:linear-gradient(rgba(127,168,223,.07),rgba(127,168,223,.07))}
 .matrix-table th.matrix-next{color:var(--text-secondary,#555)}
 
-/* ===== 화이트 화면에서 체크 표시가 잘 보이게 =====
-   네모 체크칸은 직접 그려서 테두리를 진하게, 체크 표시는 흰 V 로 */
+/* 표시 월 — 연도별 줄 */
+.month-toggle-bar.mtb-multi{display:block}
+.mtb-multi .mtb-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.mtb-multi .mtb-head .mtb-actions{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mtb-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:5px 0;border-top:1px solid var(--border-light,#eee)}
+.mtb-row:first-of-type{border-top:0}
+.mtb-year{font-size:12px;font-weight:800;min-width:50px;color:var(--text-primary,#111)}
+.mtb-ycount{font-size:11px;color:var(--text-tertiary,#999);margin-left:4px;white-space:nowrap}
+.mtb-btn.sm{font-size:11px;padding:3px 8px}
+
+/* ===== 체크 표시가 잘 보이게 (화이트 화면) =====
+   네모 칸을 직접 그린다. 눌리면 옅은 파란 바탕에 '진한 남색 V' 로 —
+   인트라넷이 색을 다시 칠해도 V 가 사라지지 않도록 글자색을 따라가게 했다. */
 html:not([data-theme="dark"]) input[type="checkbox"]{
-  -webkit-appearance:none; appearance:none;
-  width:17px; height:17px; min-width:17px; min-height:17px;
-  border:1.7px solid #6B7686; border-radius:5px; background:#fff;
-  position:relative; cursor:pointer; vertical-align:middle; flex-shrink:0;
-  box-shadow:inset 0 1px 1.5px rgba(16,24,40,.06); transition:all .12s;
+  -webkit-appearance:none !important; appearance:none !important;
+  width:18px !important; height:18px !important; min-width:18px; min-height:18px;
+  border:1.8px solid #6B7686 !important; border-radius:5px;
+  background:#fff !important; color:#15327F !important;
+  position:relative; cursor:pointer; vertical-align:middle; flex-shrink:0; margin:0;
+  box-shadow:inset 0 1px 1.5px rgba(16,24,40,.06); transition:border-color .12s, background .12s;
 }
-html:not([data-theme="dark"]) input[type="checkbox"]:hover{ border-color:#2B3442; }
+html:not([data-theme="dark"]) input[type="checkbox"]:hover{ border-color:#2B3442 !important; }
 html:not([data-theme="dark"]) input[type="checkbox"]:checked{
-  background:#1F4FD1; border-color:#1F4FD1; box-shadow:none;
+  background:#DCE6FB !important; border-color:#1F4FD1 !important; color:#15327F !important; box-shadow:none;
 }
 html:not([data-theme="dark"]) input[type="checkbox"]:checked::after{
-  content:''; position:absolute; left:5px; top:1.4px; width:4px; height:9px;
-  border:solid #fff; border-width:0 2.2px 2.2px 0; transform:rotate(43deg);
+  content:''; position:absolute; left:5.4px; top:1.6px; width:4px; height:9.5px;
+  border-style:solid; border-color:currentColor; border-width:0 2.6px 2.6px 0;
+  transform:rotate(43deg); opacity:1;
 }
-html:not([data-theme="dark"]) input[type="checkbox"]:focus-visible{
-  outline:2px solid #1F4FD1; outline-offset:2px;
-}
-html:not([data-theme="dark"]) input[type="checkbox"]:disabled{ background:#EEF0F4; border-color:#C3C9D4; cursor:default; }
-/* 배정표 동그란 확정 표시: 안 눌린 것도 테두리가 보이게 */
-html:not([data-theme="dark"]) .matrix-subj-pill .pill-ck{
-  border-color:#8A93A3; background:#fff;
-}
+html:not([data-theme="dark"]) input[type="checkbox"]:focus-visible{ outline:2px solid #1F4FD1; outline-offset:2px; }
+html:not([data-theme="dark"]) input[type="checkbox"]:disabled{ background:#EEF0F4 !important; border-color:#C3C9D4 !important; cursor:default; }
+/* 배정표 동그란 확정 표시 */
+html:not([data-theme="dark"]) .matrix-subj-pill .pill-ck{ border-color:#8A93A3; background:#fff; }
 html:not([data-theme="dark"]) .matrix-subj-pill.confirmed .pill-ck{
   border-color:var(--st-ok); background:var(--st-ok); color:#fff;
 }
