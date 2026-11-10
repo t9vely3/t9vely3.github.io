@@ -2749,5 +2749,61 @@ async function initApp() {
 })();
 
 </script>
+<script>
+/* =========================================================
+   로드맵 연동 (덧붙임) — 로드맵 화면(roadmap.html) 안에 이 견적서가 들어갔을 때만 움직임.
+   · 로드맵에서 체크한 과목을 과목표에서 찾아 담고, 학생명을 넣음
+   · 견적서에서 직접 담은 과목, 할인·멘토 등 나머지는 건드리지 않음
+   · 인트라넷 메뉴에서 그냥 열면 아무 일도 하지 않음
+   ========================================================= */
+(function(){
+  if (window.parent === window) return;
+  var lastPlan = null;
+  function norm(t){ return String(t || '').toLowerCase().replace(/[\s()\[\]·.,_\-]/g, ''); }
+  function post(m){ try{ parent.postMessage(m, location.origin); }catch(e){} }
+  function ready(){ try { return typeof MASTER !== 'undefined' && !!MASTER && Array.isArray(MASTER.departments); } catch (e) { return false; } }
+  function allCourses(){
+    var out = [];
+    MASTER.departments.forEach(function(d){ (d.processes || []).forEach(function(p){ (p.courses || []).forEach(function(c){ out.push({ c: c, d: d, p: p }); }); }); });
+    return out;
+  }
+  function sendMaster(){ if (ready()) post({ aixQuote: 'master', courses: allCourses().map(function(x){ return { subject: x.c.subject, fee: x.c.fee || 0, dept: x.d.name }; }) }); }
+  function apply(m){
+    if (!ready()) { setTimeout(function(){ apply(m); }, 300); return; }
+    var idx = {};
+    allCourses().forEach(function(x){ var k = norm(x.c.subject); if (!idx[k]) idx[k] = x; });
+    if (m.planId !== lastPlan) {
+      if (lastPlan !== null) {           /* 다른 상담 대상으로 바꾸면 새 견적으로 시작 */
+        try { state.editingQuoteId = null; resetAllSilent(); updateEditingBanner(); } catch (e) {}
+      }
+      lastPlan = m.planId;
+    }
+    var stu = document.getElementById('student');
+    if (stu && m.student && (!stu.value || stu.dataset.fromRoadmap === stu.value)) { stu.value = m.student; stu.dataset.fromRoadmap = m.student; }
+    var prevFree = {};
+    state.selected.forEach(function(s){ if (s.fromRoadmap && s.free) prevFree[s.course.id] = 1; });
+    var keep = state.selected.filter(function(s){ return !s.fromRoadmap; });
+    var have = {}; keep.forEach(function(s){ have[s.course.id] = 1; });
+    var add = [], miss = [];
+    (m.groups || []).forEach(function(g){
+      var hit = null;
+      for (var i = 0; i < (g.alts || []).length && !hit; i++) hit = idx[norm(g.alts[i])] || null;
+      if (!hit) { miss.push(g.label); return; }
+      if (have[hit.c.id]) return; have[hit.c.id] = 1;
+      add.push({ selId: nextSelId++, course: Object.assign({}, hit.c), free: !!prevFree[hit.c.id], deptId: hit.d.id, procId: hit.p.id, fromRoadmap: true });
+    });
+    state.selected = add.concat(keep);
+    render();
+    post({ aixQuote: 'result', missing: miss, count: add.length });
+  }
+  window.addEventListener('message', function(e){
+    if (e.origin !== location.origin || !e.data || !e.data.aixRoadmap) return;
+    if (e.data.aixRoadmap === 'sync') apply(e.data);
+    else if (e.data.aixRoadmap === 'master') sendMaster();
+  });
+  var t = setInterval(function(){ if (ready()) { clearInterval(t); post({ aixQuote: 'ready' }); sendMaster(); } }, 300);
+})();
+</script>
 </body>
+
 </html>
