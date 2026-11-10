@@ -1,0 +1,14 @@
+[한 번만 하면 되는 설정] 학생 링크가 열리게 하는 규칙
+
+1. Firebase 콘솔(console.firebase.google.com) → 프로젝트 student-f3e8a 선택
+2. 왼쪽 메뉴 Firestore Database → 위쪽 '규칙' 탭
+3. 맨 위 'match /databases/{database}/documents {' 줄 바로 아래에 아래 5줄을 붙여 넣고 '게시'
+
+    match /roadmap/{doc} {
+      allow get: if request.auth != null || doc == 'main' || doc == 'imgidx' || doc.matches('img_.*') || doc.matches('view_.*');
+      allow list, write: if request.auth != null;
+    }
+
+· 학생은 로그인 없이 과정 구성·커리큘럼 그림과, 링크 번호 + 휴대폰 뒷번호가 맞는 자기 로드맵 한 개만 읽을 수 있습니다.
+· 상담 메모·휴대폰 번호·학생 목록은 로그인한 직원만 볼 수 있습니다.
+· 기존 규칙(수강생 관리파일 등)은 그대로 두고 이 5줄만 더하는 것입니다.

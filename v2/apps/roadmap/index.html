@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>교육과정 로드맵 · 수강 설계</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#f6f6f7; --card:#ffffff; --ink:#1a1d23; --sub:#6b717c; --faint:#a2a7b0; --line:#e6e8ec; --hair:#eff1f4;
+  --ac:#1f2a44; --ac-d:var(--ac); --ac-bg:color-mix(in srgb,var(--ac) 7%,#fff); --ac-soft:color-mix(in srgb,var(--ac) 22%,#fff);
+  --gold:#e9a23b; --rail:#efc9d0; --danger:#b4232f;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum"}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.hide{display:none!important}
+.grow{flex:1}
+
+/* 맨 위 줄 */
+.top{position:sticky;top:0;z-index:30;background:rgba(244,245,247,.86);backdrop-filter:saturate(1.3) blur(12px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1760px;margin:0 auto;padding:0 28px;height:52px;display:flex;align-items:center;gap:28px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;letter-spacing:-.02em;white-space:nowrap}
+.logo{width:22px;height:22px;display:grid;place-items:center}
+.logo svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.logo svg circle{fill:var(--gold);stroke:none}
+.seg{display:flex;align-self:stretch;gap:22px}
+.seg button{border:0;background:none;padding:0 1px;font-size:13.5px;font-weight:500;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.seg button:hover{color:var(--ink)}
+.seg button.on{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-weight:600;font-size:13px;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn:hover{border-color:#c9cdd4}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn.pri:hover{background:color-mix(in srgb,var(--ac) 85%,#000)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
+.btn.danger{color:var(--danger)}
+.save{font-size:12px;color:var(--faint);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.save.local::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.save.err{color:var(--danger);font-weight:600}
+.acct{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
+
+/* 머리 */
+.wrap{max-width:1760px;margin:0 auto;padding:24px 28px 80px}
+.hero{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;padding:0 2px 16px}
+.hero .school{margin:0 0 6px;font-size:12.5px;color:var(--sub);letter-spacing:-.01em}
+.hero h1{margin:0;font-size:36px;font-weight:300;letter-spacing:-.035em;line-height:1.05}
+.hero .tags{margin:10px 0 0;font-size:13.5px;color:var(--sub);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hero .tags i{width:1px;height:11px;background:#c9cdd4}
+.picker{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.picker .who{display:flex;flex-direction:column;gap:3px}
+.picker label{font-size:11.5px;color:var(--sub);font-weight:500}
+.picker select{appearance:none;border:1px solid var(--line);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%236b717c' stroke-width='1.5'/%3E%3C/svg%3E") right 10px center/12px no-repeat;border-radius:8px;padding:8px 32px 8px 12px;min-width:200px;max-width:260px;font-weight:600;font-size:14px}
+.picker .cnt{align-self:flex-end;font-size:12.5px;color:var(--sub);padding:0 4px 9px}
+.picker .cnt b{color:var(--ink);font-weight:700}
+.picker .btn{align-self:flex-end}
+.hero .edit{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hero .edit input{background:#fff;border:1px dashed #c3c8d0;border-radius:8px;padding:6px 10px}
+.hero .edit input.h1{font-size:22px;font-weight:300;width:min(340px,80vw)}
+.themes{display:flex;gap:7px;align-items:center;font-size:12px;color:var(--sub);margin-left:6px}
+.themes button{width:18px;height:18px;border-radius:50%;border:2px solid var(--bg);box-shadow:0 0 0 1px #c9cdd4;padding:0}
+.themes button.on{box-shadow:0 0 0 1.5px var(--ink)}
+
+/* 판 */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-top:14px}
+.ph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid var(--hair)}
+.ph h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.03em}
+.ph .hint{font-size:12.5px;color:var(--sub)}
+.ph .hint.hot{color:var(--ink);font-weight:600}
+.sw{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--sub);cursor:pointer}
+.sw input{accent-color:var(--ink)}
+
+/* 로드맵 */
+.matrix{--hw:150px}
+.mrow{display:grid;border-bottom:1px solid var(--hair)}
+.mrow:last-child{border-bottom:0}
+.mrow>div{min-width:0}
+.mhead{position:sticky;top:52px;z-index:5;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.mh0{padding:13px 0 11px 24px;font-size:11.5px;color:var(--faint)}
+.mhc{position:relative;padding:11px 12px 9px 0;display:flex;flex-direction:column;gap:6px}
+.mhc .rail{position:relative;height:18px;display:flex;align-items:center}
+.mhc .rail::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:var(--lc)}
+.mhc .num{position:relative;width:18px;height:18px;border-radius:50%;background:#fff;border:1.5px solid var(--lc);font-size:10px;font-weight:700;color:var(--ink);display:grid;place-items:center}
+.mhc:last-child .num{background:var(--ink);border-color:var(--ink);color:#fff}
+.mhc .lb{font-size:13px;font-weight:700;letter-spacing:-.03em}
+.mhc input{width:100%;min-width:0;border:1px dashed #c3c8d0;border-radius:6px;padding:3px 7px;font-weight:700;background:#fff}
+.mcourse{padding:12px 12px 10px 24px;display:flex;flex-direction:column;gap:6px}
+.cname{font-size:14.5px;font-weight:700;letter-spacing:-.04em;line-height:1.3;word-break:keep-all}
+.csub{font-size:12px;color:var(--sub);margin-top:-4px}
+.ccount{align-self:flex-start;font-size:11.5px;font-weight:600;color:#fff;background:var(--ink);border-radius:999px;padding:1px 9px}
+.mrow.has .cname::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);margin:0 7px 2px 0;vertical-align:middle}
+.ctools{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.ctools .btn.sm{padding:2px 8px;font-size:11px}
+.mcell{--rh:45px;align-self:start;display:flex;flex-wrap:wrap;align-content:flex-start;padding:8px 0;background:repeating-linear-gradient(to bottom,transparent 0 7px,var(--lc) 7px 9px,transparent 9px var(--rh)) 0 8px/100% calc(100% - 16px) no-repeat}
+.mcell.none{background:repeating-linear-gradient(90deg,var(--rail) 0 4px,transparent 4px 9px) left 15px/100% 2px no-repeat}
+.stn{position:relative;flex:0 0 auto;min-width:44px;height:var(--rh);border:0;background:none;padding:18px 8px 0;text-align:center;display:flex;flex-direction:column;align-items:center;color:var(--ink)}
+
+.stn .dot{position:absolute;top:3px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#fff;border:1.5px solid var(--lcd)}
+.stn .nm{position:relative;font-size:12.5px;font-weight:500;letter-spacing:-.04em;line-height:1.3;word-break:keep-all;white-space:nowrap}
+.stn .lv{position:relative;font-size:10.5px;color:#8d939d;line-height:1.2}
+.stn .ic{position:absolute;top:0;right:5px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.stn::after{content:"";position:absolute;inset:14px 1px 1px;border-radius:8px;background:transparent;transition:background .15s}
+.stn:hover::after{background:var(--hair)}
+.stn>*{z-index:1}
+.stn.on .dot{width:16px;height:16px;top:0;margin-left:-8px;background:var(--ac) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.3 8.3l2.5 2.5 4.9-5.1' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat;border-color:var(--ac)}
+.stn.on .nm{font-weight:700}
+.stn.on .lv{color:var(--sub)}
+.stn.on::after{background:var(--ac-bg)}
+.dim .stn:not(.on) .nm{color:#7d838e}
+.dim .stn:not(.on) .dot{border-color:var(--rail)}
+.mode-edit .stn::after{box-shadow:inset 0 0 0 1px var(--line)}
+.stn.add{flex:0 0 auto;min-width:40px;color:var(--faint);font-weight:600;font-size:15px}
+
+.stn.add:hover{color:var(--ink)}
+.mfoot{display:flex;gap:8px;justify-content:center;padding:14px;border-top:1px solid var(--hair)}
+
+/* 과정별 노선 */
+.rm{display:grid;grid-template-columns:1fr 1fr;column-gap:44px;padding:2px 26px 6px}
+.crs{grid-column:span 2;display:grid;grid-template-columns:112px 1fr;gap:20px;padding:16px 0 12px;border-bottom:1px dashed #e4e4e8;min-width:0}
+.crs.half{grid-column:span 1}
+.crs.last{border-bottom:0}
+.chd{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px}
+.cic{width:52px;height:52px;border-radius:50%;background:#fff;border:3px solid #e4e4e8;box-shadow:inset 0 0 0 1px #f0f0f2;display:grid;place-items:center;color:#2f3138;transition:all .15s}
+.cic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.crs.has .cic{border-color:var(--ac);color:var(--ac)}
+.cnm{font-size:14px;font-weight:700;letter-spacing:-.04em;line-height:1.3;word-break:keep-all}
+.crs.has .cnm{background:var(--ac);color:#fff;border-radius:999px;padding:1px 10px}
+.csb{font-size:11.5px;color:var(--sub)}
+.cct{font-size:11px;font-weight:600;color:var(--ac);background:var(--ac-bg);border-radius:999px;padding:1px 9px}
+.crs .ctools{justify-content:center}
+.trk{display:flex;flex-direction:column;gap:12px;min-width:0}
+.trow{position:relative;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));padding-top:10px}
+.trow .bar{position:absolute;left:0;right:0;top:0;height:7px;border-radius:4px;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.trow.cont{margin-left:22px}
+.trow.cont::before{content:"";position:absolute;left:-18px;top:-24px;width:14px;height:27px;border-left:2px solid var(--rail);border-bottom:2px solid var(--rail);border-bottom-left-radius:10px}
+.sta{position:relative;border:0;background:none;margin-top:3px;padding:6px 4px 5px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:10px;color:var(--ink);transition:background .15s}
+.sta::before{content:"";position:absolute;left:calc(50% - 3px);top:-11px;border-left:6px solid rgba(255,255,255,.95);border-top:3.5px solid transparent;border-bottom:3.5px solid transparent}
+.sta:hover{background:var(--hair)}
+.sta .nm{font-size:13.5px;font-weight:700;letter-spacing:-.045em;line-height:1.3;word-break:keep-all;display:inline-flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 4px;color:#26282e}
+.sta .si{display:inline-flex}
+.sta .si svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sta .si img{width:15px;height:15px;object-fit:contain}
+.cic img{width:26px;height:26px;object-fit:contain}
+.icons .none{font-size:11px;color:var(--sub)}
+.icons img{width:22px;height:22px;object-fit:contain}
+.icons .upl{height:40px;border:1px dashed #c3c8d0;border-radius:9px;background:#fff;font-size:12px;font-weight:600;color:var(--sub);padding:0 11px}
+.icons .upl:hover{color:var(--ink);border-color:var(--ink)}
+/* 갈래 구간 */
+.split{position:relative;display:flex;align-items:flex-start;padding-top:6px}
+.lanes{flex:none;display:flex;flex-direction:column;gap:var(--lg)}
+.split.cont::before{content:"";position:absolute;left:-18px;top:-20px;width:18px;height:33px;border-left:2px solid var(--rail);border-bottom:2px solid var(--rail);border-bottom-left-radius:10px}
+.lane{position:relative;display:flex;align-items:flex-start;padding-left:14px;height:var(--lh)}
+.lane::before{content:"";position:absolute;left:0;top:7.5px;width:14px;height:2px;background:var(--rail)}
+.lane:not(:last-child)::after{content:"";position:absolute;left:0;top:7.5px;width:2px;bottom:calc(-1 * var(--lg) - 9.5px);background:var(--rail)}
+.ltag{position:relative;z-index:1;flex:none;min-width:74px;margin-top:-3px;border:1.5px solid var(--rail);background:#fff;border-radius:999px;padding:2px 12px;font-size:12px;font-weight:700;color:#4a4d55;letter-spacing:-.03em;cursor:default;text-align:center}
+.ltag::after{content:"";position:absolute;right:-12px;top:50%;width:12px;height:2px;margin-top:-1px;background:var(--rail)}
+.mode-edit .ltag{cursor:pointer;border-style:dashed}
+.mode-edit .ltag:hover{border-color:var(--ac);color:var(--ac)}
+.lane .trow{flex:0 1 auto;min-width:0;margin-left:12px;margin-top:5px;grid-template-columns:repeat(var(--n),minmax(0,var(--lw)))}
+.tail{position:relative;flex:1;min-width:22px;align-self:stretch}
+.tail::before{content:"";position:absolute;left:0;right:0;top:7.5px;height:2px;background:var(--rail)}
+.lane:not(:last-child) .tail::after{content:"";position:absolute;right:0;top:7.5px;width:2px;bottom:calc(-1 * var(--lg) - 9.5px);background:var(--rail)}
+.merge{position:relative;flex:none;width:30px;align-self:stretch}
+.merge::before{content:"";position:absolute;left:0;right:0;top:calc(var(--mid) + 7.5px);height:2px;background:var(--rail)}
+.merge::after{content:"";position:absolute;z-index:1;left:-6px;top:calc(var(--mid) + 2.5px);width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid var(--mc)}
+.merge.end{width:8px}.merge.end::before{display:none}
+.after{flex:1;min-width:0;margin-top:var(--mid);display:flex;flex-direction:column;gap:12px}
+.after .trow{margin-top:5px;width:max-content;max-width:100%;grid-template-columns:repeat(var(--n),minmax(0,max(var(--lw),104px)))}
+.sptools{display:flex;gap:5px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--sub);margin:4px 0 -4px}
+.sptools span{font-weight:700;margin-right:2px}
+.sta .lv{font-size:12.5px;color:#4a4d55;line-height:1.3;font-weight:500}
+.sta .nt{font-size:10.5px;color:#9a9da5;line-height:1.3;letter-spacing:-.03em;word-break:keep-all;margin-top:1px}
+.sta .ic{position:absolute;top:5px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.sta.on{background:var(--ac-bg)}
+.sta.on::after{content:"";position:absolute;inset:0;border:1.5px solid var(--ac);border-radius:10px;pointer-events:none}
+.sta.on.jl{border-top-left-radius:0;border-bottom-left-radius:0}
+.sta.on.jl::after{border-left:0;border-top-left-radius:0;border-bottom-left-radius:0}
+.sta.on.jr{border-top-right-radius:0;border-bottom-right-radius:0}
+.sta.on.jr::after{border-right:0;border-top-right-radius:0;border-bottom-right-radius:0}
+.sta.on .nm{color:var(--ac);font-weight:800}
+.sta.on .lv,.sta.on .nt{color:color-mix(in srgb,var(--ac) 70%,#fff)}
+.sta .badge{position:absolute;z-index:2;top:-8px;right:-7px;width:18px;height:18px;border-radius:50%;border:2px solid #fff;background:var(--ac) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8.4l2.6 2.6 5-5.3' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
+.dim .sta:not(.on) .nm{color:#6a6d75}
+.mode-check .sta:hover{background:var(--ac-bg)}
+.mode-edit .sta{box-shadow:inset 0 0 0 1px var(--line)}
+.mode-edit .sta[draggable]{cursor:grab}
+.sta.dragging{opacity:.35}
+.sta.drop-before{box-shadow:inset 3px 0 0 var(--ac),inset 0 0 0 1px var(--line)}
+.sta.drop-after{box-shadow:inset -3px 0 0 var(--ac),inset 0 0 0 1px var(--line)}
+.sta.add{color:var(--faint);font-weight:600;font-size:13px;justify-content:center}
+.sta.add:hover{color:var(--ink)}
+
+/* 학생 본인 확인 */
+.gate{max-width:380px;margin:60px auto 0;padding:32px 28px;text-align:center}
+.gate h2{margin:0 0 8px;font-size:22px;font-weight:700;letter-spacing:-.03em}
+.gate p{margin:0 0 20px;color:var(--sub);font-size:14px;line-height:1.6}
+.gate input{display:block;width:100%;text-align:center;font-size:28px;letter-spacing:.5em;padding:12px 0 12px .5em;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:700}
+.gate input:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
+.gate .err{min-height:20px;margin:10px 0;color:var(--danger);font-size:13px}
+.gate .btn{width:100%;padding:11px;font-size:15px}
+/* 견적서 · 시간표 강의장 */
+.qwrap{padding-top:0;padding-bottom:60px}
+#qframe{display:block;width:100%;height:calc(100vh - 90px);min-height:720px;border:0;border-top:1px solid var(--hair);border-radius:0 0 14px 14px;background:#fff}
+.qmiss{margin:12px 24px 0;padding:9px 13px;border-radius:9px;background:#fff7e8;border:1px solid #f0dcb0;font-size:12.5px;color:#7a5a12;line-height:1.55}
+.qmiss b{color:#5b420a}
+#qoff{padding:28px 24px;line-height:1.7}
+.tt td{position:relative}
+.tt td .ri{display:block;font-size:10.5px;color:var(--sub);line-height:1.2;margin:-5px 0 5px;pointer-events:none;letter-spacing:-.02em}
+.tt td .ri.no{color:#c6a35a}
+.qpick{border:1px solid var(--line);border-radius:10px;margin-top:6px}
+.qpick .qs{display:block;width:100%;border:0;border-bottom:1px solid var(--hair);padding:8px 11px;font-size:13px;border-radius:10px 10px 0 0}
+.qpick .ql{max-height:230px;overflow:auto;padding:4px 0}
+.qpick .qg{font-size:11px;font-weight:700;color:var(--sub);padding:7px 11px 3px}
+.qpick label{display:flex;align-items:center;gap:8px;padding:4px 11px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.qpick label:hover{background:var(--hair)}
+.qpick label span{margin-left:auto;color:var(--faint);font-size:12px}
+.qnow{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.5}
+.sendlist{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12.5px;line-height:1.7;margin:6px 0 14px}
+.who-list label{display:flex;gap:8px;align-items:flex-start;padding:7px 4px;border-bottom:1px solid var(--hair);font-size:13px;cursor:pointer}
+.who-list label small{display:block;color:var(--sub);font-size:12px}
+
+/* 선택 요약 */
+.sum .rows{display:flex;flex-wrap:wrap;gap:10px 28px;padding:14px 24px 18px}
+.sum .rowc{display:flex;gap:10px;align-items:baseline}
+.sum .rowc b{font-size:13px;font-weight:700;white-space:nowrap;letter-spacing:-.03em}
+.chips{display:flex;flex-wrap:wrap;gap:4px 10px}
+.chip{font-size:13px;color:var(--ink);font-weight:500;letter-spacing:-.03em}
+.chip+.chip::before{content:"·";margin-right:10px;color:var(--faint)}
+.empty{color:var(--sub);font-size:13px;padding:16px 24px}
+
+/* 시간표 */
+.sbody{padding:16px 24px 20px}
+.ph select{appearance:none;border:1px solid var(--line);border-radius:7px;padding:4px 26px 4px 10px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%236b717c' stroke-width='1.5'/%3E%3C/svg%3E") right 7px center/11px no-repeat;font-weight:600}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;font-size:13px}
+.tt th,.tt td{border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:0;text-align:center}
+.tt tr>:last-child{border-right:0}
+.tt tbody tr:last-child>*{border-bottom:0}
+.tt thead th{background:#fafbfc;color:var(--sub);font-weight:600;font-size:12px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.tt th.g{background:#fafbfc;font-weight:700;width:46px;color:var(--ink);font-size:12.5px}
+.tt th.t{background:#fff;font-weight:500;white-space:nowrap;padding:0 12px;width:116px;color:var(--sub)}
+.tt td input{width:100%;border:0;background:transparent;text-align:center;padding:9px 2px;min-width:56px;font-weight:600;outline:0;letter-spacing:-.03em}
+.tt td input:focus{background:#fbf8f1}
+.tt td.f{background:var(--ac-bg)}
+.tt td.f input{color:var(--ac)}
+.tt th.t input{width:98px;border:1px dashed #c3c8d0;border-radius:6px;padding:3px;text-align:center;background:#fff}
+.tt .x{border:0;background:transparent;color:var(--faint);font-size:14px;padding:0 3px}
+.tt .x:hover{color:var(--danger)}
+.memo{margin-top:12px;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:56px;resize:vertical;background:#fff}
+.snote{font-size:12px;color:var(--faint);margin-top:10px}
+.snote input{width:100%;border:1px dashed #c3c8d0;border-radius:7px;padding:6px 9px}
+
+/* 창 */
+.mask{position:fixed;inset:0;background:rgba(20,22,28,.5);backdrop-filter:blur(3px);z-index:60;display:grid;place-items:center;padding:18px}
+.modal{background:#fff;border-radius:14px;width:min(460px,100%);max-height:calc(100vh - 36px);display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(10,12,20,.3)}
+.modal.wide{width:min(1080px,100%)}
+.mh{padding:18px 22px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--hair)}
+.mh h3{margin:0;font-size:17px;font-weight:700;letter-spacing:-.03em;flex:1}
+.mh .lvl{color:var(--sub);font-weight:400;margin-left:8px;font-size:14px}
+.mb{padding:18px 22px;overflow:auto}
+.mf{padding:12px 22px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--hair)}
+.fld{display:block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:var(--sub)}
+.fld input[type=text],.fld input[type=email],.fld input[type=password],.fld select{display:block;width:100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-weight:500;background:#fff;font-size:14px;color:var(--ink)}
+.fld input:focus,.fld select:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
+.fld .help{display:block;font-weight:400;color:var(--faint);font-size:12px;margin-top:5px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:12px}
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.icons label{width:40px;height:40px;border:1px solid var(--line);border-radius:9px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.icons input{display:none}
+.icons svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.icons label:has(input:checked){border-color:var(--ink);background:var(--hair)}
+.imgs{display:flex;flex-direction:column;gap:14px}
+.imgb{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafbfc}
+.imgb img{display:block;width:100%;height:auto}
+.imgb .ib{position:absolute;top:10px;right:10px;display:flex;gap:4px;background:rgba(255,255,255,.95);border-radius:9px;padding:3px}
+.drop{border:1px dashed #c3c8d0;border-radius:12px;padding:40px 16px;text-align:center;color:var(--sub)}
+.drop b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:10px 18px;font-size:13px;z-index:90;box-shadow:0 12px 30px rgba(10,12,20,.25);max-width:90vw}
+.login{position:fixed;inset:0;background:var(--bg);z-index:80;display:grid;place-items:center;padding:18px}
+.login .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px;width:min(400px,100%)}
+.login h2{margin:0 0 6px;font-size:24px;font-weight:300;letter-spacing:-.03em}
+.login p{margin:0 0 22px;color:var(--sub);font-size:13px}
+.login .err{color:var(--danger);font-size:12.5px;min-height:18px;margin-bottom:8px}
+.banner{background:#fbf6ec;border:1px solid #eadcbf;border-radius:10px;padding:9px 14px;font-size:13px;margin-bottom:14px}
+.ponly{display:none}
+
+@media (max-width:1100px){
+  .top-in{gap:16px;padding:0 18px}
+  .wrap{padding:22px 18px 70px}
+  .hero h1{font-size:32px}
+  .picker{margin-left:0}
+}
+@media (max-width:1100px){
+  .rm{grid-template-columns:1fr}
+  .crs,.crs.half{grid-column:span 1}
+  .crs.last{border-bottom:1px solid var(--hair)}
+}
+@media (max-width:640px){
+  .rm{padding:0 16px}
+  .crs{grid-template-columns:1fr;gap:10px}
+  .chd{flex-direction:row;text-align:left}
+  .cic{width:38px;height:38px}
+}
+@media (max-width:900px){
+  .top-in{height:auto;flex-wrap:wrap;padding:8px 16px;row-gap:4px}
+  .seg{height:38px}
+  .mrow.mhead{display:none!important}
+  .mrow{display:block!important;padding:14px 18px}
+  .mcourse{padding:0 0 4px}
+  .mcell{padding:4px 0}
+  .mcell.none{display:none}
+  .mcell::before{content:attr(data-label);flex-basis:100%;font-size:11.5px;color:var(--sub);font-weight:600;margin-bottom:-2px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{background:#fff}
+  .top,.toast,.noprint,.ctools,.stn.add,.mfoot,.stn .ic,.banner,.picker select,.picker label,.picker .btn{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .hero{padding:0 0 10px}.hero h1{font-size:24px}
+  .ponly{display:inline;font-size:15px;font-weight:700}
+  .panel{margin-top:6px;border-radius:8px}
+  .mhead{position:static}
+  .rm{padding:0 12px}
+  .crs{padding:9px 0 7px;break-inside:avoid;grid-template-columns:86px 1fr;gap:10px}
+  .cic{width:32px;height:32px}.cic svg{width:15px;height:15px}
+  .cnm{font-size:11.5px}
+  .sta .nm{font-size:10.5px}.sta .lv{font-size:9px}.sta .nt{font-size:8px}
+  .sta{padding:4px 2px}
+  .sta .ic,.sta.add{display:none!important}
+  .trow .bar,.sta.on,.sta .badge,.cic,.cct{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .matrix{--hw:120px}
+  .mrow{break-inside:avoid}
+  .mcourse{padding:10px 8px 8px 12px}
+  .stn{padding:18px 5px 3px;min-width:40px}.stn .nm{font-size:10px}.stn .lv{font-size:8.5px}
+  .mrow,.mcell,.stn .dot,.stn::after,.mhc .rail::before,.mhc .num,.ccount,.tt td.f{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sched{break-inside:avoid}
+  table.tt{min-width:0;font-size:10px}.tt td input{padding:4px 1px;min-width:0;font-size:10px}
+  .memo{border:0;padding:0;min-height:0}
+}
+</style>
+</head>
+<body>
+<div class="top"><div class="top-in" id="top"></div></div>
+<div class="wrap" id="app"><div class="empty">불러오는 중입니다…</div></div>
+<div class="wrap qwrap hide" id="qdock">
+  <section class="panel">
+    <div class="ph"><h2>견적서</h2><span class="hint" id="qhint">체크한 과목이 수강료와 함께 자동으로 들어갑니다. 저장하면 인트라넷 견적서 이력에도 똑같이 보입니다.</span><div class="grow"></div></div>
+    <div class="qmiss hide" id="qmiss"></div>
+    <div class="empty hide" id="qoff"></div>
+    <iframe id="qframe" title="견적서"></iframe>
+  </section>
+</div>
+<div id="layer"></div>
+<input type="file" id="file" accept="image/*" multiple class="hide">
+
+<script>
+/* ============================================================
+   연결 설정 — 수강생 관리파일과 같은 저장 공간(student-f3e8a)을 씁니다.
+   다른 곳에 저장하려면 이 값만 바꾸면 됩니다.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCb6Evq51skrbDw_cbz9_S9LsjcY1fy9hA",
+  authDomain: "student-f3e8a.firebaseapp.com",
+  projectId: "student-f3e8a",
+  storageBucket: "student-f3e8a.firebasestorage.app",
+  messagingSenderId: "777480206536",
+  appId: "1:777480206536:web:1eedd24ed40f0e12f48dfd"
+};
+
+/* ============================================================
+   기본 로드맵 (보내주신 새 로드맵 화면 기준) — 처음 한 번만 쓰이고, 이후는 화면에서 고친 내용이 저장됩니다.
+   과목 표기: 이름#단계#작은설명   /  { split: [[갈래 이름, [과목…]], …] } 는 갈래로 나뉘었다 다시 모이는 구간
+   ============================================================ */
+const PS = "포토샵##포토샵, AI포토웍스", IL = "일러스트##일러스트, AI디일러", AP = "AI프롬프트#1~2", PF = "수강생포폴";
+const TEMPLATE = [
+  ["visual", "시각편집디자인", "", "pen", 0, ["컨셉드로잉##발상과표현", PS, IL, "인디자인", "디지털 드로잉#1~6", "UI/UX", "피그마#1~2", "어드밴스", "브랜딩디자인", AP, "디자인포폴#1~6", "포폴디렉터", PF]],
+  ["web", "웹 / 마케팅", "", "web", 0, ["컨셉드로잉##발상과표현", PS, IL, "UI/UX", "피그마#1~2", "어드밴스", "브랜딩디자인", "웹#1~3#퍼블리싱", AP, "바이브##자연어", "바이브##디자인", "AI에이전트##서포터", "AI에이전트##프로젝트", "콘텐츠##바이럴", "콘텐츠##팝업", "디자인포폴#1~6", "코딩포폴#1~6", "포폴디렉터", PF]],
+  ["interior", "인테리어디자인", "", "home", 0, ["컨셉드로잉##발상과표현, 공간스케치", "실내건축자격증#1~6#기능사, 산업기사, 기사", PS, IL, "캐드#1~2", "전산응용건축제도##(주)", "라이노", "스케치업#1~3", "3D맥스#1~3", "BIM#1~2#(주)", "엑셀실무##컴활2급", AP, "AI인테리어", "공간/제품포폴#1~6", "포폴디렉터", PF]],
+  ["motion", "모션그래픽", "", "film", 0, ["컨셉드로잉##발상과표현, 투시심화, 해부학", PS, IL, "스토리보드#1~2", "디지털드로잉#1~6", "프리미어", "에펙#1~2", "합성에펙", "플랫모션", "지브러쉬#1~2", "블렌더##M, L, A, F", "시포디#1~3", "Visual Motion#1~3", AP, "AI모션", "AI VFX", "모션포폴 2D/3D#1~6", "포폴디렉터", "AI영상디자인##프리랜서양성", "AI영상##(주)", PF]],
+  ["video", "영상편집", "크리에이터", "play", 0, ["컨셉드로잉##발상과표현", "유크리#1~2", PS, IL, "디지털드로잉#1~6", "스토리보드#1~2", "프리미어", "영상편집실전#1~4", "영상편집포폴#1~6", "에펙#1~2", "합성에펙", "플랫모션", AP, "AI모션", "AI유튜브#1~2", "모션포폴2D#1~6", "AI영상디자인##프리랜서양성", "AI영상##(주)", "포폴디렉터", PF]],
+  ["office", "사무 자격증", "", "table", 1, ["모스##MOS", "엑셀실무##컴활2급", "컴활##컴활1급", AP, "AI에이전트##서포터", "AI에이전트##프로젝트", "ADSP", "AICE", "전산회계#1급", "전산세무#2급", "전산세무#1급"]],
+  ["art", "아트웍", "드로잉", "palette", 1, ["컨셉드로잉##발상과표현, 투시심화", "디지털드로잉#1~24", "크리에이터굿즈#1~24", "스토리보드#1~2", AP, "AI레퍼런스", "AI모델링", "웹툰#1~24"]],
+  ["cg", "CG", "", "clap", 0, ["컨셉드로잉##발상과표현, 투시심화, 해부학", PS, IL, "스토리보드#1~2", "디지털드로잉#1~6", "프리미어", "에펙#1~2", "합성에펙", "플랫모션", AP, "AI모션", "AI VFX", "블렌더##M, L, A, F", "마야기초#1~2", "지브러쉬#1~2", "룩뎁#1~3", "애니#1~3", "후디니#1~3", "컴포지팅#1~3",
+    { split: [["모델링", ["모델링#1", "모델링#2", "모델링#3"]], ["렌더링", ["렌더링#1", "렌더링#2", "렌더링#3"]], ["VFX", ["VFX#1", "VFX#2", "VFX#3"]], ["언리얼", ["언리얼#1", "언리얼#2", "언리얼#3"]]] },
+    "마야포폴#1~12", "AI영상디자인##프리랜서양성", "포폴디렉터", PF]],
+  ["product", "제품디자인", "", "cube", 1, ["컨셉드로잉##발상과표현, 투시심화, 제품스케치, 공간스케치", PS, IL, "라이노", "공간/제품포폴#1~6"]],
+  ["machine", "기계설계", "", "gear", 1, ["캐드#1~2", "인벤터##(주)", "전산응용기계제도##(주)"]]
+];
+const ICONS = {
+  pen: "M12 19l7-7 3 3-7 7-3-3z M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z M2 2l7.6 7.6",
+  web: "M3 5h18v14H3z M3 9h18 M6 7h.01 M9 7h.01",
+  home: "M3 21h18 M5 21V8l7-5 7 5v13 M9.5 21v-6h5v6",
+  film: "M4 4h16v16H4z M8 4v16 M16 4v16 M4 9h4 M4 15h4 M16 9h4 M16 15h4",
+  play: "M3 6h18v12H3z M10 9.5l5 2.5-5 2.5z",
+  table: "M4 4h16v16H4z M4 10h16 M10 4v16",
+  palette: "M12 3a9 9 0 100 18c1.5 0 2-1 2-2 0-1.5 1-2 2.5-2H18a3 3 0 003-3c0-6-4-11-9-11z M7.5 11h.01 M10 7.2h.01 M14.5 7.2h.01",
+  clap: "M4 10h16v10H4z M4 10l1-4 15-2 .5 3.5z M9 5.5l2 3 M14 4.8l2 3",
+  cube: "M12 2l9 5v10l-9 5-9-5V7z M3 7l9 5 9-5 M12 12v10",
+  code: "M8 8l-4 4 4 4 M16 8l4 4-4 4 M13.5 5l-3 14",
+  gear: "M12 9a3 3 0 100 6 3 3 0 000-6z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1",
+  book: "M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z M4 21V5 M8 7h7",
+  folder: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z",
+  star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z",
+  award: "M12 3a6 6 0 100 12 6 6 0 000-12z M8.5 14l-1.5 7 5-3 5 3-1.5-7",
+  spark: "M12 3v4 M12 17v4 M3 12h4 M17 12h4 M6 6l2.5 2.5 M15.5 15.5L18 18 M6 18l2.5-2.5 M15.5 8.5L18 6",
+  bolt: "M13 2L4 14h7l-1 8 9-12h-7z",
+  camera: "M4 7h3l2-3h6l2 3h3v12H4z M12 10a3.5 3.5 0 100 7 3.5 3.5 0 000-7z",
+  chat: "M4 5h16v11H9l-5 4z",
+  flag: "M5 21V4 M5 4h12l-2 4 2 4H5"
+};
+const svg = k => {
+  if (k && String(k).startsWith("c:")) { const ci = (S.main?.customIcons || []).find(x => "c:" + x.id === k); if (ci) return `<img src="${ci.data}" alt="">`; }
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[k] || ICONS.book}"/></svg>`;
+};
+/* 아이콘 고르기 (기본 아이콘 + 직접 올린 아이콘) */
+function iconPicker(cur, allowNone) {
+  const list = [...Object.keys(ICONS).map(k => [k, svg(k)]), ...(S.main.customIcons || []).map(ci => ["c:" + ci.id, `<img src="${ci.data}" alt="">`])];
+  return `<div class="icons">${allowNone ? `<label title="없음"><input type="radio" name="ico" value=""${!cur ? " checked" : ""}><span class="none">없음</span></label>` : ""}${list.map(([k, h]) => `<label><input type="radio" name="ico" value="${esc(k)}"${k === cur ? " checked" : ""}><span>${h}</span></label>`).join("")}<button type="button" class="upl" data-up>+ 내 아이콘</button></div><input type="file" accept="image/*" class="hide" data-upf>`;
+}
+async function iconData(file) {
+  const im = await readImage(file), z = 96, cv = document.createElement("canvas"); cv.width = cv.height = z;
+  const r = Math.min(z / im.naturalWidth, z / im.naturalHeight), w = im.naturalWidth * r, h = im.naturalHeight * r;
+  cv.getContext("2d").drawImage(im, (z - w) / 2, (z - h) / 2, w, h);
+  return cv.toDataURL("image/png");
+}
+function wirePicker(box, allowNone) {
+  const wrap = $(".ipick", box); if (!wrap) return;
+  $("[data-up]", wrap).onclick = () => $("[data-upf]", wrap).click();
+  $("[data-upf]", wrap).onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const id = uid("ic"); S.main.customIcons = [...(S.main.customIcons || []), { id, data: await iconData(f) }]; saveMain(true); wrap.innerHTML = iconPicker("c:" + id, allowNone); wirePicker(box, allowNone); toast("아이콘을 추가했어요"); }
+    catch (err) { console.error(err); toast("이미지를 열 수 없어요"); }
+  };
+}
+
+function mkSubj(raw, id) {
+  const [nm, level = "", note = ""] = raw.split("#");
+  return { id, name: nm, level, note, br: false };
+}
+function buildTemplate() {
+  const now = new Date();
+  return {
+    rmType: "main", tplVer: 3, themeVer: 4, theme: "rose", stages: clone(DEFAULT_STAGES), brand: "SBS아카데미 컴퓨터AIX학원 홍대점",
+    title: "Curriculum Road Map",
+    tags: ["실무 맞춤형 교육과정", "기초부터 취업까지!"],
+    courses: TEMPLATE.map(([id, name, sub, icon, half, items]) => ({
+      id, name, sub, icon, half: !!half,
+      subjects: items.map((raw, i) => typeof raw === "object"
+        ? { id: id + "-sp" + (i + 1), type: "split", branches: raw.split.map(([label, list], bi) => ({ id: id + "-b" + (i + 1) + "-" + (bi + 1), label, subjects: list.map((r, k) => mkSubj(r, id + "-" + (i + 1) + "-" + (bi + 1) + "-" + (k + 1))) })) }
+        : mkSubj(raw, id + "-" + (i + 1)))
+    })),
+    sched: {
+      months: 12,
+      note: "※ 개강·종강일이 바뀌면 해당 개강일 전에 안내드립니다.",
+      groups: [
+        { id: "g1", label: "평일", rows: ["09:30~11:30", "11:30~13:30", "14:00~16:00", "16:00~18:00", "18:00~20:00", "20:00~22:00"].map((label, i) => ({ id: "w" + (i + 1), label })) },
+        { id: "g2", label: "주말", rows: ["10:00~13:00", "10:00~14:00", "14:00~17:00", "14:00~18:00"].map((label, i) => ({ id: "e" + (i + 1), label })) }
+      ]
+    },
+    createdAt: now.getTime()
+  };
+}
+
+/* ============================================================ 도구 */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = (p = "") => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+/* 학생 링크용 번호: 짐작할 수 없게 무작위 20자리 */
+function secureId() {
+  try { const a = new Uint8Array(15); crypto.getRandomValues(a); return "r" + Array.from(a, x => x.toString(36).padStart(2, "0")).join("").slice(0, 21); }
+  catch (e) { return uid("r") + Math.random().toString(36).slice(2, 10); }
+}
+const LINK_ID = (() => { try { return new URLSearchParams(location.search).get("s") || ""; } catch (e) { return ""; } })();
+const clone = o => JSON.parse(JSON.stringify(o));
+const subjLabel = s => (s.name + (s.level ? " " + s.level : "")).trim();
+/* 같은 과목(이름+단계)은 어느 과정에 있든 커리큘럼 이미지를 함께 씁니다 */
+const subjKey = s => (s.name + (s.level || "")).toLowerCase().replace(/\s+/g, "").replace(/[^0-9a-z가-힣]/g, "_") || "_";
+const THEMES = { rose: ["로즈", [225, 64, 88]], coral: ["코랄", [232, 110, 80]], blue: ["블루", [52, 110, 220]], green: ["그린", [40, 140, 110]], navy: ["네이비", [40, 60, 120]], graphite: ["그래파이트", [60, 62, 70]] };
+const themeRGB = () => (THEMES[S.main?.theme] || THEMES.rose)[1];
+function lineColor(i, n, k0) {
+  const t = n <= 1 ? 1 : i / (n - 1), a = [244, 214, 220], b = themeRGB(), k = k0 !== undefined ? k0 : 0.12 + 0.78 * t;
+  return "rgb(" + a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(",") + ")";
+}
+/* 글자 길이에 맞춰 과목 칸 너비(가는 눈금 몇 칸)를 정함 → 줄이 가지런히 맞음 */
+const textW = (t, px) => [...String(t || "")].reduce((w, ch) => w + (/[가-힣ㄱ-ㅎ]/.test(ch) ? px * 0.93 : ch === " " ? px * 0.3 : px * 0.58), 0);
+function spanOf(s) {
+  const nameW = Math.max(...String(s.name).split(/\s+/).map(w => textW(w, 13)));
+  const noteW = textW(s.note, 10) > 70 ? textW(s.note, 10) / 2 + 6 : textW(s.note, 10);
+  const w = Math.max(nameW, textW(s.level, 11.5), noteW) + 11;
+  return Math.max(3, Math.min(10, Math.ceil(w / 18.5)));
+}
+let toastT;
+function toast(msg) {
+  document.querySelectorAll(".toast").forEach(e => e.remove());
+  const d = document.createElement("div"); d.className = "toast"; d.textContent = msg; document.body.appendChild(d);
+  clearTimeout(toastT); toastT = setTimeout(() => d.remove(), 2600);
+}
+
+/* ============================================================ 저장소 */
+const LS = "rm1:";
+const Store = {
+  cloud: false, db: null, col: "roadmap", pfx: "",
+  ref(id) { return this.db.collection(this.col).doc(this.pfx + id); },
+  async get(id) {
+    if (!this.cloud) { try { return JSON.parse(localStorage.getItem(LS + id)); } catch (e) { return null; } }
+    const s = await this.ref(id).get(); return s.exists ? s.data() : null;
+  },
+  async set(id, data, merge) {
+    if (!this.cloud) {
+      let v = data;
+      if (merge) { const old = (await this.get(id)) || {}; v = { ...old, ...data, map: { ...(old.map || {}), ...(data.map || {}) } }; }
+      localStorage.setItem(LS + id, JSON.stringify(v)); return;
+    }
+    await this.ref(id).set(clone(data), merge ? { merge: true } : undefined);
+  },
+  async del(id) {
+    if (!this.cloud) { localStorage.removeItem(LS + id); return; }
+    await this.ref(id).delete();
+  },
+  async listType(type) {
+    if (!this.cloud) {
+      const out = [], pre = LS + "plan_";
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(pre)) { try { out.push(JSON.parse(localStorage.getItem(k))); } catch (e) {} } }
+      return out.filter(Boolean);
+    }
+    const q = await this.db.collection(this.col).where("rmType", "==", type).get();
+    return q.docs.map(d => d.data());
+  },
+  async listPlans() {
+    return this.listType("plan");
+  },
+  async probe() {
+    try { await this.db.collection("roadmap").doc("main").get(); this.col = "roadmap"; this.pfx = ""; return true; }
+    catch (e) { console.error(e); return false; }
+  }
+};
+
+/* ============================================================ 상태 */
+const S = { main: null, plans: [], cur: null, mode: "view", onlySel: false, user: null, imgidx: {}, warn: "", canLogin: false };
+const curPlan = () => S.plans.find(p => p.id === S.cur) || null;
+const myEmail = () => String(S.user?.email || "").toLowerCase();
+/* 팀장 목록이 비어 있으면 모두 팀장으로 봄 (처음 설정용). 구성 편집 화면에서 팀장 이메일을 넣으면 그때부터 나뉨 */
+const isAdmin = () => !Store.cloud || !(S.main?.admins || []).length || (S.main.admins || []).map(x => String(x).toLowerCase()).includes(myEmail());
+const isMine = p => !Store.cloud || !p.owner || String(p.owner).toLowerCase() === myEmail();
+const visiblePlans = () => (isAdmin() && S.showAll) ? S.plans : S.plans.filter(isMine);
+const checkedOf = p => (p && p.checked) || {};
+
+let saveState = "idle";
+function setSave(st) {
+  saveState = st;
+  const el = $("#save"); if (!el) return;
+  el.className = "save" + (st === "err" ? " err" : "") + (Store.cloud ? "" : " local");
+  el.textContent = st === "err" ? "저장하지 못했습니다. 인터넷과 로그인을 확인하세요" : !Store.cloud ? "이 브라우저에만 저장 중" : st === "saving" ? "저장 중…" : st === "saved" ? "저장됨" : "";
+}
+const timers = {};
+function queue(key, fn, ms = 600) {
+  setSave("saving");
+  clearTimeout(timers[key]?.t);
+  const run = async () => {
+    delete timers[key];
+    try { await fn(); if (!Object.keys(timers).length) setSave("saved"); }
+    catch (e) { console.error(e); setSave("err"); if (String(e && e.name).includes("Quota")) toast("이 브라우저 저장 공간이 가득 찼어요"); }
+  };
+  timers[key] = { t: setTimeout(run, ms), run };
+}
+function flushAll() { Object.values(timers).forEach(x => { clearTimeout(x.t); x.run(); }); }
+window.addEventListener("pagehide", flushAll);
+const saveMain = (now) => queue("main", () => Store.set("main", S.main), now ? 0 : 600);
+/* 상담 내용(plan_)은 로그인한 직원만 읽음. 학생에게는 링크 번호 + 휴대폰 뒷번호로만 찾을 수 있는 사본(view_)을 따로 둠 */
+const PUB_KEYS = ["id", "name", "checked", "cells", "startMonth", "startYear", "updatedAt"];
+async function viewKey(id, p4) {
+  const raw = "aix-roadmap:" + id + ":" + p4;
+  try { const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)); return "view_" + Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, "0")).join("").slice(0, 40); }
+  catch (e) { let x = 0; for (const ch of raw) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return "view_" + x.toString(36) + raw.length; }
+}
+function savePlan(p, now) {
+  if (S.pub) return;
+  p.updatedAt = Date.now();
+  queue("plan_" + p.id, async () => {
+    const key = /^\d{4}$/.test(p.phone4 || "") ? await viewKey(p.id, p.phone4) : "";
+    if (p.viewKey && p.viewKey !== key) { await Store.del(p.viewKey).catch(() => {}); }
+    p.viewKey = key;
+    await Store.set("plan_" + p.id, p);
+    if (key) { const pub = { rmType: "view" }; PUB_KEYS.forEach(k => { if (p[k] !== undefined) pub[k] = p[k]; }); await Store.set(key, pub); }
+  }, now ? 0 : 600);
+}
+
+/* ============================================================ 화면 */
+function render() {
+  renderTop();
+  const p = curPlan();
+  const app = $("#app");
+  document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
+  app.className = "wrap mode-" + S.mode + (p && Object.values(checkedOf(p)).some(Boolean) ? " dim" : "") + (S.onlySel ? " only-print-sel" : "");
+  app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + heroHTML(p) + boardHTML(p) + sumHTML(p) + schedHTML(p);
+  try { qSync(); } catch (e) { console.error(e); }
+}
+function renderTop() {
+  if (S.pub) {
+    $("#top").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>${esc(S.main?.brand || "수강 로드맵")}</div><div class="grow"></div><button class="btn" data-act="print">인쇄 · PDF 저장</button>`;
+    return;
+  }
+  $("#top").innerHTML = `
+    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>수강 설계</div>
+    <nav class="seg" role="tablist">
+      <button data-act="mode" data-mode="view" class="${S.mode === "view" ? "on" : ""}">커리큘럼 보기</button>
+      <button data-act="mode" data-mode="check" class="${S.mode === "check" ? "on" : ""}">수강 과목 체크</button>
+      ${isAdmin() ? `<button data-act="mode" data-mode="edit" class="${S.mode === "edit" ? "on" : ""}">구성 편집</button>` : ""}
+    </nav>
+    <div class="grow"></div>
+    <span class="save" id="save"></span>
+    <button class="btn" data-act="print">인쇄</button>
+    <div class="acct">${Store.cloud ? `${esc(S.user?.email || "")} <button class="btn sm ghost" data-act="logout">로그아웃</button>` : (S.canLogin ? `<button class="btn sm" data-act="showLogin">로그인</button>` : "")}</div>`;
+  setSave(saveState);
+}
+function heroHTML(p) {
+  const m = S.main, n = p ? Object.values(checkedOf(p)).filter(Boolean).length : 0;
+  const opts = visiblePlans().map(x => `<option value="${esc(x.id)}"${x.id === S.cur ? " selected" : ""}>${esc(x.name || "(이름 없음)")}${x.tag ? " · " + esc(x.tag) : ""}${S.showAll && x.ownerName && !isMine(x) ? " — " + esc(x.ownerName) : ""}</option>`).join("");
+  const left = S.mode === "edit" ? `<div class="edit">
+        <input class="h1" data-f="title" value="${esc(m.title)}" aria-label="제목">
+        ${[0, 1].map(i => `<input data-f="tag${i}" value="${esc(m.tags?.[i] || "")}" aria-label="문구 ${i + 1}" placeholder="짧은 문구" style="width:150px">`).join("")}
+        <input data-f="brand" value="${esc(m.brand || "")}" aria-label="학원 이름" placeholder="학원 이름" style="width:240px">
+        <input data-f="admins" value="${esc((m.admins || []).join(", "))}" aria-label="팀장 이메일" placeholder="팀장(관리자) 이메일 — 쉼표로 여러 명" style="width:300px" title="여기 적힌 사람만 구성 편집과 전체 멘토 보기를 할 수 있습니다. 비워 두면 모두 가능합니다.">
+        <span class="themes">색 ${Object.keys(THEMES).map(k => `<button data-act="theme" data-t="${k}" class="${(THEMES[m.theme] ? m.theme : "rose") === k ? "on" : ""}" style="background:rgb(${THEMES[k][1].join(",")})" title="${THEMES[k][0]}" aria-label="${THEMES[k][0]}"></button>`).join("")}</span>
+      </div>` : `<div>${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}<h1>${esc(m.title)}</h1><p class="tags">${(m.tags || []).filter(Boolean).map(t => `<span>${esc(t)}</span>`).join("<i></i>")}</p></div>`;
+  if (S.pub) return `<header class="hero"><div>${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}<h1>${esc(m.title)}</h1><p class="tags">${p ? `<span><b style="color:var(--ink)">${esc(p.name)}</b> 님의 수강 로드맵</span><i></i>` : ""}${(m.tags || []).filter(Boolean).map(t => `<span>${esc(t)}</span>`).join("<i></i>")}</p></div></header>`;
+  return `<header class="hero">${left}
+      <div class="picker">
+        <span class="ponly">${p ? esc(p.name) + " 님 수강 설계" : ""}</span>
+        <div class="who"><label for="pick">상담 대상${isAdmin() && Store.cloud ? ` <select id="showAll" style="border:0;background:none;color:var(--sub);font-size:11.5px;padding:0;min-width:0"><option value="0"${S.showAll ? "" : " selected"}>내 학생</option><option value="1"${S.showAll ? " selected" : ""}>전체 멘토</option></select>` : ""}</label><select id="pick"><option value="">선택 안 함</option>${opts}</select></div>
+        ${p ? `<span class="cnt"><b>${n}</b>과목 선택</span><button class="btn" data-act="editPlan">정보</button><button class="btn" data-act="shareLink" title="학생에게 보낼 로드맵 링크를 복사합니다">학생 링크</button>` : ""}
+        <button class="btn pri" data-act="newPlan">새 상담</button>
+      </div>
+    </header>`;
+}
+function boardHead(p) {
+  const n = p ? Object.values(checkedOf(p)).filter(Boolean).length : 0;
+  let msg = S.pub ? "과목을 누르면 그 과목의 커리큘럼을 볼 수 있습니다." : "과목을 누르면 커리큘럼 이미지가 열립니다.";
+  if (S.mode === "check") msg = p ? "수강할 과목을 누르세요. 다시 누르면 풀립니다." : "먼저 상담 대상을 고르거나 ‘새 상담’을 눌러 주세요.";
+  if (S.mode === "edit") msg = "과목을 끌어서 옮기고, 눌러서 고치거나 지웁니다. 고친 내용은 모든 상담에 적용됩니다.";
+  return `<div class="ph"><h2>로드맵</h2><span class="hint noprint${S.mode === "check" ? " hot" : ""}">${esc(msg)}</span><div class="grow"></div>
+      ${p && S.mode === "check" && n ? `<button class="btn sm noprint" data-act="clearChecks">전체 해제</button>` : ""}
+      ${p && n ? `<label class="sw noprint"><input type="checkbox" id="onlySel"${S.onlySel ? " checked" : ""}> ${S.pub ? "내 과정만 보기" : "선택한 과정만 보기"}</label>` : ""}</div>`;
+}
+function trackW(half) {
+  const W = Math.min(window.innerWidth, 1760) - 56 - 52;
+  const full = W - 112 - 20;
+  return (window.innerWidth <= 1100 || !half) ? full : (W - 44) / 2 - 132;
+}
+function perRow(half) { return Math.max(3, Math.floor(trackW(half) / (window.innerWidth <= 640 ? 76 : 80))); }
+function boardHTML(p) {
+  const ck = checkedOf(p), ed = S.mode === "edit", cs = S.main.courses;
+  const vis = cs.filter(c => !(S.onlySel && p && !ed && !allSubjects(c).some(s => ck[s.id])));
+  const station = (c, s, list, i, a, b) => {
+    const on = !!ck[s.id], ic = (S.imgidx[subjKey(s)] || []).length;
+    const pv = i > a && ck[list[i - 1].id], nx = i + 1 < b && ck[list[i + 1].id];
+    return `<button class="sta${on ? " on" : ""}${on && pv ? " jl" : ""}${on && nx ? " jr" : ""}"${ed ? ` draggable="true"` : ""} data-act="subj" data-c="${esc(c.id)}" data-s="${esc(s.id)}" title="${esc(subjLabel(s) + (ic ? " · 커리큘럼 이미지 " + ic + "장" : ""))}">${on && !nx ? `<span class="badge"></span>` : ""}${ic ? `<i class="ic"></i>` : ""}<span class="nm">${s.icon ? `<span class="si">${svg(s.icon)}</span>` : ""}${esc(s.name)}</span>${s.level ? `<span class="lv">${esc(s.level)}</span>` : ""}${s.note ? `<span class="nt">${esc(s.note)}</span>` : ""}</button>`;
+  };
+  const rows = vis.map((c, vi) => {
+    const cnt = allSubjects(c).filter(s => ck[s.id]).length;
+    const half = !!c.half && !(S.onlySel && p);
+    const max = perRow(half), lw = Math.floor(trackW(half) / max);
+    const L = Math.max(1, c.subjects.reduce((w, x) => w + (isSplit(x) ? Math.max(1, ...x.branches.map(b => b.subjects.length)) : 1), 0) - 1);
+    const col = f => lineColor(0, 1, 0.08 + 0.82 * Math.max(0, Math.min(1, f)));
+    let pos = 0;
+    const segs = []; let run = [];
+    c.subjects.forEach(x => { if (isSplit(x)) { if (run.length) segs.push({ t: "lin", items: run }); run = []; segs.push({ t: "split", x }); } else run.push(x); });
+    if (run.length) segs.push({ t: "lin", items: run });
+    if (ed) { const ls = segs[segs.length - 1]; if (ls && ls.t === "lin") ls.add = true; else segs.push({ t: "lin", items: [], add: true }); }
+    const addBtn = (attrs) => `<button class="sta add" data-act="addSubj" data-c="${esc(c.id)}"${attrs || ""}>+ 과목</button>`;
+    const lin = (items, add, cont, mx) => {
+      const n = items.length + (add ? 1 : 0); if (!n) return "";
+      const lines = Math.max(1, Math.ceil(n / (mx || max))), per = Math.max(1, Math.ceil(n / lines));
+      let h = "";
+      for (let r = 0; r < lines; r++) {
+        const a = r * per, b = Math.min(n, a + per), out = [];
+        for (let i = a; i < b; i++) out.push(i < items.length ? station(c, items[i], items, i, a, Math.min(b, items.length)) : addBtn());
+        h += `<div class="trow${r || cont ? " cont" : ""}" style="--n:${per};--c1:${col(pos / L)};--c2:${col((pos + per - 1) / L)}"><span class="bar"></span>${out.join("")}</div>`;
+        pos += b - a;
+      }
+      return h;
+    };
+    const LH = 62, LG = 8;
+    const split = (x, cont, after) => {
+      const k = Math.max(1, ...x.branches.map(b => b.subjects.length)), c1 = col(pos / L), c2 = col((pos + k - 1) / L), ci = c.subjects.indexOf(x);
+      const lanes = x.branches.map(b => {
+        const n = b.subjects.length + (ed ? 1 : 0);
+        return `<div class="lane"><button class="ltag" ${ed ? `data-act="branch" data-c="${esc(c.id)}" data-sp="${esc(x.id)}" data-b="${esc(b.id)}" title="갈래 이름 바꾸기·삭제"` : `tabindex="-1"`}>${esc(b.label || "갈래")}</button>
+          <div class="trow lt" style="--n:${Math.max(1, n)};--c1:${c1};--c2:${c2}"><span class="bar"></span>${b.subjects.map((s, i) => station(c, s, b.subjects, i, 0, b.subjects.length)).join("")}${ed ? addBtn(` data-sp="${esc(x.id)}" data-b="${esc(b.id)}"`) : ""}</div><span class="tail"></span></div>`;
+      }).join("");
+      pos += k;
+      const tools = ed ? `<div class="sptools noprint"><span>갈래 구간</span><button class="btn sm" data-act="spAddBr" data-c="${esc(c.id)}" data-sp="${esc(x.id)}">갈래 추가</button><button class="btn sm" data-act="spMove" data-c="${esc(c.id)}" data-sp="${esc(x.id)}" data-d="-1" ${ci === 0 ? "disabled" : ""}>앞으로</button><button class="btn sm" data-act="spMove" data-c="${esc(c.id)}" data-sp="${esc(x.id)}" data-d="1" ${ci === c.subjects.length - 1 ? "disabled" : ""}>뒤로</button><button class="btn sm danger" data-act="spDel" data-c="${esc(c.id)}" data-sp="${esc(x.id)}">구간 삭제</button></div>` : "";
+      const nb = x.branches.length, mid = Math.round((nb - 1) * (LH + LG) / 2);
+      const lanesW = 14 + 74 + 12 + Math.max(1, k + (ed ? 1 : 0)) * lw + 22;
+      const availA = trackW(half) - lanesW - 30;
+      let right = `<div class="merge end"></div>`, below = "";
+      if (after) {
+        const n = after.items.length + (after.add ? 1 : 0);
+        if (n && availA >= lw * 2) right = `<div class="merge"></div><div class="after">${lin(after.items, after.add, false, Math.max(1, Math.floor(availA / lw)))}</div>`;
+        else below = lin(after.items, after.add, true);
+      }
+      return `${tools}<div class="split${cont ? " cont" : ""}" style="--lw:${lw}px;--mid:${mid}px;--lh:${LH}px;--lg:${LG}px;--mc:${c2}"><div class="lanes">${lanes}</div>${right}</div>${below}`;
+    };
+    let html = "";
+    for (let gi = 0; gi < segs.length; gi++) {
+      const g = segs[gi];
+      if (g.t === "lin") { html += lin(g.items, g.add, gi > 0); continue; }
+      const nx = segs[gi + 1] && segs[gi + 1].t === "lin" ? segs[gi + 1] : null;
+      html += split(g.x, gi > 0, nx); if (nx) gi++;
+    }
+    const tools = ed ? `<div class="ctools">
+        <button class="btn sm" data-act="editCourse" data-c="${esc(c.id)}">수정</button>
+        <button class="btn sm" data-act="addSplit" data-c="${esc(c.id)}" title="갈래로 나뉘었다 다시 모이는 구간 추가">갈래</button>
+        <button class="btn sm" data-act="moveCourse" data-c="${esc(c.id)}" data-d="-1" ${cs.indexOf(c) === 0 ? "disabled" : ""} aria-label="위로">↑</button>
+        <button class="btn sm" data-act="moveCourse" data-c="${esc(c.id)}" data-d="1" ${cs.indexOf(c) === cs.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button>
+      </div>` : "";
+    const isLast = vi === vis.length - 1 || (half && vi === vis.length - 2 && vis[vi + 1].half);
+    return `<div class="crs${half ? " half" : ""}${cnt ? " has" : ""}${isLast ? " last" : ""}">
+        <div class="chd"><div class="cic">${svg(c.icon)}</div><div><div class="cnm">${esc(c.name)}</div>${c.sub ? `<div class="csb">(${esc(c.sub)})</div>` : ""}</div>${cnt ? `<span class="cct">${cnt}과목</span>` : ""}${tools}</div>
+        <div class="trk">${html}</div>
+      </div>`;
+  }).join("");
+  return `<section class="panel">${boardHead(p)}<div class="rm">${rows || `<div class="empty">표시할 과정이 없습니다.</div>`}</div>
+      ${ed ? `<div class="mfoot noprint"><button class="btn pri" data-act="addCourse">과정 추가</button><button class="btn" data-act="resetTpl">기본 로드맵으로 되돌리기</button></div>` : ""}</section>`;
+}
+/* 구성 편집: 과목을 끌어서 다른 자리(다른 줄·갈래·과정)로 옮김 */
+let drag = null;
+function clearDropMarks() { document.querySelectorAll(".drop-before,.drop-after").forEach(e => e.classList.remove("drop-before", "drop-after")); }
+function dropTarget(e) {
+  const t = e.target.closest && e.target.closest(".sta[data-c]"); if (!t || !drag) return null;
+  const c = findCourse(t.dataset.c); if (!c) return null;
+  if (t.classList.contains("add")) { const sp = c.subjects.find(x => x.id === t.dataset.sp), b = sp?.branches.find(x => x.id === t.dataset.b); return { el: t, list: b ? b.subjects : c.subjects, idx: (b ? b.subjects : c.subjects).length, after: false }; }
+  const loc = locate(c, t.dataset.s); if (!loc || loc.s.id === drag.sid) return null;
+  const r = t.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+  return { el: t, list: loc.list, idx: loc.list.indexOf(loc.s) + (after ? 1 : 0), after };
+}
+document.addEventListener("dragstart", e => {
+  const t = e.target.closest && e.target.closest(".sta[draggable][data-s]"); if (!t || S.mode !== "edit") return;
+  const c = findCourse(t.dataset.c), loc = c && locate(c, t.dataset.s); if (!loc) return;
+  drag = { sid: loc.s.id, s: loc.s, list: loc.list };
+  try { e.dataTransfer.setData("text/plain", loc.s.id); e.dataTransfer.effectAllowed = "move"; } catch (err) {}
+  setTimeout(() => t.classList.add("dragging"), 0);
+});
+document.addEventListener("dragover", e => {
+  const d = dropTarget(e); clearDropMarks(); if (!d) return;
+  e.preventDefault(); try { e.dataTransfer.dropEffect = "move"; } catch (err) {}
+  d.el.classList.add(d.after ? "drop-after" : "drop-before");
+});
+document.addEventListener("drop", e => {
+  const d = dropTarget(e); clearDropMarks(); if (!d) return;
+  e.preventDefault();
+  const from = drag.list.indexOf(drag.s); if (from < 0) return;
+  let idx = d.idx;
+  drag.list.splice(from, 1);
+  if (drag.list === d.list && from < idx) idx--;
+  d.list.splice(idx, 0, drag.s);
+  drag = null; saveMain(true); render();
+});
+document.addEventListener("dragend", () => { drag = null; clearDropMarks(); document.querySelectorAll(".dragging").forEach(e => e.classList.remove("dragging")); });
+/* 인트라넷 견적서 주소 — 이 페이지는 t9vely3.github.io/roadmap/ 에, 견적서는 /v2/apps/quote.html 에 있음 */
+const QUOTE_URL = "../v2/apps/quote.html?embed=roadmap";
+const Q = { ready: false, last: "", tried: false, timer: null };
+function qSync() {
+  const p = S.pub ? null : curPlan(), dock = $("#qdock"), fr = $("#qframe");
+  dock.classList.toggle("hide", !p);
+  if (!p) return;
+  if (!Q.tried) {
+    Q.tried = true; fr.src = QUOTE_URL;
+    Q.timer = setTimeout(() => { if (Q.ready) return; fr.classList.add("hide"); const o = $("#qoff"); o.classList.remove("hide");
+      o.innerHTML = "견적서를 불러오지 못했습니다.<br>이 화면은 인트라넷과 같은 주소의 <b>roadmap</b> 폴더(t9vely3.github.io/roadmap/)에 올려야 인트라넷 견적서가 함께 열립니다."; }, 12000);
+  }
+  if (!Q.ready) return;
+  const ck = checkedOf(p), groups = [], seen = new Set();
+  S.main.courses.forEach(c => allSubjects(c).forEach(s => { if (!ck[s.id]) return; quoteGroups(s).forEach(g => { const k = nrm(g.label); if (seen.has(k)) return; seen.add(k); groups.push(g); }); }));
+  const msg = { aixRoadmap: "sync", planId: p.id, student: p.name, groups };
+  const key = JSON.stringify(msg); if (key === Q.last) return; Q.last = key;
+  try { fr.contentWindow.postMessage(msg, location.origin); } catch (e) { console.error(e); }
+}
+window.addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data || !e.data.aixQuote) return;
+  const d = e.data;
+  if (d.aixQuote === "ready") { Q.ready = true; Q.last = ""; clearTimeout(Q.timer); try { $("#qframe").contentWindow.postMessage({ aixRoadmap: "master" }, location.origin); } catch (err) {} qSync(); }
+  else if (d.aixQuote === "master") { S.qmaster = d.courses || []; }
+  else if (d.aixQuote === "result") {
+    const box = $("#qmiss"), miss = d.missing || [];
+    box.classList.toggle("hide", !miss.length);
+    box.innerHTML = miss.length ? `견적서 과목표에서 찾지 못한 과목 <b>${miss.length}개</b>: ${miss.map(esc).join(", ")}<br>‘구성 편집’에서 그 과목을 눌러 ‘견적서 과목’을 골라 주거나, 견적서에서 직접 담아 주세요.` : "";
+  }
+});
+let rsT; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (S.main && !document.querySelector(".mask")) render(); }, 150); });
+function sumHTML(p) {
+  if (!p) return "";
+  const ck = checkedOf(p);
+  const rows = S.main.courses.map(c => {
+    const on = allSubjects(c).filter(s => ck[s.id]);
+    return on.length ? `<div class="rowc"><b>${esc(c.name)}</b><div class="chips">${on.map(s => `<span class="chip">${esc(subjLabel(s))}</span>`).join("")}</div></div>` : "";
+  }).join("");
+  return `<section class="panel sum"><div class="ph"><h2>${esc(p.name)} 님이 수강할 과목</h2></div>${rows ? `<div class="rows">${rows}</div>` : `<div class="empty">아직 체크한 과목이 없습니다. 위에서 ‘수강 과목 체크’를 누른 뒤 과목을 골라 주세요.</div>`}</section>`;
+}
+function startYM(p) {
+  const now = new Date(), m = Number(p?.startMonth) || (now.getMonth() + 1);
+  const y = Number(p?.startYear) || (m < now.getMonth() + 1 - 2 ? now.getFullYear() + 1 : now.getFullYear());
+  return { y, m };
+}
+function colYM(p, i) { const { y, m } = startYM(p), k = m - 1 + i; return { y: y + Math.floor(k / 12), m: (k % 12) + 1 }; }
+function monthLabels(p) {
+  const n = Math.max(1, Math.min(24, Number(S.main.sched.months) || 12));
+  return Array.from({ length: n }, (_, i) => colYM(p, i).m + "월");
+}
+/* 관리파일의 강의장 시간표(개강안내)에서 과목·시간대·기수로 강의장 찾기 */
+function dayText(w) {
+  const x = String(w || "").replace(/\s/g, "");
+  return ({ "월/수": "월수", "화/목": "화목", "월/수/금": "월수금", "화/목/토": "화목토" })[x] || x.replace(/\//g, "");
+}
+function ttFind(subject, timeLabel, y, m) {
+  const T = S.tt; if (!T || !Array.isArray(T.rows) || !subject) return null;
+  const name = (S.ttmap && S.ttmap[subject.trim()]) || subject.trim(), n = nrm(name);
+  const t1 = (String(timeLabel).match(/(\d{1,2}:\d{2})/) || [])[1] || "", term = y + "-" + String(m).padStart(2, "0");
+  const same = r => r.s === name || nrm(r.s) === n;
+  return T.rows.find(r => same(r) && r.t === term && r.t1 === t1) || T.rows.find(r => same(r) && r.t1 === t1) || T.rows.find(r => same(r) && r.t === term) || null;
+}
+function riHTML(v, rowLabel, p, i) {
+  if (!v || !S.tt) return "";
+  const { y, m } = colYM(p, i), r = ttFind(v, rowLabel, y, m);
+  if (!r) return `<span class="ri no" title="관리파일 강의장 시간표에서 이 과목·시간을 찾지 못했습니다">강의장 미정</span>`;
+  return `<span class="ri" title="${esc(`${r.r} 강의장 · ${r.w || ""} · ${r.o || ""} ~ ${r.c || ""}${r.tc ? " · " + r.tc : ""}`)}">${esc(r.r)}${r.w ? " · " + esc(dayText(r.w)) : ""}</span>`;
+}
+function schedHTML(p) {
+  const sc = S.main.sched, ed = S.mode === "edit", labels = monthLabels(p), cells = (p && p.cells) || {};
+  const start = Number(p?.startMonth) || (new Date().getMonth() + 1);
+  const body = sc.groups.map(g => g.rows.map((r, ri) => `<tr>
+      ${ri === 0 ? `<th class="g" rowspan="${g.rows.length}">${esc(g.label)}</th>` : ""}
+      <th class="t">${ed ? `<input data-row="${esc(r.id)}" value="${esc(r.label)}" aria-label="시간"><button class="x" data-act="delRow" data-g="${esc(g.id)}" data-r="${esc(r.id)}" aria-label="이 줄 삭제">×</button>` : esc(r.label)}</th>
+      ${labels.map((_, i) => { const v = cells[r.id + "|" + i] || ""; return `<td class="${v ? "f" : ""}"><input list="subs" data-cell="${esc(r.id)}|${i}" data-tl="${esc(r.label)}" value="${esc(v)}" ${p && !S.pub ? "" : "disabled"} aria-label="${esc(r.label)} ${labels[i]}">${riHTML(v, r.label, p, i)}</td>`; }).join("")}
+    </tr>`).join("") + (ed ? `<tr class="noprint"><th class="g"></th><th class="t"><button class="btn sm" data-act="addRow" data-g="${esc(g.id)}">+ ${esc(g.label)} 시간 줄</button></th><td colspan="${labels.length}"></td></tr>` : "")).join("");
+  const sugg = [...new Set((p ? S.main.courses.flatMap(c => allSubjects(c).filter(s => checkedOf(p)[s.id])) : []).flatMap(s => { const q = quoteAuto(s); return q.length ? q : quoteGroups(s).map(g => g.label); }))];
+  return `<section class="panel sched">
+      <div class="ph">
+        <h2>${p ? esc(p.name) + " 님 " : ""}${S.pub ? "수업 일정" : "시간표"}</h2>
+        ${p && !S.pub ? `<label class="noprint" style="font-size:13px;color:var(--sub)">시작 <select id="startYear">${[0, 1, 2].map(k => { const y = new Date().getFullYear() - 1 + k; return `<option value="${y}"${y === startYM(p).y ? " selected" : ""}>${y}년</option>`; }).join("")}</select> <select id="startMonth">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}"${i + 1 === start ? " selected" : ""}>${i + 1}월</option>`).join("")}</select></label>` : (S.pub ? "" : `<span class="hint noprint">상담 대상을 고르면 칸에 과목을 적을 수 있습니다.</span>`)}
+        <div class="grow"></div>
+        ${p && Store.cloud && !S.pub ? `<button class="btn noprint" data-act="sendMgmt">${p.studentId ? "관리파일에 다시 보내기" : "수강생 관리파일로 보내기"}</button>` : ""}
+        ${ed ? `<span class="noprint" style="font-size:13px;color:var(--sub)">개월 수 <button class="btn sm" data-act="months" data-d="-1">−</button> <b>${labels.length}</b> <button class="btn sm" data-act="months" data-d="1">+</button></span>` : ""}
+      </div>
+      <div class="sbody"><div class="tscroll"><table class="tt">
+        <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr></thead>
+        <tbody>${body}</tbody>
+      </table></div>
+      <datalist id="subs">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
+      <div class="snote">${ed ? `<input data-f="schedNote" value="${esc(sc.note || "")}" placeholder="시간표 아래 안내 문구">` : esc(sc.note || "")}</div>
+      ${p && !S.pub ? `<textarea class="memo" id="memo" placeholder="상담 메모 (희망 진로, 가능한 시간대 등)">${esc(p.memo || "")}</textarea>` : ""}
+      </div></section>`;
+}
+
+/* ============================================================ 창 */
+function modal({ title, body, actions = [], wide }) {
+  const mask = document.createElement("div"); mask.className = "mask";
+  mask.innerHTML = `<div class="modal${wide ? " wide" : ""}" role="dialog" aria-modal="true"><div class="mh"><h3>${title}</h3><button class="btn sm ghost" data-x aria-label="닫기">닫기</button></div><div class="mb">${body}</div>${actions.length ? `<div class="mf"></div>` : ""}</div>`;
+  const close = () => { mask.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  mask.addEventListener("mousedown", e => { if (e.target === mask) close(); });
+  $("[data-x]", mask).onclick = close;
+  const mf = $(".mf", mask);
+  actions.forEach(a => {
+    const b = document.createElement("button"); b.className = "btn " + (a.cls || ""); b.textContent = a.label;
+    b.onclick = async () => { const r = a.fn ? await a.fn(mask) : undefined; if (r !== false) close(); };
+    mf.appendChild(b);
+  });
+  $("#layer").appendChild(mask);
+  const first = $("input[type=text],textarea", mask); if (first) setTimeout(() => first.focus(), 30);
+  mask.close = close;
+  return mask;
+}
+function confirmBox(msg, label, fn) {
+  modal({ title: "확인", body: `<div style="font-size:14.5px">${esc(msg)}</div>`, actions: [{ label: "취소" }, { label, cls: "pri", fn }] });
+}
+
+/* 학생에게 보낼 링크 */
+function shareLink(p) {
+  if (!p) return;
+  if (!Store.cloud) { toast("로그인해야 학생 링크를 쓸 수 있습니다 (지금은 이 브라우저에만 저장 중)"); return; }
+  if (!/^\d{4}$/.test(p.phone4 || "")) { toast("먼저 ‘정보’에서 학생의 휴대폰 뒷번호 4자리를 넣어 주세요"); planForm(p); return; }
+  flushAll();
+  const url = location.origin + location.pathname + "?s=" + encodeURIComponent(p.id);
+  const done = () => toast(`${p.name} 님 로드맵 링크를 복사했습니다. 문자·카톡에 붙여 넣으세요`);
+  const show = () => modal({ title: "학생 링크", body: `<label class="fld">아래 주소를 복사해서 보내 주세요<input type="text" value="${esc(url)}" readonly onclick="this.select()"></label><div class="help" style="font-size:12px;color:var(--sub);line-height:1.6">학생은 링크를 열고 <b>휴대폰 뒷번호 4자리</b>를 넣어야 볼 수 있습니다.<br>${esc(p.name)} 님의 로드맵·수업 일정·커리큘럼만 보이고, 고치거나 다른 학생을 볼 수는 없습니다. 상담 메모와 견적서는 보이지 않습니다.</div>`, actions: [{ label: "닫기", cls: "pri" }] });
+  try { navigator.clipboard.writeText(url).then(() => { done(); show(); }, show); } catch (e) { show(); }
+}
+
+/* 상담 대상 */
+function planForm(p) {
+  const isNew = !p;
+  modal({
+    title: isNew ? "새 상담" : "상담 대상 정보",
+    body: `<label class="fld">이름<input type="text" id="f-n" value="${esc(p?.name || "")}" placeholder="예: 홍길동"></label>
+      <label class="fld">휴대폰 뒷번호 4자리<input type="text" id="f-p4" value="${esc(p?.phone4 || "")}" inputmode="numeric" maxlength="4" placeholder="예: 1234"><span class="help">학생이 링크를 열 때 이 번호를 넣어야 자기 로드맵이 보입니다.</span></label>
+      <label class="fld">구분용 메모 (선택)<input type="text" id="f-t" value="${esc(p?.tag || "")}" placeholder="예: 영상 취업반"><span class="help">이름이 같은 사람을 구분할 때 씁니다. 직원 목록에만 보입니다.</span></label>`,
+    actions: [
+      ...(isNew ? [] : [{ label: "삭제", cls: "danger", fn: () => { setTimeout(() => confirmBox(`‘${p.name}’ 상담 내용을 지울까요? 체크한 과목과 시간표가 함께 지워집니다.`, "삭제", async () => {
+        clearTimeout(timers["plan_" + p.id]?.t); delete timers["plan_" + p.id];
+        try { await Store.del("plan_" + p.id); if (p.viewKey) await Store.del(p.viewKey).catch(() => {}); } catch (e) { console.error(e); toast("삭제하지 못했어요"); return; }
+        S.plans = S.plans.filter(x => x.id !== p.id); S.cur = null; S.onlySel = false; render(); toast("삭제했어요");
+      }), 0); } }]),
+      { label: "취소" },
+      { label: isNew ? "만들기" : "저장", cls: "pri", fn: box => {
+        const name = $("#f-n", box).value.trim(), tag = $("#f-t", box).value.trim(), phone4 = $("#f-p4", box).value.trim();
+        if (!name) { toast("이름을 입력해 주세요"); return false; }
+        if (phone4 && !/^\d{4}$/.test(phone4)) { toast("휴대폰 뒷번호는 숫자 4자리로 넣어 주세요"); return false; }
+        if (isNew) {
+          const np = { rmType: "plan", id: secureId(), name, tag, phone4, ownerName: S.user?.displayName || S.user?.email || "", memo: "", checked: {}, cells: {}, startMonth: new Date().getMonth() + 1, owner: S.user?.email || "", createdAt: Date.now(), updatedAt: Date.now() };
+          S.plans.unshift(np); S.cur = np.id; S.mode = "check"; savePlan(np, true); render(); toast("수강할 과목을 눌러 체크하세요");
+        } else { p.name = name; p.tag = tag; p.phone4 = phone4; savePlan(p, true); render(); }
+      } }
+    ]
+  });
+}
+
+/* 과정·과목 편집 */
+const findCourse = id => S.main.courses.find(c => c.id === id);
+/* 로드맵 과목 → 견적서 과목 이름 (예: 에펙 1~2 → 에펙1, 에펙2). 과목 창에서 직접 고른 것이 있으면 그것을 씀 */
+const nrm = t => String(t || "").toLowerCase().replace(/[\s()\[\]·.,_\-]/g, "");
+const Q_ALIAS = { "visualmotion": "비주얼모션", "3d맥스": "맥스", "ai유튜브": "AI크리에이터 유튜브", "언리얼": "언리얼엔진", "모션포폴2d": "2D모션포폴", "포폴디렉터": "포폴디렉터" };
+function quoteGroups(s) {
+  if (s.qskip) return [];
+  if (Array.isArray(s.qnames) && s.qnames.length) return s.qnames.map(n => ({ label: n, alts: [n] }));
+  const bases = [...new Set([s.name, Q_ALIAS[nrm(s.name)]].filter(Boolean))];
+  const m = String(s.level || "").match(/^(\d+)\s*[~\-]\s*(\d+)$/);
+  if (m && +m[2] >= +m[1] && +m[2] - +m[1] < 30) {
+    const out = []; for (let k = +m[1]; k <= +m[2]; k++) out.push({ label: s.name + k, alts: bases.map(b => b + k) }); return out;
+  }
+  const alts = [];
+  bases.forEach(b => { if (s.level) alts.push(b + s.level); if (s.note) alts.push(b + s.note); alts.push(b); });
+  return [{ label: s.name + (s.level || "") + (!s.level && s.note && s.note.length < 8 ? "(" + s.note + ")" : ""), alts }];
+}
+function quoteAuto(s) {
+  if (!S.qmaster) return [];
+  const idx = {}; S.qmaster.forEach(x => { const k = nrm(x.subject); if (!idx[k]) idx[k] = x; });
+  const out = [];
+  quoteGroups(Object.assign({}, s, { qnames: null, qskip: false })).forEach(g => { for (const a of g.alts) { const h = idx[nrm(a)]; if (h) { out.push(h.subject); break; } } });
+  return out;
+}
+const isSplit = x => !!x && x.type === "split";
+function allSubjects(c) { const out = []; c.subjects.forEach(x => isSplit(x) ? x.branches.forEach(b => out.push(...b.subjects)) : out.push(x)); return out; }
+function locate(c, sid) {
+  for (const x of c.subjects) {
+    if (isSplit(x)) { for (const b of x.branches) { const s = b.subjects.find(y => y.id === sid); if (s) return { list: b.subjects, s }; } }
+    else if (x.id === sid) return { list: c.subjects, s: x };
+  }
+  return null;
+}
+const DEFAULT_STAGES = [
+  { id: "base", label: "기초", w: 1.25 },
+  { id: "tool", label: "기본 툴", w: 1.1 },
+  { id: "adv", label: "전문 · 심화", w: 1.75 },
+  { id: "ai", label: "AI 활용", w: 1.35 },
+  { id: "pf", label: "포트폴리오 · 취업", w: 1.25 }
+];
+/* 단계가 정해지지 않은 과목은 이름을 보고 자동으로 넣음 (편집 화면에서 바꿀 수 있음) */
+function guessStage(name) {
+  const n = String(name || "").replace(/\s+/g, "");
+  if (/포폴|디렉터|프리랜서/.test(n)) return "pf";
+  if (/^A\.?I(?!CE)|^바이브/.test(n)) return "ai";
+  if (/포토샵|일러스트|인디자인|프리미어|캐드|라이노|스케치업|피그마|UI\/UX/.test(n)) return "tool";
+  if (/컨셉드로잉|아트웍|발상|스토리보드|드로잉|^제도|^스케치|유크리|모스|엑셀실무|컴활/.test(n)) return "base";
+  return "adv";
+}
+const stages = () => S.main.stages || DEFAULT_STAGES;
+const stageOf = s => stages().some(x => x.id === s.stage) ? s.stage : guessStage(s.name);
+function courseForm(c) {
+  const isNew = !c, icon = c?.icon || "book";
+  modal({
+    title: isNew ? "과정 추가" : "과정 수정",
+    body: `<label class="fld">과정 이름<input type="text" id="f-n" value="${esc(c?.name || "")}" placeholder="예: 게임그래픽"></label>
+      <label class="fld">작은 이름 (선택)<input type="text" id="f-s" value="${esc(c?.sub || "")}" placeholder="예: 크리에이터"></label>
+      <label class="chk"><input type="checkbox" id="f-h"${c?.half ? " checked" : ""}> 반쪽 너비 (과목이 적은 과정 둘을 나란히)</label>
+      <div class="fld">아이콘<div class="ipick">${iconPicker(icon, false)}</div></div>`,
+    actions: [
+      ...(isNew ? [] : [{ label: "과정 삭제", cls: "danger", fn: () => { setTimeout(() => confirmBox(`‘${c.name}’ 과정과 그 안의 과목 ${allSubjects(c).length}개를 지울까요?`, "삭제", () => { S.main.courses = S.main.courses.filter(x => x !== c); saveMain(true); render(); }), 0); } }]),
+      { label: "취소" },
+      { label: isNew ? "추가" : "저장", cls: "pri", fn: box => {
+        const name = $("#f-n", box).value.trim(); if (!name) { toast("과정 이름을 입력해 주세요"); return false; }
+        const sub = $("#f-s", box).value.trim(), ic = $("input[name=ico]:checked", box)?.value || "book";
+        const half = $("#f-h", box).checked;
+        if (isNew) S.main.courses.push({ id: uid("c"), name, sub, icon: ic, half, subjects: [] });
+        else Object.assign(c, { name, sub, icon: ic, half });
+        saveMain(true); render();
+      } }
+    ]
+  });
+  wirePicker($("#layer").lastElementChild, false);
+}
+function subjForm(c, s, list) {
+  list = list || (s ? locate(c, s.id)?.list : null) || c.subjects;
+  const isNew = !s, i = isNew ? -1 : list.indexOf(s);
+  modal({
+    title: isNew ? `과목 추가 — ${esc(c.name)}` : "과목 수정",
+    body: `<label class="fld">과목 이름<input type="text" id="f-n" value="${esc(s?.name || "")}" placeholder="예: 포토샵"></label>
+      <label class="fld">단계 (선택)<input type="text" id="f-l" value="${esc(s?.level || "")}" placeholder="예: 1~2"></label>
+      <label class="fld">작은 설명 (선택)<input type="text" id="f-o" value="${esc(s?.note || "")}" placeholder="예: 포토샵, AI포토웍스"></label>
+      <div class="fld">이름 앞 아이콘 (선택)<div class="ipick">${iconPicker(s?.icon || "", true)}</div></div>
+      <div class="fld">견적서 과목${S.qmaster ? (() => {
+        const auto = s ? quoteAuto(s) : [], cur = s && Array.isArray(s.qnames) && s.qnames.length ? s.qnames : auto;
+        const groups = {}; S.qmaster.forEach(x => (groups[x.dept] = groups[x.dept] || []).push(x));
+        return `<div class="qnow">${s?.qskip ? "견적서에 넣지 않는 과목입니다." : cur.length ? "지금 연결: " + cur.map(esc).join(", ") + (s && Array.isArray(s.qnames) && s.qnames.length ? " (직접 고름)" : " (이름으로 자동)") : "자동으로 찾은 견적서 과목이 없습니다. 아래에서 골라 주세요."}</div>
+          <div class="qpick"><input class="qs" placeholder="견적서 과목 찾기" aria-label="견적서 과목 찾기"><div class="ql">${Object.keys(groups).map(d => `<div class="qg">${esc(d)}</div>` + groups[d].map(x => `<label data-n="${esc(nrm(x.subject))}"><input type="checkbox" name="qn" value="${esc(x.subject)}"${cur.includes(x.subject) ? " checked" : ""}>${esc(x.subject)}<span>${Number(x.fee || 0).toLocaleString("ko-KR")}</span></label>`).join("")).join("")}</div></div>
+          <label class="chk" style="margin-top:8px"><input type="checkbox" id="f-qskip"${s?.qskip ? " checked" : ""}> 견적서에 넣지 않음 (예: 수강생포폴)</label>`;
+      })() : `<div class="qnow">상담 대상을 고르면 아래에 견적서가 열리고, 그다음부터 여기서 견적서 과목을 고를 수 있습니다. 지금은 이름이 같은 과목으로 자동 연결됩니다.</div>`}</div>
+      ${isNew ? "" : `<div style="display:flex;gap:6px"><button class="btn sm" id="mv-l" ${i === 0 ? "disabled" : ""}>앞으로 옮기기</button><button class="btn sm" id="mv-r" ${i === list.length - 1 ? "disabled" : ""}>뒤로 옮기기</button></div>
+      <div class="help" style="font-size:12px;color:var(--sub);margin-top:10px">커리큘럼 이미지는 ‘커리큘럼 보기’에서 과목을 눌러 올립니다.</div>`}`,
+    actions: [
+      ...(isNew ? [] : [{ label: "삭제", cls: "danger", fn: () => { const j = list.indexOf(s); if (j >= 0) list.splice(j, 1); saveMain(true); render(); } }]),
+      { label: "취소" },
+      { label: isNew ? "추가" : "저장", cls: "pri", fn: box => {
+        const name = $("#f-n", box).value.trim(); if (!name) { toast("과목 이름을 입력해 주세요"); return false; }
+        const v = { name, level: $("#f-l", box).value.trim(), note: $("#f-o", box).value.trim(), icon: $("input[name=ico]:checked", box)?.value || "", br: false };
+        if (S.qmaster) {
+          const picked = [...box.querySelectorAll("input[name=qn]:checked")].map(x => x.value), auto = quoteAuto(Object.assign({}, s || {}, v));
+          const same = picked.length === auto.length && picked.every(x => auto.includes(x));
+          v.qnames = same ? null : picked; v.qskip = !!$("#f-qskip", box)?.checked;
+        }
+        if (isNew) list.push({ id: uid("s"), ...v }); else Object.assign(s, v);
+        saveMain(true); render();
+      } }
+    ]
+  });
+  const box = $("#layer").lastElementChild;
+  wirePicker(box, true);
+  const qs = $(".qpick .qs", box);
+  if (qs) qs.addEventListener("input", () => { const q = nrm(qs.value); box.querySelectorAll(".qpick label").forEach(l => { l.style.display = !q || l.dataset.n.includes(q) ? "" : "none"; }); });
+  if (!isNew) {
+    const mv = d => { const j = list.indexOf(s); list.splice(j, 1); list.splice(j + d, 0, s); saveMain(true); render(); box.close(); subjForm(c, s, list); };
+    $("#mv-l", box).onclick = () => mv(-1); $("#mv-r", box).onclick = () => mv(1);
+  }
+}
+function branchForm(c, sp, b) {
+  modal({
+    title: "갈래 수정",
+    body: `<label class="fld">갈래 이름<input type="text" id="f-n" value="${esc(b.label || "")}" placeholder="예: 모델링"></label>
+      <div class="help" style="font-size:12px;color:var(--sub)">갈래 안의 과목은 ‘+ 과목’으로 넣고, 과목을 눌러 고칩니다.</div>`,
+    actions: [
+      { label: "갈래 삭제", cls: "danger", fn: () => { setTimeout(() => confirmBox(`‘${b.label}’ 갈래와 그 안의 과목 ${b.subjects.length}개를 지울까요?`, "삭제", () => {
+        sp.branches = sp.branches.filter(x => x !== b);
+        if (!sp.branches.length) c.subjects = c.subjects.filter(x => x !== sp);
+        saveMain(true); render();
+      }), 0); } },
+      { label: "취소" },
+      { label: "저장", cls: "pri", fn: box => { b.label = $("#f-n", box).value.trim() || "갈래"; saveMain(true); render(); } }
+    ]
+  });
+}
+
+/* 시간표 → 수강생 관리파일(배정 수업)로 보내기. 기존 배정은 지우지 않고, 같은 달·시간·과목은 건너뜀 */
+function planClasses(p) {
+  const out = [], rows = {}; S.main.sched.groups.forEach(g => g.rows.forEach(r => { rows[r.id] = r.label; }));
+  Object.entries(p.cells || {}).forEach(([k, v]) => {
+    const [rid, i] = k.split("|"), lab = rows[rid]; v = String(v || "").trim(); if (!lab || !v) return;
+    const { y, m } = colYM(p, Number(i)), r = ttFind(v, lab, y, m);
+    out.push({ year: String(y), month: m + "월", time: lab.replace(/\s*~\s*/, "-").trim(), subject: v, room: r ? String(r.r).charAt(0).toUpperCase() : "A", roomFull: r ? r.r : "", ord: y * 100 + m });
+  });
+  return out.sort((a, b) => a.ord - b.ord || a.time.localeCompare(b.time));
+}
+async function sendToMgmt(p) {
+  if (!p) return;
+  flushAll();
+  const list = planClasses(p);
+  if (!list.length) { toast("시간표에 적은 과목이 없습니다"); return; }
+  const db = Store.db;
+  const box = modal({
+    wide: false, title: "수강생 관리파일로 보내기",
+    body: `<div class="fld">보낼 수업 ${list.length}개<div class="sendlist">${list.map(c => `${c.year}년 ${esc(c.month)} · ${esc(c.time)} · <b>${esc(c.subject)}</b>${c.roomFull ? " · " + esc(c.roomFull) : ""}`).join("<br>")}</div></div>
+      <label class="fld">관리파일에서 찾을 이름<span style="display:flex;gap:6px;margin-top:6px"><input type="text" id="w-n" value="${esc(p.name)}" style="margin:0"><button class="btn" type="button" id="w-go">찾기</button></span></label>
+      <div class="who-list" id="w-list"><div class="empty" style="padding:6px 0">찾는 중입니다…</div></div>
+      <div id="w-new" class="hide" style="margin-top:10px"><label class="fld">연락처 (선택)<input type="text" id="w-ct" placeholder="010-0000-0000"></label><label class="fld">담당 멘토 (선택)<input type="text" id="w-mt" value="${esc(S.user?.displayName || "")}"></label></div>
+      <div class="help" style="font-size:12px;color:var(--sub);line-height:1.6">이미 들어 있는 배정 수업은 그대로 두고, 같은 달·시간·과목은 건너뜁니다. 한 칸에 이미 2과목이 있으면 그 칸은 넣지 않습니다.<br>관리파일 화면을 열어 둔 상태라면 보낸 뒤 새로 고침해 주세요.</div>`,
+    actions: [{ label: "취소" }, { label: "보내기", cls: "pri", fn: async bx => {
+      const pick = bx.querySelector("input[name=who]:checked"); if (!pick) { toast("보낼 수강생을 골라 주세요"); return false; }
+      const btn = [...bx.querySelectorAll(".mf .btn")].pop(); btn.disabled = true; btn.textContent = "보내는 중…";
+      try {
+        const now = new Date().toISOString(), meta = { updatedAt: now, _updatedAt: firebase.firestore.FieldValue.serverTimestamp(), _updatedBy: S.user?.email || "" };
+        let sid = pick.value, added = 0, skipped = 0, cur = [];
+        if (sid === "__new") {
+          sid = "s" + Date.now();
+        } else {
+          const d = await db.collection("students").doc(sid).get(); if (!d.exists) throw new Error("관리파일에서 이 수강생을 찾지 못했습니다");
+          cur = Array.isArray(d.data().assignedClasses) ? d.data().assignedClasses.slice() : [];
+        }
+        list.forEach((c, k) => {
+          const yr = x => String(x.year || "2026");
+          if (cur.some(a => yr(a) === c.year && a.month === c.month && a.time === c.time && a.subject === c.subject)) { skipped++; return; }
+          if (cur.filter(a => yr(a) === c.year && a.month === c.month && a.time === c.time).length >= 2) { skipped++; return; }
+          cur.push({ id: "a" + (Date.now() + k), year: c.year, month: c.month, time: c.time, subject: c.subject, confirmed: false, isFree: false, room: c.room, sourcePdfId: null }); added++;
+        });
+        if (pick.value === "__new") {
+          const d8 = new Date(), yy = String(d8.getFullYear()).slice(2), mm = String(d8.getMonth() + 1).padStart(2, "0"), dd = String(d8.getDate()).padStart(2, "0");
+          await db.collection("students").doc(sid).set(Object.assign({ id: sid, name: p.name, appNum: "", birth: "", contact: $("#w-ct", bx).value.trim(), mentor: $("#w-mt", bx).value.trim(), subMentor: "", course: "", purpose: "", regDate: `${yy}-${mm}-${dd}`, durationStart: "", paidCourse: "", freeCourse: "", paymentStatus: "", ddazua: "", acp: "", regMethod: "", baseTuition: 0, discountRate: "", directDiscount: 0, totalTuition: 0, requiresCare: false, isOnLeave: false, isCompleted: false, isRefunded: false, memo: "[]", emRel: "", emContact: "", assignedClasses: cur, pdfSubjects: "" }, meta));
+        } else {
+          await db.collection("students").doc(sid).update(Object.assign({ assignedClasses: cur }, meta));
+        }
+        p.studentId = sid; savePlan(p, true); render();
+        toast(`관리파일에 ${added}개를 넣었습니다${skipped ? ` (${skipped}개는 이미 있거나 칸이 차서 건너뜀)` : ""}`);
+      } catch (e) { console.error(e); toast("보내지 못했습니다: " + (e.message || e)); btn.disabled = false; btn.textContent = "보내기"; return false; }
+    } }]
+  });
+  const find = async () => {
+    const name = $("#w-n", box).value.trim(), wl = $("#w-list", box);
+    wl.innerHTML = `<div class="empty" style="padding:6px 0">찾는 중입니다…</div>`;
+    let found = [];
+    try {
+      if (p.studentId) { const d = await db.collection("students").doc(p.studentId).get(); if (d.exists) found.push(d.data()); }
+      if (name) { const q = await db.collection("students").where("name", "==", name).get(); q.docs.forEach(d => { const x = d.data(); x.id = x.id || d.id; if (!found.some(f => f.id === x.id)) found.push(x); }); }
+    } catch (e) { console.error(e); wl.innerHTML = `<div class="empty" style="padding:6px 0">관리파일을 읽지 못했습니다. 로그인 계정을 확인해 주세요.</div>`; return; }
+    wl.innerHTML = found.map((x, i) => `<label><input type="radio" name="who" value="${esc(x.id)}"${i === 0 ? " checked" : ""}><span><b>${esc(x.name)}</b>${x.id === p.studentId ? " (연결된 수강생)" : ""}<small>${esc([x.contact, x.mentor && "멘토 " + x.mentor, x.course, x.regDate && "등록 " + x.regDate].filter(Boolean).join(" · ") || "추가 정보 없음")} · 배정 ${(x.assignedClasses || []).length}개</small></span></label>`).join("")
+      + `<label><input type="radio" name="who" value="__new"${found.length ? "" : " checked"}><span><b>새 수강생으로 등록</b><small>관리파일에 ‘${esc(name || p.name)}’ 수강생을 새로 만들고 수업을 넣습니다</small></span></label>`;
+    const sync = () => $("#w-new", box).classList.toggle("hide", !box.querySelector("input[name=who][value=__new]")?.checked);
+    wl.querySelectorAll("input[name=who]").forEach(r => r.addEventListener("change", sync)); sync();
+  };
+  $("#w-go", box).onclick = find; $("#w-n", box).addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); find(); } });
+  find();
+}
+
+const imgCache = {};
+async function loadImg(id) {
+  if (imgCache[id]) return imgCache[id];
+  const d = await Store.get("img_" + id); if (d) imgCache[id] = d; return d;
+}
+let viewer = null;
+async function openSubject(c, s) {
+  const key = subjKey(s), p = curPlan();
+  const box = modal({
+    wide: true,
+    title: `${esc(s.name)}<span class="lvl">${esc([s.level, s.note].filter(Boolean).join(" · "))}</span>`,
+    body: `<div id="v-body"><div class="empty">불러오는 중입니다…</div></div>`,
+    actions: [
+      ...(S.pub || !isAdmin() ? [] : [{ label: "이미지 올리기", fn: () => { viewer = { key, c, s, box }; $("#file").value = ""; $("#file").click(); return false; } }]),
+      ...(p && !S.pub ? [{ label: checkedOf(p)[s.id] ? "수강 체크 풀기" : `${p.name} 님 수강 과목으로 체크`, cls: checkedOf(p)[s.id] ? "" : "pri", fn: () => { toggleCheck(s.id); } }] : []),
+      { label: "닫기" }
+    ]
+  });
+  viewer = { key, c, s, box };
+  await drawViewer();
+}
+async function drawViewer() {
+  if (!viewer || !viewer.box.isConnected) return;
+  const el = $("#v-body", viewer.box), ids = S.imgidx[viewer.key] || [];
+  if (!ids.length && S.pub) { el.innerHTML = `<div class="drop"><b>이 과목의 커리큘럼은 준비 중입니다</b>담당 멘토에게 문의해 주세요.</div>`; return; }
+  if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요.<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다.</div>`; return; }
+  const docs = await Promise.all(ids.map(id => loadImg(id).catch(() => null)));
+  if (!viewer || !viewer.box.isConnected) return;
+  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" alt="${esc(subjLabel(viewer.s))} 커리큘럼 ${i + 1}">
+      <div class="ib noprint"${S.pub || !isAdmin() ? ' style="display:none"' : ""}><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">↑</button><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="1" ${i === ids.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button><button class="btn sm danger" data-act="imgDel" data-id="${id}">삭제</button></div></div>` : `<div class="empty">이미지 한 장을 불러오지 못했습니다.</div>`).join("")}</div>`;
+}
+async function saveIdx(key, ids) {
+  S.imgidx[key] = ids;
+  await Store.set("imgidx", { rmType: "imgidx", map: { [key]: ids } }, true);
+}
+function readImage(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { URL.revokeObjectURL(url); res(im); };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("이미지를 열 수 없습니다")); };
+    im.src = url;
+  });
+}
+/* 한 장이 저장 한도(약 1MB)를 넘지 않도록 크기·화질을 단계적으로 낮춤 */
+async function compress(file) {
+  const im = await readImage(file);
+  let scale = Math.min(1, 2000 / Math.max(im.naturalWidth, im.naturalHeight));
+  for (let round = 0; round < 7; round++) {
+    const w = Math.max(1, Math.round(im.naturalWidth * scale)), h = Math.max(1, Math.round(im.naturalHeight * scale));
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
+    for (const q of [0.86, 0.76, 0.66]) {
+      const data = cv.toDataURL("image/jpeg", q);
+      if (data.length < 900000) return { data, w, h };
+    }
+    scale *= 0.82;
+  }
+  throw new Error("이미지가 너무 큽니다");
+}
+$("#file").addEventListener("change", async e => {
+  const files = [...e.target.files]; if (!files.length || !viewer) return;
+  const v = viewer; let ok = 0;
+  toast(`이미지 ${files.length}장을 올리는 중입니다…`);
+  const ids = (S.imgidx[v.key] || []).slice();
+  for (const f of files) {
+    try {
+      const c = await compress(f), id = uid("i");
+      const doc = { rmType: "img", id, key: v.key, ...c, createdAt: Date.now() };
+      await Store.set("img_" + id, doc); imgCache[id] = doc; ids.push(id); ok++;
+    } catch (err) { console.error(err); }
+  }
+  try { await saveIdx(v.key, ids); } catch (err) { console.error(err); toast("저장하지 못했어요. 인터넷·로그인을 확인해 주세요"); return; }
+  toast(ok === files.length ? `${ok}장을 올렸어요` : `${ok}장 올림, ${files.length - ok}장은 실패했어요`);
+  render(); drawViewer();
+});
+
+/* ============================================================ 동작 */
+function toggleCheck(sid) {
+  const p = curPlan(); if (!p) return;
+  p.checked = p.checked || {};
+  if (p.checked[sid]) delete p.checked[sid]; else p.checked[sid] = true;
+  savePlan(p); render();
+}
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-act]"); if (!t) return;
+  const a = t.dataset.act, c = t.dataset.c ? findCourse(t.dataset.c) : null;
+  if (S.pub && !["subj", "print"].includes(a)) return;
+  if (S.pub && a === "subj") { const c2 = findCourse(t.dataset.c), s2 = c2 && locate(c2, t.dataset.s)?.s; if (s2) openSubject(c2, s2); return; }
+  if (a === "shareLink") { shareLink(curPlan()); return; }
+  if (a === "mode" && t.dataset.mode === "edit" && !isAdmin()) { toast("구성 편집은 팀장만 할 수 있어요"); return; }
+  if (a === "mode") {
+    S.mode = t.dataset.mode;
+    if (S.mode === "check" && !curPlan()) toast("상담 대상을 고르거나 ‘+ 새 상담’을 눌러 주세요");
+    render();
+  }
+  else if (a === "newPlan") planForm(null);
+  else if (a === "editPlan") planForm(curPlan());
+  else if (a === "print") { flushAll(); window.print(); }
+  else if (a === "logout") { flushAll(); setTimeout(() => firebase.auth().signOut(), 300); }
+  else if (a === "showLogin") showLogin();
+  else if (a === "clearChecks") confirmBox("체크한 과목을 모두 풀까요?", "전체 해제", () => { const p = curPlan(); p.checked = {}; savePlan(p, true); render(); });
+  else if (a === "subj" && c) {
+    const s = locate(c, t.dataset.s)?.s; if (!s) return;
+    if (S.mode === "edit") subjForm(c, s);
+    else if (S.mode === "check") { if (curPlan()) toggleCheck(s.id); else planForm(null); }
+    else openSubject(c, s);
+  }
+  else if (a === "addSubj" && c) { const sp = c.subjects.find(x => x.id === t.dataset.sp), b = sp?.branches.find(x => x.id === t.dataset.b); subjForm(c, null, b ? b.subjects : c.subjects); }
+  else if (a === "addSplit" && c) { c.subjects.push({ id: uid("sp"), type: "split", branches: [{ id: uid("b"), label: "갈래 1", subjects: [] }, { id: uid("b"), label: "갈래 2", subjects: [] }] }); saveMain(true); render(); toast("갈래 구간을 맨 뒤에 넣었어요. ‘앞으로’로 위치를 옮기세요"); }
+  else if ((a === "spAddBr" || a === "spMove" || a === "spDel" || a === "branch") && c) {
+    const sp = c.subjects.find(x => x.id === t.dataset.sp); if (!sp) return;
+    if (a === "spAddBr") { sp.branches.push({ id: uid("b"), label: "갈래 " + (sp.branches.length + 1), subjects: [] }); saveMain(true); render(); }
+    else if (a === "spMove") { const i = c.subjects.indexOf(sp), d = Number(t.dataset.d); c.subjects.splice(i, 1); c.subjects.splice(i + d, 0, sp); saveMain(true); render(); }
+    else if (a === "spDel") confirmBox(`이 갈래 구간과 그 안의 과목 ${sp.branches.reduce((n, b) => n + b.subjects.length, 0)}개를 지울까요?`, "삭제", () => { c.subjects = c.subjects.filter(x => x !== sp); saveMain(true); render(); });
+    else { const b = sp.branches.find(x => x.id === t.dataset.b); if (b) branchForm(c, sp, b); }
+  }
+  else if (a === "addCourse") courseForm(null);
+  else if (a === "sendMgmt") sendToMgmt(curPlan());
+  else if (a === "theme") { S.main.theme = t.dataset.t; saveMain(true); render(); }
+  else if (a === "resetTpl") confirmBox("과정·과목 구성을 처음 기본 로드맵으로 되돌릴까요? 지금까지 고친 과정·과목 구성이 사라집니다. (올린 이미지와 상담 내용은 그대로 남습니다)", "되돌리기", () => { const t0 = buildTemplate(); S.main.courses = t0.courses; S.main.stages = t0.stages; saveMain(true); render(); });
+  else if (a === "editCourse" && c) courseForm(c);
+  else if (a === "moveCourse" && c) { const i = S.main.courses.indexOf(c), d = Number(t.dataset.d); S.main.courses.splice(i, 1); S.main.courses.splice(i + d, 0, c); saveMain(true); render(); }
+  else if (a === "months") { S.main.sched.months = Math.max(1, Math.min(24, (Number(S.main.sched.months) || 12) + Number(t.dataset.d))); saveMain(true); render(); }
+  else if (a === "addRow") { const g = S.main.sched.groups.find(x => x.id === t.dataset.g); g.rows.push({ id: uid("r"), label: "00:00~00:00" }); saveMain(true); render(); }
+  else if (a === "delRow") { const g = S.main.sched.groups.find(x => x.id === t.dataset.g); if (g.rows.length <= 1) { toast("시간 줄은 하나 이상 있어야 해요"); return; } g.rows = g.rows.filter(r => r.id !== t.dataset.r); saveMain(true); render(); }
+  else if (a === "imgDel" && viewer) {
+    const id = t.dataset.id, v = viewer;
+    try { await saveIdx(v.key, (S.imgidx[v.key] || []).filter(x => x !== id)); await Store.del("img_" + id); delete imgCache[id]; } catch (err) { console.error(err); toast("삭제하지 못했어요"); }
+    render(); drawViewer();
+  }
+  else if (a === "imgMove" && viewer) {
+    const ids = (S.imgidx[viewer.key] || []).slice(), i = ids.indexOf(t.dataset.id), d = Number(t.dataset.d);
+    if (i < 0 || i + d < 0 || i + d >= ids.length) return;
+    ids.splice(i, 1); ids.splice(i + d, 0, t.dataset.id);
+    try { await saveIdx(viewer.key, ids); } catch (err) { console.error(err); }
+    drawViewer();
+  }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.id === "pick") { S.cur = t.value || null; if (!S.cur) { S.onlySel = false; if (S.mode === "check") S.mode = "view"; } render(); }
+  else if (t.id === "onlySel") { S.onlySel = t.checked; render(); }
+  else if (t.id === "showAll") { S.showAll = t.value === "1"; if (S.cur && !visiblePlans().some(x => x.id === S.cur)) S.cur = null; render(); }
+  else if (t.dataset.f === "admins") {
+    let list = t.value.split(/[,\s]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+    if (list.length && !list.includes(myEmail()) && myEmail()) { list.unshift(myEmail()); toast("내 이메일이 빠지면 구성 편집을 못 하게 되어 함께 넣었어요"); }
+    S.main.admins = list; t.value = list.join(", "); saveMain(true); render();
+  }
+  else if (t.id === "startMonth") { const p = curPlan(); if (p) { p.startMonth = Number(t.value); if (!p.startYear) p.startYear = startYM(p).y; savePlan(p, true); render(); } }
+  else if (t.id === "startYear") { const p = curPlan(); if (p) { p.startYear = Number(t.value); savePlan(p, true); render(); } }
+  else if (t.dataset && t.dataset.cell) { const p = curPlan(), td = t.parentElement; if (!p || !td) return; td.querySelector(".ri")?.remove(); td.insertAdjacentHTML("beforeend", riHTML(t.value.trim(), t.dataset.tl, p, Number(t.dataset.cell.split("|")[1]))); }
+});
+document.addEventListener("input", e => {
+  const t = e.target, p = curPlan();
+  if (t.dataset.cell && p) {
+    p.cells = p.cells || {};
+    const v = t.value.trim(); if (v) p.cells[t.dataset.cell] = t.value; else delete p.cells[t.dataset.cell];
+    t.parentElement.classList.toggle("f", !!v); savePlan(p);
+  }
+  else if (t.id === "memo" && p) { p.memo = t.value; savePlan(p); }
+  else if (t.dataset.row) { for (const g of S.main.sched.groups) { const r = g.rows.find(x => x.id === t.dataset.row); if (r) r.label = t.value; } saveMain(); }
+  else if (t.dataset.f === "title") { S.main.title = t.value; saveMain(); }
+  else if (t.dataset.f === "tag0" || t.dataset.f === "tag1") { S.main.tags = S.main.tags || ["", ""]; S.main.tags[Number(t.dataset.f.slice(3))] = t.value; saveMain(); }
+  else if (t.dataset.stage && t.tagName === "INPUT") { if (!S.main.stages) S.main.stages = clone(DEFAULT_STAGES); const x = S.main.stages.find(y => y.id === t.dataset.stage); if (x) { x.label = t.value; saveMain(); } }
+  else if (t.dataset.f === "brand") { S.main.brand = t.value; saveMain(); }
+  else if (t.dataset.f === "schedNote") { S.main.sched.note = t.value; saveMain(); }
+});
+
+/* ============================================================ 시작 · 로그인 */
+async function loadAll() {
+  let main = null, idx = null, plans = [];
+  try { [main, idx, plans] = await Promise.all([Store.get("main"), Store.get("imgidx"), Store.listPlans()]); }
+  catch (e) { console.error(e); S.warn = "저장된 내용을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 새로 고침해 주세요."; }
+  if (!main || !Array.isArray(main.courses)) { main = buildTemplate(); if (!S.warn) { try { await Store.set("main", main); } catch (e) { console.error(e); } } }
+  if (main.tplVer === 2 && !S.warn) { const t0 = buildTemplate(), i = main.courses.findIndex(c => c.id === "cg"); if (i >= 0 && !main.courses[i].subjects.some(isSplit)) main.courses[i] = t0.courses.find(c => c.id === "cg"); main.tplVer = 3; try { await Store.set("main", main); } catch (e) { console.error(e); } }
+  if (!(main.tplVer >= 2) && !S.warn) { const keep = main.sched; main = buildTemplate(); if (keep) main.sched = keep; try { await Store.set("main", main); } catch (e) { console.error(e); } }
+  if (!main.sched) main.sched = buildTemplate().sched;
+  if (main.brand === undefined) main.brand = buildTemplate().brand;
+  if (main.themeVer !== 4) { main.theme = "rose"; main.themeVer = 4; }
+  if (!Array.isArray(main.stages) || !main.stages.length) main.stages = clone(DEFAULT_STAGES);
+  S.main = main; S.imgidx = (idx && idx.map) || {};
+  if (Store.cloud && Store.db) {
+    try { const a = await Store.db.collection("config").doc("timetable").get(); if (a.exists && a.data().data) S.tt = a.data().data; } catch (e) { console.warn("강의장 시간표", e); }
+    try { const b = await Store.db.collection("config").doc("timetable_map").get(); if (b.exists && b.data().data) S.ttmap = b.data().data; } catch (e) {}
+  }
+  S.plans = (plans || []).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (!visiblePlans().some(p => p.id === S.cur)) S.cur = null;
+  if (S.mode === "edit" && !isAdmin()) S.mode = "view";
+  render();
+}
+function showLogin(msg) {
+  document.querySelectorAll(".login").forEach(x => x.remove());
+  const d = document.createElement("div"); d.className = "login";
+  d.innerHTML = `<form class="box"><h2>로드맵 수강 설계</h2><p>수강생 관리파일과 같은 계정으로 로그인합니다.</p>
+    <label class="fld">이메일<input type="email" id="l-e" autocomplete="username" required></label>
+    <label class="fld">비밀번호<input type="password" id="l-p" autocomplete="current-password" required></label>
+    <div class="err" id="l-m">${esc(msg || "")}</div>
+    <button class="btn pri" style="width:100%;padding:10px" type="submit">로그인</button>
+    <button class="btn ghost" style="width:100%;margin-top:8px;font-weight:500;color:var(--sub)" type="button" id="l-local">로그인 없이 둘러보기 (이 브라우저에만 저장)</button></form>`;
+  document.body.appendChild(d);
+  $("form", d).addEventListener("submit", async e => {
+    e.preventDefault(); $("#l-m", d).textContent = "확인 중입니다…";
+    try { await firebase.auth().signInWithEmailAndPassword($("#l-e", d).value.trim(), $("#l-p", d).value); }
+    catch (err) { console.error(err); $("#l-m", d).textContent = "로그인하지 못했습니다. 이메일과 비밀번호를 확인해 주세요."; }
+  });
+  $("#l-local", d).onclick = () => { d.remove(); Store.cloud = false; S.user = null; loadAll(); };
+}
+async function loadPublic(p4, msg) {
+  S.pub = true; S.mode = "view"; Store.cloud = true; Store.col = "roadmap"; Store.pfx = "";
+  let main = S.main;
+  if (!main) { try { main = await Store.get("main"); } catch (e) { console.error(e); } }
+  if (main && !main.sched) main.sched = buildTemplate().sched;
+  S.main = main;
+  const saved = (() => { try { return localStorage.getItem("rmv:" + LINK_ID) || ""; } catch (e) { return ""; } })();
+  p4 = p4 || saved;
+  if (!main) { $("#top").innerHTML = ""; $("#app").innerHTML = `<div class="panel" style="padding:40px 28px;text-align:center;margin-top:40px"><h2 style="margin:0 0 8px;font-size:20px">로드맵을 열 수 없습니다</h2><p style="color:var(--sub);margin:0">잠시 뒤 다시 열거나, 담당 멘토에게 문의해 주세요.</p></div>`; return; }
+  if (!p4) return gate(msg);
+  let plan = null;
+  try { plan = await Store.get(await viewKey(LINK_ID, p4)); } catch (e) { console.error(e); }
+  if (!plan) { try { localStorage.removeItem("rmv:" + LINK_ID); } catch (e) {} return gate(saved && !msg ? "" : "번호가 맞지 않거나 링크가 바뀌었습니다. 다시 확인해 주세요."); }
+  try { localStorage.setItem("rmv:" + LINK_ID, p4); } catch (e) {}
+  let idx = null; try { idx = await Store.get("imgidx"); } catch (e) {}
+  S.imgidx = (idx && idx.map) || {}; S.plans = [plan]; S.cur = plan.id;
+  S.onlySel = Object.values(plan.checked || {}).some(Boolean);
+  try { const a = await Store.db.collection("config").doc("timetable").get(); if (a.exists && a.data().data) S.tt = a.data().data; } catch (e) {}
+  try { const b = await Store.db.collection("config").doc("timetable_map").get(); if (b.exists && b.data().data) S.ttmap = b.data().data; } catch (e) {}
+  document.title = plan.name + " 님 수강 로드맵";
+  render();
+}
+/* 학생 본인 확인 화면 */
+function gate(msg) {
+  document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
+  $("#top").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>${esc(S.main?.brand || "수강 로드맵")}</div>`;
+  $("#app").className = "wrap";
+  $("#app").innerHTML = `<form class="panel gate" id="gate" autocomplete="off">
+      <h2>내 수강 로드맵</h2>
+      <p>본인 확인을 위해 휴대폰 번호 <b>뒷자리 4자리</b>를 입력해 주세요.</p>
+      <input id="g-p4" inputmode="numeric" maxlength="4" pattern="\\d{4}" placeholder="0000" aria-label="휴대폰 뒷번호 4자리">
+      <div class="err" id="g-err">${esc(msg || "")}</div>
+      <button class="btn pri" type="submit">확인</button>
+    </form>`;
+  const inp = $("#g-p4"); setTimeout(() => inp.focus(), 50);
+  $("#gate").addEventListener("submit", async e => {
+    e.preventDefault(); const v = inp.value.trim();
+    if (!/^\d{4}$/.test(v)) { $("#g-err").textContent = "숫자 4자리를 입력해 주세요."; return; }
+    $("#g-err").textContent = "확인 중입니다…";
+    await new Promise(r => setTimeout(r, 400));
+    loadPublic(v, "x");
+  });
+}
+(function start() {
+  let ok = false;
+  try { if (window.firebase && firebase.initializeApp) { firebase.initializeApp(FIREBASE_CONFIG); Store.db = firebase.firestore(); ok = true; } } catch (e) { console.error(e); }
+  S.canLogin = ok;
+  if (!ok) { if (LINK_ID) { $("#app").innerHTML = `<div class="empty" style="padding:40px;text-align:center">인터넷 연결을 확인한 뒤 다시 열어 주세요.</div>`; return; } loadAll(); return; }
+  firebase.auth().onAuthStateChanged(async u => {
+    S.user = u;
+    if (!u) {
+      if (LINK_ID) { loadPublic(); return; }   /* 학생: 로그인 없이 자기 로드맵만 */
+      Store.cloud = false; showLogin(); return;
+    }
+    S.pub = false;
+    document.querySelectorAll(".login").forEach(x => x.remove());
+    Store.cloud = true; S.warn = "";
+    if (!(await Store.probe())) { Store.cloud = false; S.warn = "저장 공간(roadmap)에 접근하지 못해 지금은 이 브라우저에만 저장됩니다. 저장 공간 규칙을 한 번 추가해야 합니다 (안내 참고)."; }
+    if (LINK_ID) S.cur = LINK_ID;
+    await loadAll();
+    if (LINK_ID && S.plans.some(p => p.id === LINK_ID)) { const lp = S.plans.find(p => p.id === LINK_ID); if (!isMine(lp) && isAdmin()) S.showAll = true; if (visiblePlans().includes(lp)) { S.cur = LINK_ID; render(); } }
+  });
+})();
+</script>
+</body>
+</html>
