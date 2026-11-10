@@ -205,8 +205,11 @@ button{cursor:pointer}
 .gate input:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
 .gate .err{min-height:20px;margin:10px 0;color:var(--danger);font-size:13px}
 .gate .btn{width:100%;padding:11px;font-size:15px}
+.qsum{font-size:12.5px;color:var(--sub)}
+.qsum b{color:var(--ink)}
+.qwarn{color:#b07a12;font-weight:600}
 /* 견적서 · 시간표 강의장 */
-.qwrap{padding-top:0;padding-bottom:60px}
+.qwrap{padding-top:0;padding-bottom:60px;margin-top:-60px}
 #qframe{display:block;width:100%;height:calc(100vh - 90px);min-height:720px;border:0;border-top:1px solid var(--hair);border-radius:0 0 14px 14px;background:#fff}
 .qmiss{margin:12px 24px 0;padding:9px 13px;border-radius:9px;background:#fff7e8;border:1px solid #f0dcb0;font-size:12.5px;color:#7a5a12;line-height:1.55}
 .qmiss b{color:#5b420a}
@@ -479,6 +482,7 @@ function secureId() {
   catch (e) { return uid("r") + Math.random().toString(36).slice(2, 10); }
 }
 const LINK_ID = (() => { try { return new URLSearchParams(location.search).get("s") || ""; } catch (e) { return ""; } })();
+const PREVIEW = (() => { try { return new URLSearchParams(location.search).get("preview") === "1"; } catch (e) { return false; } })();
 const clone = o => JSON.parse(JSON.stringify(o));
 const subjLabel = s => (s.name + (s.level ? " " + s.level : "")).trim();
 /* 같은 과목(이름+단계)은 어느 과정에 있든 커리큘럼 이미지를 함께 씁니다 */
@@ -600,7 +604,9 @@ function render() {
   const app = $("#app");
   document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
   app.className = "wrap mode-" + S.mode + (p && Object.values(checkedOf(p)).some(Boolean) ? " dim" : "") + (S.onlySel ? " only-print-sel" : "");
-  app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + heroHTML(p) + boardHTML(p) + sumHTML(p) + schedHTML(p);
+  app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + heroHTML(p) + (S.view === "quote" && !S.pub
+    ? (p ? "" : `<section class="panel"><div class="empty">견적서를 보려면 위에서 상담 대상을 고르거나 ‘새 상담’을 눌러 주세요.</div></section>`)
+    : boardHTML(p) + sumHTML(p) + schedHTML(p));
   try { qSync(); } catch (e) { console.error(e); }
 }
 function renderTop() {
@@ -611,9 +617,10 @@ function renderTop() {
   $("#top").innerHTML = `
     <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>수강 설계</div>
     <nav class="seg" role="tablist">
-      <button data-act="mode" data-mode="view" class="${S.mode === "view" ? "on" : ""}">커리큘럼 보기</button>
-      <button data-act="mode" data-mode="check" class="${S.mode === "check" ? "on" : ""}">수강 과목 체크</button>
-      ${isAdmin() ? `<button data-act="mode" data-mode="edit" class="${S.mode === "edit" ? "on" : ""}">구성 편집</button>` : ""}
+      <button data-act="mode" data-mode="view" class="${S.view !== "quote" && S.mode === "view" ? "on" : ""}">커리큘럼 보기</button>
+      <button data-act="mode" data-mode="check" class="${S.view !== "quote" && S.mode === "check" ? "on" : ""}">수강 과목 체크</button>
+      ${isAdmin() ? `<button data-act="mode" data-mode="edit" class="${S.view !== "quote" && S.mode === "edit" ? "on" : ""}">구성 편집</button>` : ""}
+      <button data-act="qview" class="${S.view === "quote" ? "on" : ""}">견적서</button>
     </nav>
     <div class="grow"></div>
     <span class="save" id="save"></span>
@@ -770,7 +777,7 @@ const QUOTE_URL = "/v2/apps/quote.html?embed=roadmap";   /* 주소 맨 앞(/)부
 const Q = { ready: false, last: "", tried: false, timer: null };
 function qSync() {
   const p = S.pub ? null : curPlan(), dock = $("#qdock"), fr = $("#qframe");
-  dock.classList.toggle("hide", !p);
+  dock.classList.toggle("hide", !p || S.view !== "quote");
   if (!p) return;
   if (!Q.tried) {
     Q.tried = true; fr.src = QUOTE_URL;
@@ -788,7 +795,7 @@ window.addEventListener("message", e => {
   if (e.origin !== location.origin || !e.data || !e.data.aixQuote) return;
   const d = e.data;
   if (d.aixQuote === "ready") { Q.ready = true; Q.last = ""; clearTimeout(Q.timer); try { $("#qframe").contentWindow.postMessage({ aixRoadmap: "master" }, location.origin); } catch (err) {} qSync(); }
-  else if (d.aixQuote === "master") { S.qmaster = d.courses || []; }
+  else if (d.aixQuote === "master") { S.qmaster = d.courses || []; if (S.view !== "quote") render(); }
   else if (d.aixQuote === "result") {
     const box = $("#qmiss"), miss = d.missing || [];
     box.classList.toggle("hide", !miss.length);
@@ -803,7 +810,12 @@ function sumHTML(p) {
     const on = allSubjects(c).filter(s => ck[s.id]);
     return on.length ? `<div class="rowc"><b>${esc(c.name)}</b><div class="chips">${on.map(s => `<span class="chip">${esc(subjLabel(s))}</span>`).join("")}</div></div>` : "";
   }).join("");
-  return `<section class="panel sum"><div class="ph"><h2>${esc(p.name)} 님이 수강할 과목</h2></div>${rows ? `<div class="rows">${rows}</div>` : `<div class="empty">아직 체크한 과목이 없습니다. 위에서 ‘수강 과목 체크’를 누른 뒤 과목을 골라 주세요.</div>`}</section>`;
+  let qline = "";
+  if (!S.pub) {
+    const items = quoteItems(p);
+    qline = `<div class="grow"></div><span class="qsum">${S.qmaster ? `견적서에 담긴 과목 <b>${items.found.length}</b>개 · 수강료 <b>${items.total.toLocaleString("ko-KR")}</b>원${items.miss.length ? ` · <span class="qwarn">못 찾은 과목 ${items.miss.length}개</span>` : ""}` : "견적서 준비 중…"}</span><button class="btn sm" data-act="qview">견적서 보기</button>`;
+  }
+  return `<section class="panel sum"><div class="ph"><h2>${esc(p.name)} 님이 수강할 과목</h2>${qline}</div>${rows ? `<div class="rows">${rows}</div>` : `<div class="empty">아직 체크한 과목이 없습니다. 위에서 ‘수강 과목 체크’를 누른 뒤 과목을 골라 주세요.</div>`}</section>`;
 }
 function startYM(p) {
   const now = new Date(), m = Number(p?.startMonth) || (now.getMonth() + 1);
@@ -892,7 +904,7 @@ function shareLink(p) {
   flushAll();
   const url = location.origin + location.pathname + "?s=" + encodeURIComponent(p.id);
   const done = () => toast(`${p.name} 님 로드맵 링크를 복사했습니다. 문자·카톡에 붙여 넣으세요`);
-  const show = () => modal({ title: "학생 링크", body: `<label class="fld">아래 주소를 복사해서 보내 주세요<input type="text" value="${esc(url)}" readonly onclick="this.select()"></label><div class="help" style="font-size:12px;color:var(--sub);line-height:1.6">학생은 링크를 열고 <b>휴대폰 뒷번호 4자리</b>를 넣어야 볼 수 있습니다.<br>${esc(p.name)} 님의 로드맵·수업 일정·커리큘럼만 보이고, 고치거나 다른 학생을 볼 수는 없습니다. 상담 메모와 견적서는 보이지 않습니다.</div>`, actions: [{ label: "닫기", cls: "pri" }] });
+  const show = () => modal({ title: "학생 링크", body: `<label class="fld">아래 주소를 복사해서 보내 주세요<input type="text" value="${esc(url)}" readonly onclick="this.select()"></label><div class="help" style="font-size:12px;color:var(--sub);line-height:1.6">학생은 링크를 열고 <b>휴대폰 뒷번호 4자리</b>를 넣어야 볼 수 있습니다.<br>${esc(p.name)} 님의 로드맵·수업 일정·커리큘럼만 보이고, 고치거나 다른 학생을 볼 수는 없습니다. 상담 메모와 견적서는 보이지 않습니다.</div>`, actions: [{ label: "학생 화면 미리 보기", fn: () => { window.open(url + "&preview=1", "_blank"); return false; } }, { label: "닫기", cls: "pri" }] });
   try { navigator.clipboard.writeText(url).then(() => { done(); show(); }, show); } catch (e) { show(); }
 }
 
@@ -940,6 +952,18 @@ function quoteGroups(s) {
   const alts = [];
   bases.forEach(b => { if (s.level) alts.push(b + s.level); if (s.note) alts.push(b + s.note); alts.push(b); });
   return [{ label: s.name + (s.level || "") + (!s.level && s.note && s.note.length < 8 ? "(" + s.note + ")" : ""), alts }];
+}
+/* 체크한 과목이 견적서에서 어떤 과목·금액으로 들어가는지 (할인 전 합계) */
+function quoteItems(p) {
+  const out = { found: [], miss: [], total: 0 }; if (!S.qmaster || !p) return out;
+  const idx = {}; S.qmaster.forEach(x => { const k = nrm(x.subject); if (!idx[k]) idx[k] = x; });
+  const ck = checkedOf(p), seen = new Set();
+  S.main.courses.forEach(c => allSubjects(c).forEach(s => { if (!ck[s.id]) return; quoteGroups(s).forEach(g => {
+    let hit = null; for (const a of g.alts) { hit = idx[nrm(a)]; if (hit) break; }
+    if (!hit) { out.miss.push(g.label); return; }
+    if (seen.has(hit.subject)) return; seen.add(hit.subject); out.found.push(hit); out.total += Number(hit.fee) || 0;
+  }); }));
+  return out;
 }
 function quoteAuto(s) {
   if (!S.qmaster) return [];
@@ -1217,6 +1241,8 @@ document.addEventListener("click", async e => {
   if (S.pub && a === "subj") { const c2 = findCourse(t.dataset.c), s2 = c2 && locate(c2, t.dataset.s)?.s; if (s2) openSubject(c2, s2); return; }
   if (a === "shareLink") { shareLink(curPlan()); return; }
   if (a === "mode" && t.dataset.mode === "edit" && !isAdmin()) { toast("구성 편집은 팀장만 할 수 있어요"); return; }
+  if (a === "qview") { S.view = "quote"; render(); scrollTo(0, 0); return; }
+  if (a === "mode") S.view = "road";
   if (a === "mode") {
     S.mode = t.dataset.mode;
     if (S.mode === "check" && !curPlan()) toast("상담 대상을 고르거나 ‘+ 새 상담’을 눌러 주세요");
@@ -1225,7 +1251,7 @@ document.addEventListener("click", async e => {
   else if (a === "newPlan") planForm(null);
   else if (a === "editPlan") planForm(curPlan());
   else if (a === "print") { flushAll(); window.print(); }
-  else if (a === "logout") { flushAll(); setTimeout(() => firebase.auth().signOut(), 300); }
+  else if (a === "logout") { flushAll(); setTimeout(() => firebase.auth().signOut().finally(() => location.reload()), 300); }
   else if (a === "showLogin") showLogin();
   else if (a === "clearChecks") confirmBox("체크한 과목을 모두 풀까요?", "전체 해제", () => { const p = curPlan(); p.checked = {}; savePlan(p, true); render(); });
   else if (a === "subj" && c) {
@@ -1334,8 +1360,14 @@ function showLogin(msg) {
   });
   $("#l-local", d).onclick = () => { d.remove(); Store.cloud = false; S.user = null; loadAll(); };
 }
+function dropQuote() {
+  Q.tried = true; Q.ready = false; clearTimeout(Q.timer);
+  const fr = $("#qframe"); if (fr && fr.src && fr.src !== "about:blank") fr.src = "about:blank";
+  $("#qdock")?.classList.add("hide");
+}
 async function loadPublic(p4, msg) {
-  S.pub = true; S.mode = "view"; Store.cloud = true; Store.col = "roadmap"; Store.pfx = "";
+  dropQuote();
+  S.pub = true; S.mode = "view"; S.view = "road"; Store.cloud = true; Store.col = "roadmap"; Store.pfx = "";
   let main = S.main;
   if (!main) { try { main = await Store.get("main"); } catch (e) { console.error(e); } }
   if (main && !main.sched) main.sched = buildTemplate().sched;
@@ -1358,6 +1390,7 @@ async function loadPublic(p4, msg) {
 }
 /* 학생 본인 확인 화면 */
 function gate(msg) {
+  dropQuote();
   document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
   $("#top").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>${esc(S.main?.brand || "수강 로드맵")}</div>`;
   $("#app").className = "wrap";
@@ -1382,6 +1415,7 @@ function gate(msg) {
   try { if (window.firebase && firebase.initializeApp) { firebase.initializeApp(FIREBASE_CONFIG); Store.db = firebase.firestore(); ok = true; } } catch (e) { console.error(e); }
   S.canLogin = ok;
   if (!ok) { if (LINK_ID) { $("#app").innerHTML = `<div class="empty" style="padding:40px;text-align:center">인터넷 연결을 확인한 뒤 다시 열어 주세요.</div>`; return; } loadAll(); return; }
+  if (LINK_ID && PREVIEW) { loadPublic(); return; }   /* 직원이 학생 화면을 미리 보기 */
   firebase.auth().onAuthStateChanged(async u => {
     S.user = u;
     if (!u) {
