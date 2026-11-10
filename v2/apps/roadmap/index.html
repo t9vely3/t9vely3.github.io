@@ -25,15 +25,19 @@ button{cursor:pointer}
 
 /* 맨 위 줄 */
 .top{position:sticky;top:0;z-index:30;background:rgba(244,245,247,.86);backdrop-filter:saturate(1.3) blur(12px);border-bottom:1px solid var(--line)}
-.top-in{max-width:1760px;margin:0 auto;padding:0 28px;height:52px;display:flex;align-items:center;gap:28px}
+.top-in{max-width:1760px;margin:0 auto;padding:0 28px;height:58px;display:flex;align-items:center;gap:28px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;letter-spacing:-.02em;white-space:nowrap}
 .logo{width:22px;height:22px;display:grid;place-items:center}
 .logo svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .logo svg circle{fill:var(--gold);stroke:none}
-.seg{display:flex;align-self:stretch;gap:22px}
-.seg button{border:0;background:none;padding:0 1px;font-size:13.5px;font-weight:500;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.seg{position:relative;display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:#ecedf0;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+.seg button{position:relative;z-index:1;border:0;background:none;padding:7px 16px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--sub);white-space:nowrap;transition:color .25s}
 .seg button:hover{color:var(--ink)}
-.seg button.on{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.seg button.on{color:#fff}
+.seg-pill{position:absolute;z-index:0;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--ac);box-shadow:0 2px 8px color-mix(in srgb,var(--ac) 40%,transparent);transition:left .32s cubic-bezier(.3,.8,.3,1),width .32s cubic-bezier(.3,.8,.3,1);opacity:0}
+.seg-pill.ready{opacity:1}
+@media (prefers-reduced-motion:reduce){.seg-pill{transition:none}}
+@media (max-width:640px){.seg{max-width:100%;overflow-x:auto}.seg button{padding:7px 12px;font-size:13px}}
 .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-weight:600;font-size:13px;white-space:nowrap;transition:background .15s,border-color .15s}
 .btn:hover{border-color:#c9cdd4}
 .btn:disabled{opacity:.35;cursor:default}
@@ -248,6 +252,28 @@ button{cursor:pointer}
 .tt td .ri em.full{color:var(--danger);font-weight:700}
 .opsn{font-size:12px}
 .opsn a{color:var(--ac);font-weight:600;margin-left:4px}
+.acg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 26px}
+table.at{border-collapse:collapse;width:100%;font-size:12.5px;table-layout:fixed}
+.at th,.at td{border:1px solid #cdd5e0;height:25px;text-align:center;padding:0 4px}
+.at th{background:#dce8f6;font-weight:700;color:#1f2a44}
+.at th.am{width:22%;font-size:13px}
+.at td.wd{width:12%;font-weight:700}
+.at td.amemo{text-align:left;color:var(--sub);font-size:12px;position:relative;padding:0 8px}
+.at input{width:100%;border:0;background:transparent;text-align:center;font:inherit;color:inherit;font-weight:inherit}
+.at input[type=date]{font-size:12px}
+.at td.amemo input{text-align:left}
+.at .x{position:absolute;right:4px;top:3px;border:0;background:none;color:var(--faint);font-size:14px}
+.at .x:hover{color:var(--danger)}
+@media (max-width:760px){.acg{grid-template-columns:1fr}}
+@media print{.acg{gap:6px 14px}.at{font-size:10px}.at th,.at td{height:18px}}
+.tgl{position:relative;display:inline-flex;align-items:center;gap:9px;height:34px;padding:0 14px 0 4px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--sub);font-weight:700;font-size:13.5px;cursor:pointer;transition:background .25s,color .25s,border-color .25s}
+.tgl .knob{position:relative;width:44px;height:26px;border-radius:999px;background:#e3e5ea;transition:background .25s}
+.tgl .knob::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .28s cubic-bezier(.3,.8,.3,1)}
+.tgl.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tgl.on .knob{background:var(--ac)}
+.tgl.on .knob::after{transform:translateX(18px)}
+.tgl:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.btn.tb.on{background:var(--ink);border-color:var(--ink);color:#fff}
 /* 견적서 · 시간표 강의장 */
 .qwrap{padding-top:0;padding-bottom:60px;margin-top:-60px}
 #qframe{display:block;width:100%;height:calc(100vh - 90px);min-height:720px;border:0;border-top:1px solid var(--hair);border-radius:0 0 14px 14px;background:#fff}
@@ -354,7 +380,6 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 }
 @media (max-width:900px){
   .top-in{height:auto;flex-wrap:wrap;padding:8px 16px;row-gap:4px}
-  .seg{height:38px}
   .mrow.mhead{display:none!important}
   .mrow{display:block!important;padding:14px 18px}
   .mcourse{padding:0 0 4px}
@@ -513,7 +538,7 @@ function buildTemplate() {
         : mkSubj(raw, id + "-" + (i + 1)))
     })),
     sched: {
-      acadTitle: "2026년 수강생 학사일정 (평일반)",
+      acadTitle: "2026년 수강생 학사일정 (평일반)", acadTitleWE: "2026년 수강생 학사일정 (주말반)", blocksWE: [],
       blocks: ACAD_SEED.map(([label, start, end], i) => ({ id: "b" + (i + 1), label, start, end, memo: "" })),
       months: 12,
       note: "※ 개강·종강일이 바뀌면 해당 개강일 전에 안내드립니다.",
@@ -684,18 +709,26 @@ function renderTop() {
   }
   $("#top").innerHTML = `
     <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>수강 설계</div>
-    <nav class="seg" role="tablist">
-      <button data-act="mode" data-mode="view" class="${S.view !== "quote" && S.mode === "view" ? "on" : ""}">커리큘럼 보기</button>
-      <button data-act="mode" data-mode="check" class="${S.view !== "quote" && S.mode === "check" ? "on" : ""}">수강 과목 체크</button>
-      ${isAdmin() ? `<button data-act="mode" data-mode="edit" class="${S.view !== "quote" && S.mode === "edit" ? "on" : ""}">구성 편집</button>` : ""}
-      <button data-act="qview" class="${S.view === "quote" ? "on" : ""}">견적서</button>
-    </nav>
+    ${(() => { const on = S.view !== "quote" && S.mode === "check"; return `<button class="tgl${on ? " on" : ""}" data-act="toggleCheck" role="switch" aria-checked="${on}" title="${on ? "켜짐: 과목을 눌러 수강 과목을 체크합니다" : "꺼짐: 과목을 누르면 커리큘럼을 봅니다"}"><span class="knob"></span><span class="tl">${on ? "편집" : "커리큘럼"}</span></button>`; })()}
     <div class="grow"></div>
+    ${curPlan() ? `<button class="btn tb${S.view === "quote" ? " on" : ""}" data-act="${S.view === "quote" ? "backRoad" : "qview"}">${S.view === "quote" ? "로드맵으로" : "견적서"}</button>` : ""}
+    ${isAdmin() ? `<button class="btn tb${S.view !== "quote" && S.mode === "edit" ? " on" : ""}" data-act="${S.view !== "quote" && S.mode === "edit" ? "endEdit" : "startEdit"}">${S.view !== "quote" && S.mode === "edit" ? "구성 편집 끝내기" : "구성 편집"}</button>` : ""}
     <span class="save" id="save"></span>
     <button class="btn" data-act="print">인쇄</button>
     <div class="acct">${Store.cloud ? `${esc(S.user?.email || "")} <button class="btn sm ghost" data-act="logout">로그아웃</button>` : (S.canLogin ? `<button class="btn sm" data-act="showLogin">로그인</button>` : "")}</div>`;
   setSave(saveState);
 }
+let pillAt = null;
+function movePill() {
+  const nav = $(".seg"), pill = $(".seg-pill"), on = nav && $(".seg button.on", nav);
+  if (!pill) return;
+  if (!on) { pill.classList.remove("ready"); return; }
+  const to = { left: on.offsetLeft, width: on.offsetWidth };
+  if (pillAt) { pill.style.transition = "none"; pill.style.left = pillAt.left + "px"; pill.style.width = pillAt.width + "px"; pill.classList.add("ready"); void pill.offsetWidth; pill.style.transition = ""; }
+  requestAnimationFrame(() => { pill.style.left = to.left + "px"; pill.style.width = to.width + "px"; pill.classList.add("ready"); });
+  pillAt = to;
+}
+
 function heroHTML(p) {
   const m = S.main, n = p ? Object.values(checkedOf(p)).filter(Boolean).length : 0;
   const opts = visiblePlans().map(x => `<option value="${esc(x.id)}"${x.id === S.cur ? " selected" : ""}>${esc(x.name || "(이름 없음)")}${x.tag ? " · " + esc(x.tag) : ""}${S.showAll && x.ownerName && !isMine(x) ? " — " + esc(x.ownerName) : ""}</option>`).join("");
@@ -966,30 +999,41 @@ function acadRows(p, n) {
   return `<tr class="acr"><th class="g ag" rowspan="2">학사<br>일정</th><th class="t">개강</th>${bs.map(b => cell(b, "start")).join("")}</tr>
     <tr class="acr acr2"><th class="t">종강</th>${bs.map(b => cell(b, "end")).join("")}</tr>`;
 }
+const BL = kind => kind === "we" ? (S.main.sched.blocksWE || (S.main.sched.blocksWE = [])) : (S.main.sched.blocks || (S.main.sched.blocks = []));
+const findBlk = id => (S.main.sched.blocks || []).find(b => b.id === id) || (S.main.sched.blocksWE || []).find(b => b.id === id);
+/* 학생 시간표에 평일·주말 칸 중 어디에 과목이 있는지로 보여 줄 학사일정을 정함 (아무것도 없으면 평일반) */
+function acadKinds(p) {
+  if (!p) return ["wd", "we"];
+  const g = S.main.sched.groups, wdRows = new Set((g[0]?.rows || []).map(r => r.id)), weRows = new Set((g[1]?.rows || []).map(r => r.id));
+  const keys = Object.keys(p.cells || {}).filter(k => String(p.cells[k] || "").trim()).map(k => k.split("|")[0]);
+  const k = []; if (keys.some(x => wdRows.has(x))) k.push("wd"); if (keys.some(x => weRows.has(x))) k.push("we");
+  return k.length ? k : ["wd"];
+}
 function acadHTML(p, n) {
   const sc = S.main.sched, ed = S.mode === "edit" && !S.pub && isAdmin();
-  let list = (sc.blocks || []).slice().sort((a, b) => (a.start || "9").localeCompare(b.start || "9"));
-  if (p && !ed) { const yms = new Set(Array.from({ length: n }, (_, i) => { const { y, m } = colYM(p, i); return y + "-" + String(m).padStart(2, "0"); })); list = list.filter(b => yms.has((b.start || "").slice(0, 7))); }
-  if (!ed) {
-    const memos = list.filter(b => b.memo).map(b => `${esc(b.label || "")} ${esc(b.memo)}`);
-    return list.length ? `<div class="acad-v">${esc(sc.acadTitle || "수강생 학사일정")} · 위 표의 ‘개강·종강’ 줄에 달마다 표시됩니다.${memos.length ? " (" + memos.join(", ") + ")" : ""}</div>` : "";
-  }
-  const cards = list.map(b => ed ? `<div class="ac ed">
-      <div class="ach"><input data-blk="${esc(b.id)}" data-bf="label" value="${esc(b.label || "")}" aria-label="이름" placeholder="11월"><button class="x" data-act="delBlk" data-id="${esc(b.id)}" aria-label="삭제">×</button></div>
-      <label>개강<input type="date" data-blk="${esc(b.id)}" data-bf="start" value="${esc(b.start || "")}"></label>
-      <label>종강<input type="date" data-blk="${esc(b.id)}" data-bf="end" value="${esc(b.end || "")}"></label>
-      <input class="acm" data-blk="${esc(b.id)}" data-bf="memo" value="${esc(b.memo || "")}" placeholder="메모 (선택)">
-    </div>` : `<div class="ac">
-      <div class="ach"><b>${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</b>${b.memo ? `<span>${esc(b.memo)}</span>` : ""}</div>
-      <div class="acd"><span>개강</span><b>${dShort(b.start)}</b></div>
-      <div class="acd"><span>종강</span><b>${dShort(b.end)}</b></div>
-    </div>`).join("");
-  return `<div class="acad">
-      <div class="acad-t">${ed ? `<input data-f="acadTitle" value="${esc(sc.acadTitle || "")}" aria-label="학사일정 제목">` : `<h3>${esc(sc.acadTitle || "수강생 학사일정")}</h3>`}</div>
-      ${ed ? `<p class="acad-n noprint">여기 넣은 월별 개강·종강일이 학생마다 시간표의 달에 맞춰 자동으로 보입니다.</p>` : ""}
-      <div class="acs">${cards}</div>
-      ${ed ? `<div class="noprint" style="display:flex;gap:6px;margin-top:10px"><button class="btn sm" data-act="addBlk">+ 학사일정 추가</button>${S.tt && (S.tt.terms || []).length ? `<button class="btn sm" data-act="ttBlk" title="수강생 관리파일의 강의장 시간표에 적힌 기수별 개강·종강일을 가져옵니다">관리파일 개강일 가져오기</button>` : ""}</div>` : ""}
+  const kinds = ed ? ["wd", "we"] : acadKinds(p);
+  const yms = p && !ed ? new Set(Array.from({ length: n }, (_, i) => { const { y, m } = colYM(p, i); return y + "-" + String(m).padStart(2, "0"); })) : null;
+  const sec = kind => {
+    let list = BL(kind).slice().sort((a, b) => (a.start || "9").localeCompare(b.start || "9"));
+    if (yms) list = list.filter(b => yms.has((b.start || "").slice(0, 7)));
+    if (!list.length && !ed) return "";
+    const tk = kind === "we" ? "acadTitleWE" : "acadTitle", title = sc[tk] || (kind === "we" ? "수강생 학사일정 (주말반)" : "수강생 학사일정 (평일반)");
+    const wd = d => { const x = ymd(d); return x ? WD[x.getDay()] : ""; };
+    const tbl = b => ed ? `<table class="at"><tr><th class="am" rowspan="3"><input data-blk="${esc(b.id)}" data-bf="label" value="${esc(b.label || "")}" placeholder="11월" aria-label="달"></th><th colspan="4"><input data-blk="${esc(b.id)}" data-bf="head" value="${esc(b.head || "강의")}" aria-label="구분"></th></tr>
+        <tr><th colspan="2">개강일</th><th colspan="2">종강일</th></tr>
+        <tr><td><input type="date" data-blk="${esc(b.id)}" data-bf="start" value="${esc(b.start || "")}"></td><td class="wd">${wd(b.start)}</td><td><input type="date" data-blk="${esc(b.id)}" data-bf="end" value="${esc(b.end || "")}"></td><td class="wd">${wd(b.end)}</td></tr>
+        <tr><td colspan="5" class="amemo"><input data-blk="${esc(b.id)}" data-bf="memo" value="${esc(b.memo || "")}" placeholder="메모 (비워 두면 출력 시 빈칸)"><button class="x noprint" data-act="delBlk" data-id="${esc(b.id)}" aria-label="삭제">×</button></td></tr></table>`
+      : `<table class="at"><tr><th class="am" rowspan="3">${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</th><th colspan="4">${esc(b.head || "강의")}</th></tr>
+        <tr><th colspan="2">개강일</th><th colspan="2">종강일</th></tr>
+        <tr><td>${esc(b.start || "-")}</td><td class="wd">${wd(b.start)}</td><td>${esc(b.end || "-")}</td><td class="wd">${wd(b.end)}</td></tr>
+        <tr><td colspan="5" class="amemo">${esc(b.memo || "")}</td></tr></table>`;
+    return `<div class="acad">
+      <div class="acad-t">${ed ? `<input data-f="${tk}" value="${esc(title)}" aria-label="학사일정 제목">` : `<h3>${esc(title)}</h3>`}</div>
+      <div class="acg">${list.map(tbl).join("")}</div>
+      ${ed ? `<div class="noprint" style="display:flex;gap:6px;margin-top:10px"><button class="btn sm" data-act="addBlk" data-kind="${kind}">+ ${kind === "we" ? "주말반" : "평일반"} 학사일정 추가</button>${kind === "wd" && S.tt && (S.tt.terms || []).length ? `<button class="btn sm" data-act="ttBlk" title="수강생 관리파일의 강의장 시간표에 적힌 기수별 개강·종강일을 가져옵니다">관리파일 개강일 가져오기</button>` : ""}</div>` : ""}
     </div>`;
+  };
+  return (ed ? `<p class="acad-n noprint">학사일정은 평일반·주말반을 따로 적습니다. 학생 화면에는 그 학생 시간표의 달에 맞는 것만, 평일 칸에 수업이 있으면 평일반, 주말 칸에 있으면 주말반이 보입니다.</p>` : "") + kinds.map(sec).join("");
 }
 function schedHTML(p) {
   const sc = S.main.sched, ed = S.mode === "edit", labels = monthLabels(p), cells = (p && p.cells) || {};
@@ -1010,7 +1054,7 @@ function schedHTML(p) {
         ${ed ? `<span class="noprint" style="font-size:13px;color:var(--sub)">개월 수 <button class="btn sm" data-act="months" data-d="-1">−</button> <b>${labels.length}</b> <button class="btn sm" data-act="months" data-d="1">+</button></span>` : ""}
       </div>
       <div class="sbody"><div class="tscroll"><table class="tt">
-        <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr>${acadRows(p, labels.length)}</thead>
+        <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr></thead>
         <tbody>${body}</tbody>
       </table></div>
       <datalist id="subs">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
@@ -1412,6 +1456,10 @@ document.addEventListener("click", async e => {
   if (a === "shareLink") { shareLink(curPlan()); return; }
   if (a === "mode" && t.dataset.mode === "edit" && !isAdmin()) { toast("구성 편집은 팀장만 할 수 있어요"); return; }
   if (a === "qview") { S.view = "quote"; render(); scrollTo(0, 0); return; }
+  if (a === "backRoad") { S.view = "road"; render(); return; }
+  if (a === "toggleCheck") { S.view = "road"; S.mode = S.mode === "check" ? "view" : "check"; if (S.mode === "check" && !curPlan()) toast("상담 대상을 고르거나 ‘새 상담’을 눌러 주세요"); render(); return; }
+  if (a === "startEdit") { if (!isAdmin()) { toast("구성 편집은 팀장만 할 수 있어요"); return; } S.view = "road"; S.mode = "edit"; render(); return; }
+  if (a === "endEdit") { S.mode = "view"; render(); return; }
   if (a === "mode") S.view = "road";
   if (a === "mode") {
     S.mode = t.dataset.mode;
@@ -1440,8 +1488,8 @@ document.addEventListener("click", async e => {
     else { const b = sp.branches.find(x => x.id === t.dataset.b); if (b) branchForm(c, sp, b); }
   }
   else if (a === "addCourse") courseForm(null);
-  else if (a === "addBlk") { const L = S.main.sched.blocks || (S.main.sched.blocks = []); const last = L.slice().sort((x, y) => (x.start || "").localeCompare(y.start || "")).pop(); let start = ""; if (last && ymd(last.end)) { const d = ymd(last.end); d.setDate(d.getDate() + 1); start = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); } L.push({ id: uid("b"), label: start ? (ymd(start).getMonth() + 1) + "월" : "", start, end: "", memo: "" }); saveMain(true); render(); }
-  else if (a === "delBlk") { S.main.sched.blocks = (S.main.sched.blocks || []).filter(x => x.id !== t.dataset.id); saveMain(true); render(); }
+  else if (a === "addBlk") { const L = BL(t.dataset.kind); const last = L.slice().sort((x, y) => (x.start || "").localeCompare(y.start || "")).pop(); let start = ""; if (last && ymd(last.end)) { const d = ymd(last.end); d.setDate(d.getDate() + 1); start = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); } L.push({ id: uid("b"), label: start ? (ymd(start).getMonth() + 1) + "월" : "", start, end: "", memo: "" }); saveMain(true); render(); }
+  else if (a === "delBlk") { S.main.sched.blocks = (S.main.sched.blocks || []).filter(x => x.id !== t.dataset.id); S.main.sched.blocksWE = (S.main.sched.blocksWE || []).filter(x => x.id !== t.dataset.id); saveMain(true); render(); }
   else if (a === "ttBlk") confirmBox("관리파일 강의장 시간표의 기수별 개강·종강일로 같은 달의 학사일정을 채울까요? (없던 달은 새로 추가됩니다)", "가져오기", () => {
     const L = S.main.sched.blocks || (S.main.sched.blocks = []);
     (S.tt.terms || []).forEach(tm => { if (!tm.o) return; const ym = tm.o.slice(0, 7), ex = L.find(b => (b.start || "").slice(0, 7) === ym);
@@ -1496,8 +1544,8 @@ document.addEventListener("input", e => {
   else if (t.dataset.f === "tag0" || t.dataset.f === "tag1") { S.main.tags = S.main.tags || ["", ""]; S.main.tags[Number(t.dataset.f.slice(3))] = t.value; saveMain(); }
   else if (t.dataset.stage && t.tagName === "INPUT") { if (!S.main.stages) S.main.stages = clone(DEFAULT_STAGES); const x = S.main.stages.find(y => y.id === t.dataset.stage); if (x) { x.label = t.value; saveMain(); } }
   else if (t.dataset.f === "brand") { S.main.brand = t.value; saveMain(); }
-  else if (t.dataset.blk) { const b = (S.main.sched.blocks || []).find(x => x.id === t.dataset.blk); if (b) { b[t.dataset.bf] = t.value; saveMain(); } }
-  else if (t.dataset.f === "acadTitle") { S.main.sched.acadTitle = t.value; saveMain(); }
+  else if (t.dataset.blk) { const b = findBlk(t.dataset.blk); if (b) { b[t.dataset.bf] = t.value; saveMain(); if (t.type === "date") { const td = t.closest("td")?.nextElementSibling; const x = ymd(t.value); if (td) td.textContent = x ? WD[x.getDay()] : ""; } } }
+  else if (t.dataset.f === "acadTitle" || t.dataset.f === "acadTitleWE") { S.main.sched[t.dataset.f] = t.value; saveMain(); }
   else if (t.dataset.f === "schedNote") { S.main.sched.note = t.value; saveMain(); }
 });
 
