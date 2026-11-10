@@ -765,8 +765,8 @@ document.addEventListener("drop", e => {
   drag = null; saveMain(true); render();
 });
 document.addEventListener("dragend", () => { drag = null; clearDropMarks(); document.querySelectorAll(".dragging").forEach(e => e.classList.remove("dragging")); });
-/* 인트라넷 견적서 주소 — 이 페이지는 t9vely3.github.io/roadmap/ 에, 견적서는 /v2/apps/quote.html 에 있음 */
-const QUOTE_URL = "../v2/apps/quote.html?embed=roadmap";
+/* 인트라넷 견적서 주소 (t9vely3.github.io/v2/apps/quote.html) */
+const QUOTE_URL = "/v2/apps/quote.html?embed=roadmap";   /* 주소 맨 앞(/)부터 적어서 이 파일을 어느 폴더에 두어도 견적서를 찾음 */
 const Q = { ready: false, last: "", tried: false, timer: null };
 function qSync() {
   const p = S.pub ? null : curPlan(), dock = $("#qdock"), fr = $("#qframe");
@@ -775,7 +775,7 @@ function qSync() {
   if (!Q.tried) {
     Q.tried = true; fr.src = QUOTE_URL;
     Q.timer = setTimeout(() => { if (Q.ready) return; fr.classList.add("hide"); const o = $("#qoff"); o.classList.remove("hide");
-      o.innerHTML = "견적서를 불러오지 못했습니다.<br>이 화면은 인트라넷과 같은 주소의 <b>roadmap</b> 폴더(t9vely3.github.io/roadmap/)에 올려야 인트라넷 견적서가 함께 열립니다."; }, 12000);
+      o.innerHTML = "견적서를 불러오지 못했습니다.<br>이 화면은 인트라넷과 같은 주소(t9vely3.github.io) 안에 올려야 인트라넷 견적서가 함께 열립니다."; }, 12000);
   }
   if (!Q.ready) return;
   const ck = checkedOf(p), groups = [], seen = new Set();
