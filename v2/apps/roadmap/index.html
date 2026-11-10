@@ -208,6 +208,15 @@ button{cursor:pointer}
 .qsum{font-size:12.5px;color:var(--sub)}
 .qsum b{color:var(--ink)}
 .qwarn{color:#b07a12;font-weight:600}
+.chbtn{position:relative;border:0;background:none;padding:0;border-radius:50%;cursor:pointer}
+.chbtn:hover .cic{border-color:var(--ac);color:var(--ac)}
+.cimg{position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--gold);border:2px solid #fff}
+.crs,.rowc{--ac-bg:color-mix(in srgb,var(--ac) 9%,#fff);--ac-soft:color-mix(in srgb,var(--ac) 28%,#fff)}
+.cols{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.cols label{width:28px;height:28px;border-radius:50%;cursor:pointer;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.cols input{display:none}
+.cols label:has(input:checked){box-shadow:0 0 0 2px var(--ink)}
+.cols .auto{width:auto;border-radius:999px;padding:0 10px;font-size:12px;color:var(--sub);background:#fff}
 /* 견적서 · 시간표 강의장 */
 .qwrap{padding-top:0;padding-bottom:60px;margin-top:-60px}
 #qframe{display:block;width:100%;height:calc(100vh - 90px);min-height:720px;border:0;border-top:1px solid var(--hair);border-radius:0 0 14px 14px;background:#fff}
@@ -231,11 +240,12 @@ button{cursor:pointer}
 
 /* 선택 요약 */
 .sum .rows{display:flex;flex-wrap:wrap;gap:10px 28px;padding:14px 24px 18px}
-.sum .rowc{display:flex;gap:10px;align-items:baseline}
-.sum .rowc b{font-size:13px;font-weight:700;white-space:nowrap;letter-spacing:-.03em}
-.chips{display:flex;flex-wrap:wrap;gap:4px 10px}
-.chip{font-size:13px;color:var(--ink);font-weight:500;letter-spacing:-.03em}
-.chip+.chip::before{content:"·";margin-right:10px;color:var(--faint)}
+.sum .rows{gap:12px 26px}
+.sum .rowc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sum .rowc b{font-size:12.5px;font-weight:700;white-space:nowrap;letter-spacing:-.03em;color:#fff;background:var(--ac);border-radius:999px;padding:4px 11px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;color:var(--ac);font-weight:600;letter-spacing:-.03em;background:var(--ac-bg);border:1px solid var(--ac-soft);border-radius:999px;padding:3px 11px}
+
 .empty{color:var(--sub);font-size:13px;padding:16px 24px}
 
 /* 시간표 */
@@ -382,7 +392,7 @@ const FIREBASE_CONFIG = {
    기본 로드맵 (보내주신 새 로드맵 화면 기준) — 처음 한 번만 쓰이고, 이후는 화면에서 고친 내용이 저장됩니다.
    과목 표기: 이름#단계#작은설명   /  { split: [[갈래 이름, [과목…]], …] } 는 갈래로 나뉘었다 다시 모이는 구간
    ============================================================ */
-const PS = "포토샵##포토샵, AI포토웍스", IL = "일러스트##일러스트, AI디일러", AP = "AI프롬프트#1~2", PF = "수강생포폴";
+const PS = "포토샵##포토샵, AI포토웍스", IL = "일러스트##일러스트, AI디일러", AP = "AI프롬프트#1~2", PF = "포트폴리오";
 const TEMPLATE = [
   ["visual", "시각편집디자인", "", "pen", 0, ["컨셉드로잉##발상과표현", PS, IL, "인디자인", "디지털 드로잉#1~6", "UI/UX", "피그마#1~2", "어드밴스", "브랜딩디자인", AP, "디자인포폴#1~6", "포폴디렉터", PF]],
   ["web", "웹 / 마케팅", "", "web", 0, ["컨셉드로잉##발상과표현", PS, IL, "UI/UX", "피그마#1~2", "어드밴스", "브랜딩디자인", "웹#1~3#퍼블리싱", AP, "바이브##자연어", "바이브##디자인", "AI에이전트##서포터", "AI에이전트##프로젝트", "콘텐츠##바이럴", "콘텐츠##팝업", "디자인포폴#1~6", "코딩포폴#1~6", "포폴디렉터", PF]],
@@ -446,7 +456,7 @@ function wirePicker(box, allowNone) {
 
 function mkSubj(raw, id) {
   const [nm, level = "", note = ""] = raw.split("#");
-  return { id, name: nm, level, note, br: false };
+  return Object.assign({ id, name: nm, level, note, br: false }, nm === "포트폴리오" ? { qskip: true } : {});
 }
 function buildTemplate() {
   const now = new Date();
@@ -489,6 +499,11 @@ const subjLabel = s => (s.name + (s.level ? " " + s.level : "")).trim();
 const subjKey = s => (s.name + (s.level || "")).toLowerCase().replace(/\s+/g, "").replace(/[^0-9a-z가-힣]/g, "_") || "_";
 const THEMES = { rose: ["로즈", [225, 64, 88]], coral: ["코랄", [232, 110, 80]], blue: ["블루", [52, 110, 220]], green: ["그린", [40, 140, 110]], navy: ["네이비", [40, 60, 120]], graphite: ["그래파이트", [60, 62, 70]] };
 const themeRGB = () => (THEMES[S.main?.theme] || THEMES.rose)[1];
+/* 학과별 색: 과정 수정 창에서 고름. 정하지 않은 과정은 순서대로 아래 색을 씀 */
+const COURSE_COLORS = ["#e2475f", "#ee7d3b", "#d6a019", "#3ea06a", "#1c9d9a", "#2f8bd8", "#4c63d6", "#7a55cf", "#c0479a", "#66707f"];
+const hexRGB = h => { const m = String(h || "").replace("#", ""); return m.length === 6 ? [0, 2, 4].map(i => parseInt(m.slice(i, i + 2), 16)) : null; };
+function courseRGB(c) { return hexRGB(c && c.color) || hexRGB(COURSE_COLORS[Math.max(0, S.main.courses.indexOf(c)) % COURSE_COLORS.length]) || themeRGB(); }
+function courseLine(c, k) { const b = courseRGB(c), a = b.map(v => Math.round(v + (255 - v) * 0.72)); return "rgb(" + a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(",") + ")"; }
 function lineColor(i, n, k0) {
   const t = n <= 1 ? 1 : i / (n - 1), a = [244, 214, 220], b = themeRGB(), k = k0 !== undefined ? k0 : 0.12 + 0.78 * t;
   return "rgb(" + a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(",") + ")";
@@ -676,7 +691,7 @@ function boardHTML(p) {
     const half = !!c.half && !(S.onlySel && p);
     const max = perRow(half), lw = Math.floor(trackW(half) / max);
     const L = Math.max(1, c.subjects.reduce((w, x) => w + (isSplit(x) ? Math.max(1, ...x.branches.map(b => b.subjects.length)) : 1), 0) - 1);
-    const col = f => lineColor(0, 1, 0.08 + 0.82 * Math.max(0, Math.min(1, f)));
+    const col = f => courseLine(c, 0.1 + 0.9 * Math.max(0, Math.min(1, f)));
     let pos = 0;
     const segs = []; let run = [];
     c.subjects.forEach(x => { if (isSplit(x)) { if (run.length) segs.push({ t: "lin", items: run }); run = []; segs.push({ t: "split", x }); } else run.push(x); });
@@ -730,8 +745,8 @@ function boardHTML(p) {
         <button class="btn sm" data-act="moveCourse" data-c="${esc(c.id)}" data-d="1" ${cs.indexOf(c) === cs.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button>
       </div>` : "";
     const isLast = vi === vis.length - 1 || (half && vi === vis.length - 2 && vis[vi + 1].half);
-    return `<div class="crs${half ? " half" : ""}${cnt ? " has" : ""}${isLast ? " last" : ""}">
-        <div class="chd"><div class="cic">${svg(c.icon)}</div><div><div class="cnm">${esc(c.name)}</div>${c.sub ? `<div class="csb">(${esc(c.sub)})</div>` : ""}</div>${cnt ? `<span class="cct">${cnt}과목</span>` : ""}${tools}</div>
+    return `<div class="crs${half ? " half" : ""}${cnt ? " has" : ""}${isLast ? " last" : ""}" style="--ac:rgb(${courseRGB(c).join(",")})">
+        <div class="chd"><button class="chbtn" data-act="course" data-c="${esc(c.id)}" title="${esc(c.name)} 과정 커리큘럼 보기"><div class="cic">${svg(c.icon)}</div>${(S.imgidx["c_" + c.id] || []).length ? `<i class="cimg" title="과정 커리큘럼 이미지 ${(S.imgidx["c_" + c.id] || []).length}장"></i>` : ""}</button><div><div class="cnm">${esc(c.name)}</div>${c.sub ? `<div class="csb">(${esc(c.sub)})</div>` : ""}</div>${cnt ? `<span class="cct">${cnt}과목</span>` : ""}${tools}</div>
         <div class="trk">${html}</div>
       </div>`;
   }).join("");
@@ -808,7 +823,7 @@ function sumHTML(p) {
   const ck = checkedOf(p);
   const rows = S.main.courses.map(c => {
     const on = allSubjects(c).filter(s => ck[s.id]);
-    return on.length ? `<div class="rowc"><b>${esc(c.name)}</b><div class="chips">${on.map(s => `<span class="chip">${esc(subjLabel(s))}</span>`).join("")}</div></div>` : "";
+    return on.length ? `<div class="rowc" style="--ac:rgb(${courseRGB(c).join(",")})"><b>${esc(c.name)}</b><div class="chips">${on.map(s => `<span class="chip">${esc(subjLabel(s))}</span>`).join("")}</div></div>` : "";
   }).join("");
   let qline = "";
   if (!S.pub) {
@@ -1006,6 +1021,7 @@ function courseForm(c) {
     body: `<label class="fld">과정 이름<input type="text" id="f-n" value="${esc(c?.name || "")}" placeholder="예: 게임그래픽"></label>
       <label class="fld">작은 이름 (선택)<input type="text" id="f-s" value="${esc(c?.sub || "")}" placeholder="예: 크리에이터"></label>
       <label class="chk"><input type="checkbox" id="f-h"${c?.half ? " checked" : ""}> 반쪽 너비 (과목이 적은 과정 둘을 나란히)</label>
+      <div class="fld">줄 색<div class="cols"><label class="auto"><input type="radio" name="col" value=""${!c?.color ? " checked" : ""}>자동</label>${COURSE_COLORS.map(h => `<label style="background:${h}" title="${h}"><input type="radio" name="col" value="${h}"${c?.color === h ? " checked" : ""}></label>`).join("")}<label class="auto">직접 <input type="color" id="f-col" value="${esc(c?.color || "#e2475f")}" style="display:inline-block;width:26px;height:20px;border:0;padding:0;background:none;vertical-align:middle"></label></div></div>
       <div class="fld">아이콘<div class="ipick">${iconPicker(icon, false)}</div></div>`,
     actions: [
       ...(isNew ? [] : [{ label: "과정 삭제", cls: "danger", fn: () => { setTimeout(() => confirmBox(`‘${c.name}’ 과정과 그 안의 과목 ${allSubjects(c).length}개를 지울까요?`, "삭제", () => { S.main.courses = S.main.courses.filter(x => x !== c); saveMain(true); render(); }), 0); } }]),
@@ -1014,13 +1030,18 @@ function courseForm(c) {
         const name = $("#f-n", box).value.trim(); if (!name) { toast("과정 이름을 입력해 주세요"); return false; }
         const sub = $("#f-s", box).value.trim(), ic = $("input[name=ico]:checked", box)?.value || "book";
         const half = $("#f-h", box).checked;
-        if (isNew) S.main.courses.push({ id: uid("c"), name, sub, icon: ic, half, subjects: [] });
-        else Object.assign(c, { name, sub, icon: ic, half });
+        let color = $("input[name=col]:checked", box)?.value || "";
+        if (box.dataset.custom) color = $("#f-col", box).value;
+        if (isNew) S.main.courses.push({ id: uid("c"), name, sub, icon: ic, half, color, subjects: [] });
+        else Object.assign(c, { name, sub, icon: ic, half, color });
         saveMain(true); render();
       } }
     ]
   });
-  wirePicker($("#layer").lastElementChild, false);
+  const cbox = $("#layer").lastElementChild;
+  wirePicker(cbox, false);
+  $("#f-col", cbox).addEventListener("input", () => { cbox.dataset.custom = "1"; cbox.querySelectorAll("input[name=col]").forEach(r => { r.checked = false; }); });
+  cbox.querySelectorAll("input[name=col]").forEach(r => r.addEventListener("change", () => { delete cbox.dataset.custom; }));
 }
 function subjForm(c, s, list) {
   list = list || (s ? locate(c, s.id)?.list : null) || c.subjects;
@@ -1036,7 +1057,7 @@ function subjForm(c, s, list) {
         const groups = {}; S.qmaster.forEach(x => (groups[x.dept] = groups[x.dept] || []).push(x));
         return `<div class="qnow">${s?.qskip ? "견적서에 넣지 않는 과목입니다." : cur.length ? "지금 연결: " + cur.map(esc).join(", ") + (s && Array.isArray(s.qnames) && s.qnames.length ? " (직접 고름)" : " (이름으로 자동)") : "자동으로 찾은 견적서 과목이 없습니다. 아래에서 골라 주세요."}</div>
           <div class="qpick"><input class="qs" placeholder="견적서 과목 찾기" aria-label="견적서 과목 찾기"><div class="ql">${Object.keys(groups).map(d => `<div class="qg">${esc(d)}</div>` + groups[d].map(x => `<label data-n="${esc(nrm(x.subject))}"><input type="checkbox" name="qn" value="${esc(x.subject)}"${cur.includes(x.subject) ? " checked" : ""}>${esc(x.subject)}<span>${Number(x.fee || 0).toLocaleString("ko-KR")}</span></label>`).join("")).join("")}</div></div>
-          <label class="chk" style="margin-top:8px"><input type="checkbox" id="f-qskip"${s?.qskip ? " checked" : ""}> 견적서에 넣지 않음 (예: 수강생포폴)</label>`;
+          <label class="chk" style="margin-top:8px"><input type="checkbox" id="f-qskip"${s?.qskip ? " checked" : ""}> 견적서에 넣지 않음 (예: 포트폴리오)</label>`;
       })() : `<div class="qnow">상담 대상을 고르면 아래에 견적서가 열리고, 그다음부터 여기서 견적서 과목을 고를 수 있습니다. 지금은 이름이 같은 과목으로 자동 연결됩니다.</div>`}</div>
       ${isNew ? "" : `<div style="display:flex;gap:6px"><button class="btn sm" id="mv-l" ${i === 0 ? "disabled" : ""}>앞으로 옮기기</button><button class="btn sm" id="mv-r" ${i === list.length - 1 ? "disabled" : ""}>뒤로 옮기기</button></div>
       <div class="help" style="font-size:12px;color:var(--sub);margin-top:10px">커리큘럼 이미지는 ‘커리큘럼 보기’에서 과목을 눌러 올립니다.</div>`}`,
@@ -1157,6 +1178,21 @@ async function loadImg(id) {
   const d = await Store.get("img_" + id); if (d) imgCache[id] = d; return d;
 }
 let viewer = null;
+/* 학과(과정) 커리큘럼: 과정 아이콘을 누르면 그 과정 전체 커리큘럼 이미지 */
+async function openCourse(c) {
+  const key = "c_" + c.id, label = c.name + " 과정";
+  const box = modal({
+    wide: true,
+    title: `${esc(c.name)}<span class="lvl">과정 커리큘럼</span>`,
+    body: `<div id="v-body"><div class="empty">불러오는 중입니다…</div></div>`,
+    actions: [
+      ...(S.pub || !isAdmin() ? [] : [{ label: "이미지 올리기", fn: () => { viewer = { key, c, label, box }; $("#file").value = ""; $("#file").click(); return false; } }]),
+      { label: "닫기" }
+    ]
+  });
+  viewer = { key, c, label, box };
+  await drawViewer();
+}
 async function openSubject(c, s) {
   const key = subjKey(s), p = curPlan();
   const box = modal({
@@ -1175,11 +1211,11 @@ async function openSubject(c, s) {
 async function drawViewer() {
   if (!viewer || !viewer.box.isConnected) return;
   const el = $("#v-body", viewer.box), ids = S.imgidx[viewer.key] || [];
-  if (!ids.length && S.pub) { el.innerHTML = `<div class="drop"><b>이 과목의 커리큘럼은 준비 중입니다</b>담당 멘토에게 문의해 주세요.</div>`; return; }
-  if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요.<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다.</div>`; return; }
+  if (!ids.length && S.pub) { el.innerHTML = `<div class="drop"><b>이 ${viewer.s ? "과목" : "과정"}의 커리큘럼은 준비 중입니다</b>담당 멘토에게 문의해 주세요.</div>`; return; }
+  if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>${isAdmin() ? "아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요." : "팀장이 이미지를 올리면 여기에 보입니다."}${viewer.s ? "<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다." : ""}</div>`; return; }
   const docs = await Promise.all(ids.map(id => loadImg(id).catch(() => null)));
   if (!viewer || !viewer.box.isConnected) return;
-  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" alt="${esc(subjLabel(viewer.s))} 커리큘럼 ${i + 1}">
+  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" alt="${esc(viewer.s ? subjLabel(viewer.s) : viewer.label)} 커리큘럼 ${i + 1}">
       <div class="ib noprint"${S.pub || !isAdmin() ? ' style="display:none"' : ""}><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">↑</button><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="1" ${i === ids.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button><button class="btn sm danger" data-act="imgDel" data-id="${id}">삭제</button></div></div>` : `<div class="empty">이미지 한 장을 불러오지 못했습니다.</div>`).join("")}</div>`;
 }
 async function saveIdx(key, ids) {
@@ -1237,6 +1273,7 @@ function toggleCheck(sid) {
 document.addEventListener("click", async e => {
   const t = e.target.closest("[data-act]"); if (!t) return;
   const a = t.dataset.act, c = t.dataset.c ? findCourse(t.dataset.c) : null;
+  if (a === "course") { const c3 = findCourse(t.dataset.c); if (c3) openCourse(c3); return; }
   if (S.pub && !["subj", "print"].includes(a)) return;
   if (S.pub && a === "subj") { const c2 = findCourse(t.dataset.c), s2 = c2 && locate(c2, t.dataset.s)?.s; if (s2) openSubject(c2, s2); return; }
   if (a === "shareLink") { shareLink(curPlan()); return; }
@@ -1332,6 +1369,7 @@ async function loadAll() {
   if (!main.sched) main.sched = buildTemplate().sched;
   if (main.brand === undefined) main.brand = buildTemplate().brand;
   if (main.themeVer !== 4) { main.theme = "rose"; main.themeVer = 4; }
+  if (!main.pfRenamed) { main.courses.forEach(c => allSubjects(c).forEach(x => { if (x.name === "수강생포폴") { x.name = "포트폴리오"; x.qskip = true; if (x.icon === "folder") x.icon = ""; } })); main.pfRenamed = true; if (!S.warn && Store.cloud) { try { await Store.set("main", main); } catch (e) { console.error(e); } } }
   if (!Array.isArray(main.stages) || !main.stages.length) main.stages = clone(DEFAULT_STAGES);
   S.main = main; S.imgidx = (idx && idx.map) || {};
   if (Store.cloud && Store.db) {
