@@ -217,6 +217,37 @@ button{cursor:pointer}
 .cols input{display:none}
 .cols label:has(input:checked){box-shadow:0 0 0 2px var(--ink)}
 .cols .auto{width:auto;border-radius:999px;padding:0 10px;font-size:12px;color:var(--sub);background:#fff}
+.acad{margin-top:22px}
+.acad-t{text-align:center;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:12px}
+.acad-t h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.03em}
+.acad-t input{font-size:16px;font-weight:700;text-align:center;width:min(420px,100%);border:1px dashed #c3c8d0;border-radius:8px;padding:4px 8px}
+.acad-n{font-size:12px;color:var(--sub);margin:0 0 10px;text-align:center}
+.acs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ac{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+.ach{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.ach b{font-size:13px;font-weight:700;color:#fff;background:var(--ac);border-radius:999px;padding:1px 10px}
+.ach span{font-size:11px;color:var(--sub)}
+.acd{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;padding:2px 0}
+.acd span{color:var(--sub);font-size:11.5px}
+.acd b{font-weight:600}
+.ac.ed label{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11.5px;color:var(--sub);margin:3px 0}
+.ac.ed input[type=date]{border:1px solid var(--line);border-radius:6px;padding:2px 4px;font-size:12px;max-width:122px}
+.ac.ed .ach input{flex:1;min-width:0;border:1px dashed #c3c8d0;border-radius:6px;padding:2px 6px;font-weight:700}
+.ac.ed .acm{width:100%;border:1px dashed #c3c8d0;border-radius:6px;padding:3px 6px;font-size:12px;margin-top:4px}
+.ac .x{border:0;background:none;color:var(--faint);font-size:15px;padding:0 2px}
+.ac .x:hover{color:var(--danger)}
+@media print{.acs{grid-template-columns:repeat(5,1fr)}.ac{break-inside:avoid;padding:6px 8px}}
+.tt thead tr.acr th,.tt thead tr.acr td{background:#fbf7f8;color:var(--ink);font-weight:600;padding:5px 2px;font-size:12px;border-bottom:1px solid var(--hair)}
+.tt thead tr.acr th.ag{background:#f5eef0;font-size:11.5px;line-height:1.25}
+.tt thead tr.acr th.t{background:#fbf7f8;font-weight:600;color:var(--sub)}
+.tt thead tr.acr2 td,.tt thead tr.acr2 th{border-bottom:1px solid var(--line)}
+.tt td.ad{white-space:nowrap;letter-spacing:-.02em}
+.tt td.ad.none{color:var(--faint)}
+.acad-v{font-size:12px;color:var(--sub);margin-top:10px}
+.tt td .ri em{font-style:normal;color:var(--faint);margin-left:3px}
+.tt td .ri em.full{color:var(--danger);font-weight:700}
+.opsn{font-size:12px}
+.opsn a{color:var(--ac);font-weight:600;margin-left:4px}
 /* 견적서 · 시간표 강의장 */
 .qwrap{padding-top:0;padding-bottom:60px;margin-top:-60px}
 #qframe{display:block;width:100%;height:calc(100vh - 90px);min-height:720px;border:0;border-top:1px solid var(--hair);border-radius:0 0 14px 14px;background:#fff}
@@ -388,6 +419,16 @@ const FIREBASE_CONFIG = {
   appId: "1:777480206536:web:1eedd24ed40f0e12f48dfd"
 };
 
+/* 운영계획표(t9vely3.github.io/hongdae) — 강의실·시간 자료를 읽어 옴. 같은 주소라 운영계획표에 로그인돼 있으면 자동으로 읽힘 */
+const OPS_CONFIG = {
+  apiKey: "AIzaSyAY0UqcUw0zgsOWvhZHK7lTB65RFB1rLPE",
+  authDomain: "hongdae-ops.firebaseapp.com",
+  projectId: "hongdae-ops",
+  storageBucket: "hongdae-ops.firebasestorage.app",
+  messagingSenderId: "1074230015310",
+  appId: "1:1074230015310:web:7e22af71a7000dc819da1f"
+};
+
 /* ============================================================
    기본 로드맵 (보내주신 새 로드맵 화면 기준) — 처음 한 번만 쓰이고, 이후는 화면에서 고친 내용이 저장됩니다.
    과목 표기: 이름#단계#작은설명   /  { split: [[갈래 이름, [과목…]], …] } 는 갈래로 나뉘었다 다시 모이는 구간
@@ -454,6 +495,7 @@ function wirePicker(box, allowNone) {
   };
 }
 
+const ACAD_SEED = [["11월", "2026-11-17", "2026-12-14"], ["12월", "2026-12-15", "2027-01-11"], ["1월", "2027-01-12", "2027-02-04"], ["2월", "2027-02-10", "2027-03-04"], ["3월", "2027-03-16", "2027-04-12"], ["4월", "2027-04-13", "2027-05-12"], ["5월", "2027-05-17", "2027-06-11"], ["6월", "2027-06-14", "2027-07-09"], ["7월", "2027-07-12", "2027-08-09"], ["8월", "2027-08-10", "2027-09-07"]];
 function mkSubj(raw, id) {
   const [nm, level = "", note = ""] = raw.split("#");
   return Object.assign({ id, name: nm, level, note, br: false }, nm === "포트폴리오" ? { qskip: true } : {});
@@ -471,6 +513,8 @@ function buildTemplate() {
         : mkSubj(raw, id + "-" + (i + 1)))
     })),
     sched: {
+      acadTitle: "2026년 수강생 학사일정 (평일반)",
+      blocks: ACAD_SEED.map(([label, start, end], i) => ({ id: "b" + (i + 1), label, start, end, memo: "" })),
       months: 12,
       note: "※ 개강·종강일이 바뀌면 해당 개강일 전에 안내드립니다.",
       groups: [
@@ -594,14 +638,23 @@ function flushAll() { Object.values(timers).forEach(x => { clearTimeout(x.t); x.
 window.addEventListener("pagehide", flushAll);
 const saveMain = (now) => queue("main", () => Store.set("main", S.main), now ? 0 : 600);
 /* 상담 내용(plan_)은 로그인한 직원만 읽음. 학생에게는 링크 번호 + 휴대폰 뒷번호로만 찾을 수 있는 사본(view_)을 따로 둠 */
-const PUB_KEYS = ["id", "name", "checked", "cells", "startMonth", "startYear", "updatedAt"];
+const PUB_KEYS = ["id", "name", "checked", "cells", "rooms", "startMonth", "startYear", "updatedAt"];
 async function viewKey(id, p4) {
   const raw = "aix-roadmap:" + id + ":" + p4;
   try { const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)); return "view_" + Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, "0")).join("").slice(0, 40); }
   catch (e) { let x = 0; for (const ch of raw) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return "view_" + x.toString(36) + raw.length; }
 }
+function syncRooms(p) {
+  if (!p || S.pub || !((S.ops && S.ops.length) || S.tt)) return false;
+  const rows = {}; S.main.sched.groups.forEach(g => g.rows.forEach(r => { rows[r.id] = r.label; }));
+  const next = {};
+  Object.entries(p.cells || {}).forEach(([k, v]) => { const [rid, i] = k.split("|"); if (!rows[rid] || !String(v || "").trim()) return; const r = roomOf(v, rows[rid], p, Number(i)); if (r) next[k] = r.text; });
+  if (JSON.stringify(next) === JSON.stringify(p.rooms || {})) return false;
+  p.rooms = next; return true;
+}
 function savePlan(p, now) {
   if (S.pub) return;
+  syncRooms(p);
   p.updatedAt = Date.now();
   queue("plan_" + p.id, async () => {
     const key = /^\d{4}$/.test(p.phone4 || "") ? await viewKey(p.id, p.phone4) : "";
@@ -828,7 +881,7 @@ function sumHTML(p) {
   let qline = "";
   if (!S.pub) {
     const items = quoteItems(p);
-    qline = `<div class="grow"></div><span class="qsum">${S.qmaster ? `견적서에 담긴 과목 <b>${items.found.length}</b>개 · 수강료 <b>${items.total.toLocaleString("ko-KR")}</b>원${items.miss.length ? ` · <span class="qwarn">못 찾은 과목 ${items.miss.length}개</span>` : ""}` : "견적서 준비 중…"}</span><button class="btn sm" data-act="qview">견적서 보기</button>`;
+    qline = `<div class="grow"></div>${S.qmaster && items.miss.length ? `<span class="qsum"><span class="qwarn">견적서에서 못 찾은 과목 ${items.miss.length}개</span></span>` : ""}<button class="btn sm" data-act="qview">견적서 보기</button>`;
   }
   return `<section class="panel sum"><div class="ph"><h2>${esc(p.name)} 님이 수강할 과목</h2>${qline}</div>${rows ? `<div class="rows">${rows}</div>` : `<div class="empty">아직 체크한 과목이 없습니다. 위에서 ‘수강 과목 체크’를 누른 뒤 과목을 골라 주세요.</div>`}</section>`;
 }
@@ -855,10 +908,88 @@ function ttFind(subject, timeLabel, y, m) {
   return T.rows.find(r => same(r) && r.t === term && r.t1 === t1) || T.rows.find(r => same(r) && r.t1 === t1) || T.rows.find(r => same(r) && r.t === term) || null;
 }
 function riHTML(v, rowLabel, p, i) {
-  if (!v || !S.tt) return "";
-  const { y, m } = colYM(p, i), r = ttFind(v, rowLabel, y, m);
-  if (!r) return `<span class="ri no" title="관리파일 강의장 시간표에서 이 과목·시간을 찾지 못했습니다">강의장 미정</span>`;
-  return `<span class="ri" title="${esc(`${r.r} 강의장 · ${r.w || ""} · ${r.o || ""} ~ ${r.c || ""}${r.tc ? " · " + r.tc : ""}`)}">${esc(r.r)}${r.w ? " · " + esc(dayText(r.w)) : ""}</span>`;
+  if (!v) return "";
+  const key = (rowLabel || "") + "|" + i;
+  if (S.pub) { const t = (p.rooms || {})[cellKeyOf(rowLabel, i)]; return t ? `<span class="ri">${esc(t)}</span>` : ""; }
+  const r = roomOf(v, rowLabel, p, i);
+  if (r === null) return "";
+  if (!r) return `<span class="ri no" title="운영계획표·관리파일 시간표에서 이 과목·시간·달의 반을 찾지 못했습니다">강의장 미정</span>`;
+  return `<span class="ri" title="${esc(r.tip)}">${esc(r.text)}${r.cap ? ` <em class="rc${r.full ? " full" : ""}">${esc(r.cap)}</em>` : ""}</span>`;
+}
+/* 시간표 칸 하나의 강의장: {text:'B · 월화수목', tip, cap:'23/30', letter} / 찾을 자료가 없으면 null / 못 찾으면 false */
+function cellKeyOf(rowLabel, i) { for (const g of S.main.sched.groups) { const r = g.rows.find(x => x.label === rowLabel); if (r) return r.id + "|" + i; } return rowLabel + "|" + i; }
+function roomOf(v, rowLabel, p, i) {
+  const { y, m } = colYM(p, i), name = String(v || "").trim(); if (!name) return null;
+  if (S.ops && S.ops.length) {
+    const c = opsFind(name, rowLabel, y, m);
+    if (c) return { text: c.room + (c.days ? " · " + dayText(c.days) : ""), letter: String(c.room).charAt(0).toUpperCase(), tip: `${c.room} 강의실 · ${c.teacher || "강사 미정"} · ${c.days || ""} · ${c.time || ""}${c.tend ? "~" + c.tend : ""} · ${c.start || ""} ~ ${c.end || ""} · 정원 ${c.cap || "-"} / 배정 ${c.cnt || 0}`, cap: c.cap ? `배정 ${c.cnt || 0}/${c.cap}` : "", full: c.cap && (+c.cnt || 0) >= +c.cap };
+  }
+  if (S.tt) { const r = ttFind(name, rowLabel, y, m); if (r) return { text: r.r + (r.w ? " · " + dayText(r.w) : ""), letter: String(r.r).charAt(0).toUpperCase(), tip: `${r.r} 강의장 · ${r.w || ""} · ${r.o || ""} ~ ${r.c || ""}${r.tc ? " · " + r.tc : ""}` }; }
+  return (S.ops && S.ops.length) || S.tt ? false : null;
+}
+const opsName = t => nrm(String(t || "").replace(/\(국\)|국비|_\d+-?\(?국?\)?$/g, "").replace(/-?total$/i, ""));
+function opsFind(subject, timeLabel, y, m) {
+  const want = [subject, S.ttmap && S.ttmap[subject]].filter(Boolean).map(opsName);
+  const t1 = (String(timeLabel).match(/(\d{1,2}:\d{2})/) || [])[1] || "", ym = y + "-" + String(m).padStart(2, "0");
+  const mid = ym + "-15";
+  const L = S.ops.filter(c => want.includes(opsName(c.name)) && !/폐강/.test(c.st || ""));
+  const inMonth = c => (c.start || "").slice(0, 7) === ym || ((c.start || "") <= mid && mid <= (c.end || ""));
+  return L.find(c => inMonth(c) && c.time === t1) || L.find(c => c.time === t1 && (c.start || "").slice(5, 7) === String(m).padStart(2, "0")) || L.find(c => inMonth(c)) || null;
+}
+/* 운영계획표 시간표 읽기 (그 사이트에 로그인돼 있을 때만) */
+async function loadOps() {
+  S.opsState = "wait";
+  try {
+    const app = firebase.apps.find(a => a.name === "ops") || firebase.initializeApp(OPS_CONFIG, "ops");
+    const u = await new Promise(res => { let done = false; const off = app.auth().onAuthStateChanged(x => { if (done) return; done = true; try { off(); } catch (e) {} res(x); }); setTimeout(() => { if (!done) { done = true; res(null); } }, 5000); });
+    if (!u) { S.opsState = "login"; return; }
+    const FP = firebase.firestore.FieldPath.documentId();
+    const q = await app.firestore().collection("ops_calls").where(FP, ">=", "_tt_").where(FP, "<=", "_tt_").get();
+    const dec = v => Array.isArray(v) ? v.map(dec) : (v && typeof v === "object") ? ((Object.keys(v).length === 1 && "__a" in v) ? dec(v.__a) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dec(x)]))) : v;
+    S.ops = q.docs.flatMap(d => (dec(d.data()).classes || [])).filter(c => c && c.name);
+    S.opsState = "ok";
+  } catch (e) { console.warn("운영계획표 시간표", e); S.opsState = "err"; }
+}
+/* 학사일정: 월별 개강·종강일. 학생 시간표의 달에 맞는 것만 보여 줌 */
+const WD = "일월화수목금토";
+const ymd = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const dShort = d => { const x = ymd(d); return x ? `${x.getMonth() + 1}.${String(x.getDate()).padStart(2, "0")} (${WD[x.getDay()]})` : "-"; };
+function blockOf(p, i) {
+  const { y, m } = colYM(p, i), ym = y + "-" + String(m).padStart(2, "0");
+  return (S.main.sched.blocks || []).find(b => (b.start || "").slice(0, 7) === ym) || null;
+}
+function acadRows(p, n) {
+  if (!(S.main.sched.blocks || []).length) return "";
+  const bs = Array.from({ length: n }, (_, i) => blockOf(p, i));
+  if (!bs.some(Boolean)) return "";
+  const cell = (b, k) => b && b[k] ? `<td class="ad">${dShort(b[k])}</td>` : `<td class="ad none">-</td>`;
+  return `<tr class="acr"><th class="g ag" rowspan="2">학사<br>일정</th><th class="t">개강</th>${bs.map(b => cell(b, "start")).join("")}</tr>
+    <tr class="acr acr2"><th class="t">종강</th>${bs.map(b => cell(b, "end")).join("")}</tr>`;
+}
+function acadHTML(p, n) {
+  const sc = S.main.sched, ed = S.mode === "edit" && !S.pub && isAdmin();
+  let list = (sc.blocks || []).slice().sort((a, b) => (a.start || "9").localeCompare(b.start || "9"));
+  if (p && !ed) { const yms = new Set(Array.from({ length: n }, (_, i) => { const { y, m } = colYM(p, i); return y + "-" + String(m).padStart(2, "0"); })); list = list.filter(b => yms.has((b.start || "").slice(0, 7))); }
+  if (!ed) {
+    const memos = list.filter(b => b.memo).map(b => `${esc(b.label || "")} ${esc(b.memo)}`);
+    return list.length ? `<div class="acad-v">${esc(sc.acadTitle || "수강생 학사일정")} · 위 표의 ‘개강·종강’ 줄에 달마다 표시됩니다.${memos.length ? " (" + memos.join(", ") + ")" : ""}</div>` : "";
+  }
+  const cards = list.map(b => ed ? `<div class="ac ed">
+      <div class="ach"><input data-blk="${esc(b.id)}" data-bf="label" value="${esc(b.label || "")}" aria-label="이름" placeholder="11월"><button class="x" data-act="delBlk" data-id="${esc(b.id)}" aria-label="삭제">×</button></div>
+      <label>개강<input type="date" data-blk="${esc(b.id)}" data-bf="start" value="${esc(b.start || "")}"></label>
+      <label>종강<input type="date" data-blk="${esc(b.id)}" data-bf="end" value="${esc(b.end || "")}"></label>
+      <input class="acm" data-blk="${esc(b.id)}" data-bf="memo" value="${esc(b.memo || "")}" placeholder="메모 (선택)">
+    </div>` : `<div class="ac">
+      <div class="ach"><b>${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</b>${b.memo ? `<span>${esc(b.memo)}</span>` : ""}</div>
+      <div class="acd"><span>개강</span><b>${dShort(b.start)}</b></div>
+      <div class="acd"><span>종강</span><b>${dShort(b.end)}</b></div>
+    </div>`).join("");
+  return `<div class="acad">
+      <div class="acad-t">${ed ? `<input data-f="acadTitle" value="${esc(sc.acadTitle || "")}" aria-label="학사일정 제목">` : `<h3>${esc(sc.acadTitle || "수강생 학사일정")}</h3>`}</div>
+      ${ed ? `<p class="acad-n noprint">여기 넣은 월별 개강·종강일이 학생마다 시간표의 달에 맞춰 자동으로 보입니다.</p>` : ""}
+      <div class="acs">${cards}</div>
+      ${ed ? `<div class="noprint" style="display:flex;gap:6px;margin-top:10px"><button class="btn sm" data-act="addBlk">+ 학사일정 추가</button>${S.tt && (S.tt.terms || []).length ? `<button class="btn sm" data-act="ttBlk" title="수강생 관리파일의 강의장 시간표에 적힌 기수별 개강·종강일을 가져옵니다">관리파일 개강일 가져오기</button>` : ""}</div>` : ""}
+    </div>`;
 }
 function schedHTML(p) {
   const sc = S.main.sched, ed = S.mode === "edit", labels = monthLabels(p), cells = (p && p.cells) || {};
@@ -874,15 +1005,17 @@ function schedHTML(p) {
         <h2>${p ? esc(p.name) + " 님 " : ""}${S.pub ? "수업 일정" : "시간표"}</h2>
         ${p && !S.pub ? `<label class="noprint" style="font-size:13px;color:var(--sub)">시작 <select id="startYear">${[0, 1, 2].map(k => { const y = new Date().getFullYear() - 1 + k; return `<option value="${y}"${y === startYM(p).y ? " selected" : ""}>${y}년</option>`; }).join("")}</select> <select id="startMonth">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}"${i + 1 === start ? " selected" : ""}>${i + 1}월</option>`).join("")}</select></label>` : (S.pub ? "" : `<span class="hint noprint">상담 대상을 고르면 칸에 과목을 적을 수 있습니다.</span>`)}
         <div class="grow"></div>
+        ${!S.pub && Store.cloud ? `<span class="hint noprint opsn">${S.opsState === "ok" ? `강의장: 운영계획표 시간표 기준 (${S.ops.length}반)` : S.opsState === "login" ? `강의장: 운영계획표에 로그인하면 그 시간표로 표시됩니다 <a href="/hongdae/" target="_blank" rel="noopener">운영계획표 열기</a>` : S.opsState === "wait" ? "강의장 자료 불러오는 중…" : S.tt ? "강의장: 관리파일 강의장 시간표 기준" : ""}</span>` : ""}
         ${p && Store.cloud && !S.pub ? `<button class="btn noprint" data-act="sendMgmt">${p.studentId ? "관리파일에 다시 보내기" : "수강생 관리파일로 보내기"}</button>` : ""}
         ${ed ? `<span class="noprint" style="font-size:13px;color:var(--sub)">개월 수 <button class="btn sm" data-act="months" data-d="-1">−</button> <b>${labels.length}</b> <button class="btn sm" data-act="months" data-d="1">+</button></span>` : ""}
       </div>
       <div class="sbody"><div class="tscroll"><table class="tt">
-        <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr></thead>
+        <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr>${acadRows(p, labels.length)}</thead>
         <tbody>${body}</tbody>
       </table></div>
       <datalist id="subs">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
       <div class="snote">${ed ? `<input data-f="schedNote" value="${esc(sc.note || "")}" placeholder="시간표 아래 안내 문구">` : esc(sc.note || "")}</div>
+      ${acadHTML(p, labels.length)}
       ${p && !S.pub ? `<textarea class="memo" id="memo" placeholder="상담 메모 (희망 진로, 가능한 시간대 등)">${esc(p.memo || "")}</textarea>` : ""}
       </div></section>`;
 }
@@ -1108,8 +1241,8 @@ function planClasses(p) {
   const out = [], rows = {}; S.main.sched.groups.forEach(g => g.rows.forEach(r => { rows[r.id] = r.label; }));
   Object.entries(p.cells || {}).forEach(([k, v]) => {
     const [rid, i] = k.split("|"), lab = rows[rid]; v = String(v || "").trim(); if (!lab || !v) return;
-    const { y, m } = colYM(p, Number(i)), r = ttFind(v, lab, y, m);
-    out.push({ year: String(y), month: m + "월", time: lab.replace(/\s*~\s*/, "-").trim(), subject: v, room: r ? String(r.r).charAt(0).toUpperCase() : "A", roomFull: r ? r.r : "", ord: y * 100 + m });
+    const { y, m } = colYM(p, Number(i)), r = roomOf(v, lab, p, Number(i));
+    out.push({ year: String(y), month: m + "월", time: lab.replace(/\s*~\s*/, "-").trim(), subject: v, room: r ? r.letter : "A", roomFull: r ? r.text : "", ord: y * 100 + m });
   });
   return out.sort((a, b) => a.ord - b.ord || a.time.localeCompare(b.time));
 }
@@ -1307,6 +1440,14 @@ document.addEventListener("click", async e => {
     else { const b = sp.branches.find(x => x.id === t.dataset.b); if (b) branchForm(c, sp, b); }
   }
   else if (a === "addCourse") courseForm(null);
+  else if (a === "addBlk") { const L = S.main.sched.blocks || (S.main.sched.blocks = []); const last = L.slice().sort((x, y) => (x.start || "").localeCompare(y.start || "")).pop(); let start = ""; if (last && ymd(last.end)) { const d = ymd(last.end); d.setDate(d.getDate() + 1); start = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); } L.push({ id: uid("b"), label: start ? (ymd(start).getMonth() + 1) + "월" : "", start, end: "", memo: "" }); saveMain(true); render(); }
+  else if (a === "delBlk") { S.main.sched.blocks = (S.main.sched.blocks || []).filter(x => x.id !== t.dataset.id); saveMain(true); render(); }
+  else if (a === "ttBlk") confirmBox("관리파일 강의장 시간표의 기수별 개강·종강일로 같은 달의 학사일정을 채울까요? (없던 달은 새로 추가됩니다)", "가져오기", () => {
+    const L = S.main.sched.blocks || (S.main.sched.blocks = []);
+    (S.tt.terms || []).forEach(tm => { if (!tm.o) return; const ym = tm.o.slice(0, 7), ex = L.find(b => (b.start || "").slice(0, 7) === ym);
+      if (ex) Object.assign(ex, { start: tm.o, end: tm.c || ex.end, label: ex.label || tm.n }); else L.push({ id: uid("b"), label: tm.n || "", start: tm.o, end: tm.c || "", memo: tm.p ? "예상 일정" : "" }); });
+    saveMain(true); render(); toast("개강·종강일을 가져왔어요");
+  });
   else if (a === "sendMgmt") sendToMgmt(curPlan());
   else if (a === "theme") { S.main.theme = t.dataset.t; saveMain(true); render(); }
   else if (a === "resetTpl") confirmBox("과정·과목 구성을 처음 기본 로드맵으로 되돌릴까요? 지금까지 고친 과정·과목 구성이 사라집니다. (올린 이미지와 상담 내용은 그대로 남습니다)", "되돌리기", () => { const t0 = buildTemplate(); S.main.courses = t0.courses; S.main.stages = t0.stages; saveMain(true); render(); });
@@ -1355,6 +1496,8 @@ document.addEventListener("input", e => {
   else if (t.dataset.f === "tag0" || t.dataset.f === "tag1") { S.main.tags = S.main.tags || ["", ""]; S.main.tags[Number(t.dataset.f.slice(3))] = t.value; saveMain(); }
   else if (t.dataset.stage && t.tagName === "INPUT") { if (!S.main.stages) S.main.stages = clone(DEFAULT_STAGES); const x = S.main.stages.find(y => y.id === t.dataset.stage); if (x) { x.label = t.value; saveMain(); } }
   else if (t.dataset.f === "brand") { S.main.brand = t.value; saveMain(); }
+  else if (t.dataset.blk) { const b = (S.main.sched.blocks || []).find(x => x.id === t.dataset.blk); if (b) { b[t.dataset.bf] = t.value; saveMain(); } }
+  else if (t.dataset.f === "acadTitle") { S.main.sched.acadTitle = t.value; saveMain(); }
   else if (t.dataset.f === "schedNote") { S.main.sched.note = t.value; saveMain(); }
 });
 
@@ -1367,6 +1510,7 @@ async function loadAll() {
   if (main.tplVer === 2 && !S.warn) { const t0 = buildTemplate(), i = main.courses.findIndex(c => c.id === "cg"); if (i >= 0 && !main.courses[i].subjects.some(isSplit)) main.courses[i] = t0.courses.find(c => c.id === "cg"); main.tplVer = 3; try { await Store.set("main", main); } catch (e) { console.error(e); } }
   if (!(main.tplVer >= 2) && !S.warn) { const keep = main.sched; main = buildTemplate(); if (keep) main.sched = keep; try { await Store.set("main", main); } catch (e) { console.error(e); } }
   if (!main.sched) main.sched = buildTemplate().sched;
+  if (!Array.isArray(main.sched.blocks)) { const t0 = buildTemplate().sched; main.sched.blocks = t0.blocks; main.sched.acadTitle = t0.acadTitle; }
   if (main.brand === undefined) main.brand = buildTemplate().brand;
   if (main.themeVer !== 4) { main.theme = "rose"; main.themeVer = 4; }
   if (!main.pfRenamed) { main.courses.forEach(c => allSubjects(c).forEach(x => { if (x.name === "수강생포폴") { x.name = "포트폴리오"; x.qskip = true; if (x.icon === "folder") x.icon = ""; } })); main.pfRenamed = true; if (!S.warn && Store.cloud) { try { await Store.set("main", main); } catch (e) { console.error(e); } } }
@@ -1375,6 +1519,7 @@ async function loadAll() {
   if (Store.cloud && Store.db) {
     try { const a = await Store.db.collection("config").doc("timetable").get(); if (a.exists && a.data().data) S.tt = a.data().data; } catch (e) { console.warn("강의장 시간표", e); }
     try { const b = await Store.db.collection("config").doc("timetable_map").get(); if (b.exists && b.data().data) S.ttmap = b.data().data; } catch (e) {}
+    loadOps().then(() => { const p = curPlan(); if (p && syncRooms(p)) savePlan(p, true); if (!document.querySelector(".mask")) render(); });
   }
   S.plans = (plans || []).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if (!visiblePlans().some(p => p.id === S.cur)) S.cur = null;
