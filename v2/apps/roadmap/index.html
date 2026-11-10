@@ -275,6 +275,9 @@ table.at{border-collapse:collapse;width:100%;font-size:12.5px;table-layout:fixed
 .ph.bh{position:sticky;top:var(--toph,58px);z-index:20;background:#fff;box-shadow:0 6px 12px -10px rgba(0,0,0,.18);border-radius:14px 14px 0 0}
 .ph.bh .tgl{height:30px;font-size:13px}.ph.bh .tgl .knob{width:40px;height:24px}.ph.bh .tgl .knob::after{width:18px;height:18px}.ph.bh .tgl.on .knob::after{transform:translateX(16px)}
 .tgl:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.tbg{display:flex;align-items:center;gap:8px}
+.tbg .btn.tb{min-width:96px;height:36px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-size:13.5px}
+@media (max-width:640px){.tbg{gap:6px}.tbg .btn.tb{min-width:0;height:32px;padding:0 11px;font-size:13px}}
 .btn.tb.on{background:var(--ink);border-color:var(--ink);color:#fff}
 /* 견적서 · 시간표 강의장 */
 .qwrap{padding-top:0;padding-bottom:60px;margin-top:-60px}
@@ -435,7 +438,7 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 <div class="wrap" id="app"><div class="empty">불러오는 중입니다…</div></div>
 <div class="wrap qwrap hide" id="qdock">
   <section class="panel">
-    <div class="ph"><h2>견적서</h2><span class="hint" id="qhint">체크한 과목이 수강료와 함께 자동으로 들어갑니다. 저장하면 인트라넷 견적서 이력에도 똑같이 보입니다.</span><div class="grow"></div></div>
+    <div class="ph"><h2>과정안내서</h2><span class="hint" id="qhint">체크한 과목이 수강료와 함께 자동으로 들어갑니다. 저장하면 인트라넷 견적서 이력에도 똑같이 보입니다.</span><div class="grow"></div></div>
     <div class="qmiss hide" id="qmiss"></div>
     <div class="empty hide" id="qoff"></div>
     <iframe id="qframe" title="견적서"></iframe>
@@ -712,7 +715,7 @@ function render() {
   document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
   app.className = "wrap mode-" + S.mode + (p && Object.values(checkedOf(p)).some(Boolean) ? " dim" : "") + (S.onlySel ? " only-print-sel" : "");
   app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + (S.view === "quote" && !S.pub ? heroHTML(p) : "") + (S.view === "quote" && !S.pub
-    ? (p ? "" : `<section class="panel"><div class="empty">견적서를 보려면 위에서 상담 대상을 고르거나 ‘새 상담’을 눌러 주세요.</div></section>`)
+    ? (p ? "" : `<section class="panel"><div class="empty">과정안내서를 보려면 위에서 상담 대상을 고르거나 ‘새 상담’을 눌러 주세요.</div></section>`)
     : `<div class="pg pg1">${heroHTML(p)}${boardHTML(p)}${sumHTML(p)}</div><div class="pg pg2">${p ? `<div class="pghead ponly2">${esc(S.main?.brand || "")}<b>${esc(p.name)} 님 수업 일정</b></div>` : ""}${schedHTML(p)}</div>`);
   try { qSync(); } catch (e) { console.error(e); }
 }
@@ -724,9 +727,11 @@ function renderTop() {
   $("#top").innerHTML = `
     <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>수강 설계</div>
     <div class="grow"></div>
-    ${curPlan() ? `<button class="btn tb${S.view === "quote" ? " on" : ""}" data-act="${S.view === "quote" ? "backRoad" : "qview"}">${S.view === "quote" ? "로드맵으로" : "과정안내"}</button>` : ""}
+    <div class="tbg">
+    <button class="btn tb${S.view === "quote" ? " on" : ""}" data-act="${S.view === "quote" ? "backRoad" : "qview"}">${S.view === "quote" ? "로드맵으로" : "과정안내"}</button>
     ${isAdmin() ? `<button class="btn tb${S.view !== "quote" && S.mode === "edit" ? " on" : ""}" data-act="${S.view !== "quote" && S.mode === "edit" ? "endEdit" : "startEdit"}">${S.view !== "quote" && S.mode === "edit" ? "구성 편집 끝내기" : "구성 편집"}</button>` : ""}
-    <button class="btn" data-act="print">인쇄</button>
+    <button class="btn tb" data-act="print">인쇄</button>
+    </div>
     <span class="save" id="save"></span>
     <div class="acct">${Store.cloud ? `${esc(S.user?.email || "")} <button class="btn sm ghost" data-act="logout">로그아웃</button>` : (S.canLogin ? `<button class="btn sm" data-act="showLogin">로그인</button>` : "")}</div>`;
   setSave(saveState);
