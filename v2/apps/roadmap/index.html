@@ -204,7 +204,7 @@ button{cursor:pointer}
 /* 학생 본인 확인 */
 .gate{max-width:380px;margin:60px auto 0;padding:32px 28px;text-align:center}
 .gate h2{margin:0 0 8px;font-size:22px;font-weight:700;letter-spacing:-.03em}
-.gate p{margin:0 0 20px;color:var(--sub);font-size:14px;line-height:1.6}
+.gate p{word-break:keep-all;margin:0 0 20px;color:var(--sub);font-size:14px;line-height:1.6}
 .gate input{display:block;width:100%;text-align:center;font-size:28px;letter-spacing:.5em;padding:12px 0 12px .5em;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:700}
 .gate input:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
 .gate .err{min-height:20px;margin:10px 0;color:var(--danger);font-size:13px}
@@ -275,6 +275,31 @@ table.at{border-collapse:collapse;width:100%;font-size:12.5px;table-layout:fixed
 .ph.bh{position:sticky;top:var(--toph,58px);z-index:20;background:#fff;box-shadow:0 6px 12px -10px rgba(0,0,0,.18);border-radius:14px 14px 0 0}
 .ph.bh .tgl{height:30px;font-size:13px}.ph.bh .tgl .knob{width:40px;height:24px}.ph.bh .tgl .knob::after{width:18px;height:18px}.ph.bh .tgl.on .knob::after{transform:translateX(16px)}
 .tgl:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.curst{display:flex;align-items:baseline;gap:8px;padding:0 6px 9px 0;align-self:flex-end;flex-wrap:wrap}
+.curst .cl{font-size:11.5px;color:var(--sub)}
+.curst b{font-size:16px;letter-spacing:-.02em}
+.curst em{font-style:normal;font-size:12px;color:var(--sub);background:#f1f2f5;border-radius:999px;padding:2px 8px}
+.curst .cn{font-size:12.5px;color:var(--ac);font-weight:700}
+.curst.none .cl{font-size:13px}
+.sl-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.sl-bar .sl-q{flex:1 1 220px;max-width:320px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 12px;font:inherit;font-size:13.5px}
+.sl-cnt{font-size:12px;color:var(--sub);margin:4px 2px 8px}
+.sl-wrap{max-height:min(60vh,560px);overflow:auto;border:1px solid var(--line);border-radius:10px}
+table.sl{width:100%;border-collapse:collapse;font-size:13.5px}
+.sl th{position:sticky;top:0;background:#f7f8fa;color:var(--sub);font-weight:600;font-size:12px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.sl td{padding:11px 12px;border-bottom:1px solid var(--hair);white-space:nowrap}
+.sl tr[data-pid]{cursor:pointer}
+.sl tr[data-pid]:hover td{background:#fafbfc}
+.sl tr.cur td{background:#fdf3f5}
+.sl td.nm{font-weight:700}
+.sl .now{margin-left:8px;font-size:11px;font-weight:700;color:#fff;background:var(--ac);border-radius:999px;padding:2px 7px;vertical-align:1px}
+.sl td.tg,.sl td.ow,.sl td.dt{color:var(--sub);font-size:12.5px}
+.sl .dim{color:var(--faint)}
+.sl .ok{color:#2f8f5b;font-weight:700}
+.modal.wide .mb{min-width:0;overflow-x:hidden}
+.sl-wrap{max-width:100%}
+@media (max-width:640px){.sl-bar .sl-q{max-width:none;flex-basis:100%}.sl-bar .grow{display:none}.sl td,.sl th{padding:10px 9px}}
+.sl-empty{padding:40px 16px;text-align:center;color:var(--sub);font-size:13.5px}
 .tbg{display:flex;align-items:center;gap:8px}
 .tbg .btn.tb{min-width:96px;height:36px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-size:13.5px}
 @media (max-width:640px){.tbg{gap:6px}.tbg .btn.tb{min-width:0;height:32px;padding:0 11px;font-size:13px}}
@@ -335,7 +360,7 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 /* 창 */
 .mask{position:fixed;inset:0;background:rgba(20,22,28,.5);backdrop-filter:blur(3px);z-index:60;display:grid;place-items:center;padding:18px}
 .modal{background:#fff;border-radius:14px;width:min(460px,100%);max-height:calc(100vh - 36px);display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(10,12,20,.3)}
-.modal.wide{width:min(1080px,100%)}
+.modal.wide{width:min(1080px,100%);max-width:calc(100vw - 24px);min-width:0}
 .mh{padding:18px 22px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--hair)}
 .mh h3{margin:0;font-size:17px;font-weight:700;letter-spacing:-.03em;flex:1}
 .mh .lvl{color:var(--sub);font-weight:400;margin-left:8px;font-size:14px}
@@ -393,6 +418,142 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
   .mcell::before{content:attr(data-label);flex-basis:100%;font-size:11.5px;color:var(--sub);font-weight:600;margin-bottom:-2px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ── 휴대폰 세로 로드맵 ── */
+.rm.vmode{display:block;padding:0 14px}
+.vcrs{display:block!important;padding:14px 0 12px}
+.vcrs .chd{display:flex;flex-direction:row;align-items:center;text-align:left;gap:10px}
+.vcrs .cic{width:38px;height:38px}
+.vcrs .cnm{font-size:15px}
+.vtg{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;height:32px;padding:0 12px;font:inherit;font-size:12.5px;font-weight:600;color:var(--sub);white-space:nowrap}
+.vtg .chev{width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg) translate(-2px,-2px)}
+.vcrs.open .vtg .chev{transform:rotate(-135deg) translate(-2px,-2px)}
+.vl{list-style:none;margin:12px 0 2px;padding:0;position:relative}
+.vl::before{content:"";position:absolute;left:13.5px;top:22px;bottom:22px;width:3px;border-radius:3px;background:linear-gradient(color-mix(in srgb,var(--ac) 35%,#fff),var(--ac))}
+.vs{position:relative}
+.vsta{width:100%;display:flex;align-items:center;gap:12px;border:0;background:none;padding:7px 10px 7px 0;text-align:left;font:inherit;color:var(--ink);border-radius:12px;min-height:46px;cursor:pointer}
+.vsta .dot,.vsp>.dot{position:relative;z-index:1;flex:none;box-sizing:border-box;width:14px;height:14px;margin:0 6px 0 8px;border-radius:50%;background:#fff;border:3px solid color-mix(in srgb,var(--ac) 55%,#fff)}
+.vsta .tx{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.vsta .nm{font-size:15px;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vsta .nm .si{display:inline-flex;width:16px;height:16px}
+.vsta .lv{font-size:12px;font-weight:600;color:var(--sub);background:#f2f3f5;border-radius:6px;padding:1px 6px}
+.vsta .nt{font-size:12px;color:var(--sub)}
+.vsta .ic{width:8px;height:8px;border-radius:50%;background:var(--ac);opacity:.45;flex:none}
+.vs.on .vsta{background:var(--ac-bg)}
+.vs.on .vsta .dot{background:var(--ac);border-color:var(--ac);box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 18%,transparent)}
+.vs.on .vsta .nm{color:var(--ac)}
+.vs.on .vsta .lv{background:#fff;color:var(--ac)}
+.vsta .ck{flex:none;width:22px;height:22px;border-radius:50%;background:var(--ac);position:relative}
+.vsta .ck::after{content:"";position:absolute;left:7.5px;top:4px;width:5px;height:10px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.dim .vs:not(.on) .vsta .nm{color:#6a6d75}
+.vsp{display:flex;align-items:flex-start;gap:12px;padding:6px 0}
+.vsp>.dot{margin-top:16px;border-radius:4px;transform:rotate(45deg)}
+.vbr{flex:1;display:grid;gap:8px;min-width:0}
+.vbr .br{border:1px solid var(--line);border-left:3px solid color-mix(in srgb,var(--ac) 60%,#fff);border-radius:10px;padding:8px 10px;background:#fff}
+.vbr .bt{display:inline-block;font-size:12px;font-weight:700;color:var(--ac);margin-bottom:6px}
+.vbr .bch{display:flex;flex-wrap:wrap;gap:6px}
+.vchip{border:1px solid var(--line);background:#fafbfc;border-radius:999px;padding:5px 11px;font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.vchip small{font-size:11px;color:var(--sub);font-weight:600}
+.vchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.vchip.on small{color:#fff;opacity:.8}
+.vchip .si{display:none}
+/* ── 학생이 받는 화면 ── */
+.shero{display:grid;grid-template-columns:1fr auto;align-items:end;gap:20px;padding:6px 2px 18px}
+.shero h1{font-size:34px;font-weight:300;letter-spacing:-.035em;line-height:1.2}
+.shero h1 b{font-weight:800;color:var(--ac)}
+.sh-sub{margin:8px 0 0;color:var(--sub);font-size:14px}
+.sh-stats{display:flex;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.sh-stats>div{padding:14px 22px;display:flex;flex-direction:column;gap:2px;min-width:104px}
+.sh-stats>div+div{border-left:1px solid var(--hair)}
+.sh-stats em{font-style:normal;font-size:11.5px;color:var(--sub);font-weight:600}
+.sh-stats b{font-size:22px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.sh-stats b small{font-size:13px;font-weight:600;margin-left:2px;color:var(--sub)}
+.sh-stats span{font-size:11.5px;color:var(--sub)}
+.snav{position:sticky;top:var(--toph,58px);z-index:21;display:flex;gap:6px;padding:8px 0;margin:0 0 4px;background:var(--bg,#f4f5f7)}
+.snav button{flex:1;height:38px;border:1px solid var(--line);background:#fff;border-radius:999px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+.snav button:hover{border-color:var(--ac);color:var(--ac)}
+.mycl{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:10px}
+.mycl li{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.mycl .mm b{display:block;font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--ac)}
+.mycl .mm span{font-size:11.5px;color:var(--sub)}
+.mycl .cc{display:grid;gap:8px}
+.mycl .c{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+.mycl .v{font-size:15.5px;font-weight:700;letter-spacing:-.02em}
+.mycl .w{grid-column:1;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums}
+.mycl .r{grid-row:1/3;grid-column:2;align-self:center;font-size:12px;font-weight:700;color:var(--ac);background:var(--ac-bg);border-radius:999px;padding:4px 10px}
+.mycl-empty{padding:26px 14px;text-align:center;color:var(--sub);font-size:13.5px;border:1px dashed var(--line);border-radius:12px;margin-bottom:12px}
+.ttgl{margin:0 0 12px}
+.tscroll.pubhide{display:none}
+@media screen and (min-width:1101px){.mycl{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media screen and (min-width:641px) and (max-width:1100px){.mycl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gate .g-ic{width:52px;height:52px;margin:0 auto 14px;border-radius:16px;background:var(--ac-bg);display:grid;place-items:center}
+.gate .g-ic svg{width:28px;height:28px;fill:none;stroke:var(--ac);stroke-width:2;stroke-linecap:round}
+.gate .g-foot{margin:14px 0 0;font-size:12px;color:var(--faint)}
+@media screen and (max-width:1100px){.shero{grid-template-columns:1fr}.sh-stats{width:100%}.sh-stats>div{flex:1;min-width:0}}
+@media screen and (max-width:640px){
+  .shero h1{font-size:26px}.shero h1 .br{display:block}
+  .sh-stats>div{padding:12px 12px}.sh-stats b{font-size:19px}
+  .snav{margin:0 -12px 4px;padding:8px 12px;overflow-x:auto}.snav button{flex:1 0 auto;height:36px;padding:0 12px;font-size:13px}
+  .gate{margin:28px auto 0;padding:28px 20px}
+  .mycl li{grid-template-columns:52px 1fr;padding:12px 14px}
+}
+@media print{.mycl,.ttgl,.mycl-empty{display:none!important}.tscroll.pubhide{display:block!important}.shero{display:grid}.sh-stats b{font-size:18px}}
+/* ── 학사일정 카드형(휴대폰) ── */
+.acl{display:none;list-style:none;margin:0;padding:0}
+.acl li{display:grid;grid-template-columns:52px 1fr 14px 1fr;align-items:center;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.acl li+li{margin-top:8px}
+.acl .m{font-weight:800;font-size:15px;color:#1f2a44;letter-spacing:-.02em}
+.acl .d{display:flex;flex-direction:column;font-size:15px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.acl .d em{font-style:normal;font-size:11px;color:var(--sub);font-weight:600;margin-bottom:1px}
+.acl .d b{font-weight:700;white-space:nowrap}
+.acl .d small{font-size:12px;color:var(--sub);font-weight:500;margin-left:2px}
+.acl i{font-style:normal;color:var(--faint);text-align:center}
+.acl .mm{grid-column:2/-1;font-size:12px;color:var(--sub)}
+/* ── 태블릿 ── */
+@media screen and (max-width:1100px){
+  .acg:not(.ed){display:none}
+  .acl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .acl li+li{margin-top:0}
+  .hero{gap:14px}
+  .picker{width:100%}
+  .ph.bh .hint{flex-basis:100%;order:5}
+}
+/* ── 휴대폰 ── */
+@media screen and (max-width:640px){
+  .top-in{display:grid;grid-template-columns:1fr auto;align-items:center;padding:8px 14px 10px;gap:8px 10px;height:auto}
+  .top-in .grow,.top-in .save{display:none}
+  .top-in .brand{grid-row:1;grid-column:1}
+  .top-in .acct{grid-row:1;grid-column:2}
+  .acct .em{display:none}
+  .tbg{grid-row:2;grid-column:1/-1;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+  .tbg .btn.tb{width:100%;height:38px;padding:0 4px;font-size:13px;border-radius:10px}
+  .wrap{padding:16px 12px 60px}
+  .hero{padding:2px 4px 14px}
+  .hero h1{font-size:27px}
+  .hero .school{font-size:12px}
+  .hero .tags{font-size:12.5px}
+  .picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+  .picker .curst{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;align-items:center}
+  .picker .curst.none{text-align:center;justify-content:center}
+  .picker .curst .cl{flex-basis:100%;margin-bottom:1px}
+  .picker .curst .cn{margin-left:auto}
+  .picker .btn{width:100%;height:40px;padding:0 4px;justify-content:center}
+  .curst.none~.btn{grid-column:1/-1}
+  .panel{border-radius:14px}
+  .ph{padding:12px 14px;gap:8px}
+  .ph.bh .hint{display:none}
+  .ph.bh{gap:8px 10px}
+  .rm{padding:0 12px}
+  .tt{min-width:0!important;font-size:12.5px}
+  .tt thead tr:first-child th:first-child,.tt th.g,.tt th.t{position:sticky;z-index:2}
+  .tt thead tr:first-child th:first-child{left:0;z-index:3;min-width:120px}
+  .tt th.g{left:0;width:34px;min-width:34px;max-width:34px;font-size:11.5px}
+  .tt th.t{left:34px;width:86px;min-width:86px;padding:0 6px;font-size:12px;box-shadow:1px 0 0 var(--line)}
+  .tt td{min-width:68px}
+  .acl{grid-template-columns:1fr;gap:8px}
+  .acad-t h3{font-size:16px}
+  .sum .ph{flex-wrap:wrap}
+  .memo{font-size:14px}
+}
 @media print{
   @page{size:A4 landscape;margin:8mm}
   body{background:#fff}
@@ -715,25 +876,27 @@ function render() {
   document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
   app.className = "wrap mode-" + S.mode + (p && Object.values(checkedOf(p)).some(Boolean) ? " dim" : "") + (S.onlySel ? " only-print-sel" : "");
   app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + (S.view === "quote" && !S.pub ? heroHTML(p) : "") + (S.view === "quote" && !S.pub
-    ? (p ? "" : `<section class="panel"><div class="empty">과정안내서를 보려면 위에서 상담 대상을 고르거나 ‘새 상담’을 눌러 주세요.</div></section>`)
+    ? (p ? "" : `<section class="panel"><div class="empty">과정안내서를 보려면 ‘학생 목록’에서 학생을 고르거나 추가해 주세요.</div></section>`)
+    : S.pub ? `<div class="pg pg1">${heroHTML(p)}${studentNav(p)}${sumHTML(p)}${boardHTML(p)}</div><div class="pg pg2">${p ? `<div class="pghead ponly2">${esc(S.main?.brand || "")}<b>${esc(p.name)} 님 수업 일정</b></div>` : ""}${schedHTML(p)}</div>`
     : `<div class="pg pg1">${heroHTML(p)}${boardHTML(p)}${sumHTML(p)}</div><div class="pg pg2">${p ? `<div class="pghead ponly2">${esc(S.main?.brand || "")}<b>${esc(p.name)} 님 수업 일정</b></div>` : ""}${schedHTML(p)}</div>`);
   try { qSync(); } catch (e) { console.error(e); }
 }
 function renderTop() {
   if (S.pub) {
-    $("#top").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>${esc(S.main?.brand || "수강 로드맵")}</div><div class="grow"></div><button class="btn" data-act="print">인쇄 · PDF 저장</button>`;
+    $("#top").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>${esc(S.main?.brand || "수강 로드맵")}</div><div class="grow"></div><button class="btn tb" data-act="print">인쇄 · PDF 저장</button>`;
     return;
   }
   $("#top").innerHTML = `
     <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>수강 설계</div>
     <div class="grow"></div>
     <div class="tbg">
+    <button class="btn tb" data-act="stuList">학생 목록</button>
     <button class="btn tb${S.view === "quote" ? " on" : ""}" data-act="${S.view === "quote" ? "backRoad" : "qview"}">${S.view === "quote" ? "로드맵으로" : "과정안내"}</button>
     ${isAdmin() ? `<button class="btn tb${S.view !== "quote" && S.mode === "edit" ? " on" : ""}" data-act="${S.view !== "quote" && S.mode === "edit" ? "endEdit" : "startEdit"}">${S.view !== "quote" && S.mode === "edit" ? "구성 편집 끝내기" : "구성 편집"}</button>` : ""}
     <button class="btn tb" data-act="print">인쇄</button>
     </div>
     <span class="save" id="save"></span>
-    <div class="acct">${Store.cloud ? `${esc(S.user?.email || "")} <button class="btn sm ghost" data-act="logout">로그아웃</button>` : (S.canLogin ? `<button class="btn sm" data-act="showLogin">로그인</button>` : "")}</div>`;
+    <div class="acct">${Store.cloud ? `<span class="em">${esc(S.user?.email || "")}</span> <button class="btn sm ghost" data-act="logout">로그아웃</button>` : (S.canLogin ? `<button class="btn sm" data-act="showLogin">로그인</button>` : "")}</div>`;
   setSave(saveState);
   setTopH();
 }
@@ -742,7 +905,11 @@ let printRestore = null;
 function printFit() {
   try { document.activeElement && document.activeElement.blur && document.activeElement.blur(); } catch (e) {}
   const p = curPlan();
-  if (p && !S.onlySel && Object.values(checkedOf(p)).some(Boolean) && S.mode !== "edit") { S.onlySel = true; printRestore = () => { S.onlySel = false; }; render(); }
+  const wasSel = S.onlySel;
+  S.forceH = true;
+  if (p && !S.onlySel && Object.values(checkedOf(p)).some(Boolean) && S.mode !== "edit") S.onlySel = true;
+  printRestore = () => { S.onlySel = wasSel; S.forceH = false; };
+  render();
   const css = [];
   for (const sh of document.styleSheets) { let rs; try { rs = sh.cssRules; } catch (e) { continue; }
     for (const r of rs) if (r.media && /print/.test(r.media.mediaText)) for (const x of r.cssRules) if (!(x instanceof CSSPageRule)) css.push(x.cssText); }
@@ -781,7 +948,6 @@ function movePill() {
 
 function heroHTML(p) {
   const m = S.main, n = p ? Object.values(checkedOf(p)).filter(Boolean).length : 0;
-  const opts = visiblePlans().map(x => `<option value="${esc(x.id)}"${x.id === S.cur ? " selected" : ""}>${esc(x.name || "(이름 없음)")}${x.tag ? " · " + esc(x.tag) : ""}${S.showAll && x.ownerName && !isMine(x) ? " — " + esc(x.ownerName) : ""}</option>`).join("");
   const left = S.mode === "edit" ? `<div class="edit">
         <input class="h1" data-f="title" value="${esc(m.title)}" aria-label="제목">
         ${[0, 1].map(i => `<input data-f="tag${i}" value="${esc(m.tags?.[i] || "")}" aria-label="문구 ${i + 1}" placeholder="짧은 문구" style="width:150px">`).join("")}
@@ -789,20 +955,20 @@ function heroHTML(p) {
         <input data-f="admins" value="${esc((m.admins || []).join(", "))}" aria-label="팀장 이메일" placeholder="팀장(관리자) 이메일 — 쉼표로 여러 명" style="width:300px" title="여기 적힌 사람만 구성 편집과 전체 멘토 보기를 할 수 있습니다. 비워 두면 모두 가능합니다.">
         <span class="themes">색 ${Object.keys(THEMES).map(k => `<button data-act="theme" data-t="${k}" class="${(THEMES[m.theme] ? m.theme : "rose") === k ? "on" : ""}" style="background:rgb(${THEMES[k][1].join(",")})" title="${THEMES[k][0]}" aria-label="${THEMES[k][0]}"></button>`).join("")}</span>
       </div>` : `<div>${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}<h1>${esc(m.title)}</h1><p class="tags">${(m.tags || []).filter(Boolean).map(t => `<span>${esc(t)}</span>`).join("<i></i>")}</p></div>`;
-  if (S.pub) return `<header class="hero"><div>${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}<h1>${esc(m.title)}</h1><p class="tags">${p ? `<span><b style="color:var(--ink)">${esc(p.name)}</b> 님의 수강 로드맵</span><i></i>` : ""}${(m.tags || []).filter(Boolean).map(t => `<span>${esc(t)}</span>`).join("<i></i>")}</p></div></header>`;
+  if (S.pub) return studentHero(p);
   return `<header class="hero">${left}
       <div class="picker">
         <span class="ponly">${p ? esc(p.name) + " 님 수강 설계" : ""}</span>
-        <div class="who"><label for="pick">상담 대상${isAdmin() && Store.cloud ? ` <select id="showAll" style="border:0;background:none;color:var(--sub);font-size:11.5px;padding:0;min-width:0"><option value="0"${S.showAll ? "" : " selected"}>내 학생</option><option value="1"${S.showAll ? " selected" : ""}>전체 멘토</option></select>` : ""}</label><select id="pick"><option value="">선택 안 함</option>${opts}</select></div>
-        ${p ? `<span class="cnt"><b>${n}</b>과목 선택</span><button class="btn" data-act="editPlan">정보</button><button class="btn" data-act="shareLink" title="학생에게 보낼 로드맵 링크를 복사합니다">학생 링크</button>` : ""}
-        <button class="btn pri" data-act="newPlan">새 상담</button>
+        ${p ? `<div class="curst noprint"><span class="cl">지금 상담 중</span><b>${esc(p.name)}</b>${p.tag ? `<em>${esc(p.tag)}</em>` : ""}<span class="cn">${n}과목 선택</span></div><button class="btn" data-act="editPlan">정보</button><button class="btn" data-act="shareLink" title="학생에게 보낼 로드맵 링크를 복사합니다">학생 링크</button>`
+          : `<div class="curst none noprint"><span class="cl">상담할 학생을 학생 목록에서 고르거나 추가해 주세요</span></div>`}
+        <button class="btn pri" data-act="stuList">학생 목록</button>
       </div>
     </header>`;
 }
 function boardHead(p) {
   const n = p ? Object.values(checkedOf(p)).filter(Boolean).length : 0;
   let msg = S.pub ? "과목을 누르면 그 과목의 커리큘럼을 볼 수 있습니다." : "과목을 누르면 커리큘럼 이미지가 열립니다.";
-  if (S.mode === "check") msg = p ? "수강할 과목을 누르세요. 다시 누르면 풀립니다." : "먼저 상담 대상을 고르거나 ‘새 상담’을 눌러 주세요.";
+  if (S.mode === "check") msg = p ? "수강할 과목을 누르세요. 다시 누르면 풀립니다." : "먼저 ‘학생 목록’에서 학생을 고르거나 추가해 주세요.";
   if (S.mode === "edit") msg = "과목을 끌어서 옮기고, 눌러서 고치거나 지웁니다. 고친 내용은 모든 상담에 적용됩니다.";
   const on = S.mode === "check";
   const tgl = S.pub ? "" : `<button class="tgl${on ? " on" : ""}" data-act="toggleCheck" role="switch" aria-checked="${on}" title="${on ? "켜짐: 과목을 눌러 수강 과목을 체크합니다" : "꺼짐: 과목을 누르면 커리큘럼을 봅니다"}"><span class="knob"></span><span class="tl">${on ? "편집" : "커리큘럼"}</span></button>`;
@@ -819,6 +985,11 @@ function perRow(half) { return Math.max(3, Math.floor(trackW(half) / (window.inn
 function boardHTML(p) {
   const ck = checkedOf(p), ed = S.mode === "edit", cs = S.main.courses;
   const vis = cs.filter(c => !(S.onlySel && p && !ed && !allSubjects(c).some(s => ck[s.id])));
+  const V = window.innerWidth <= 640 && !ed && !S.forceH;   /* 휴대폰: 세로로 내려가는 로드맵 */
+  const vName = s => `${s.icon ? `<span class="si">${svg(s.icon)}</span>` : ""}${esc(s.name)}`;
+  const vRow = (c, s) => { const on = !!ck[s.id], ic = (S.imgidx[subjKey(s)] || []).length;
+    return `<li class="vs${on ? " on" : ""}"><button class="vsta" data-act="subj" data-c="${esc(c.id)}" data-s="${esc(s.id)}"><span class="dot" aria-hidden="true"></span><span class="tx"><span class="nm">${vName(s)}${s.level ? `<span class="lv">${esc(s.level)}</span>` : ""}</span>${s.note ? `<span class="nt">${esc(s.note)}</span>` : ""}</span>${ic ? `<i class="ic" title="커리큘럼 이미지"></i>` : ""}${on ? `<span class="ck" aria-label="수강"></span>` : ""}</button></li>`; };
+  const vSplit = (c, x) => `<li class="vsp"><span class="dot" aria-hidden="true"></span><div class="vbr">${x.branches.map(b => `<div class="br"><span class="bt">${esc(b.label || "갈래")}</span><div class="bch">${b.subjects.map(s => `<button class="vchip${ck[s.id] ? " on" : ""}" data-act="subj" data-c="${esc(c.id)}" data-s="${esc(s.id)}">${vName(s)}${s.level ? ` <small>${esc(s.level)}</small>` : ""}</button>`).join("")}</div></div>`).join("")}</div></li>`;
   const station = (c, s, list, i, a, b) => {
     const on = !!ck[s.id], ic = (S.imgidx[subjKey(s)] || []).length;
     const pv = i > a && ck[list[i - 1].id], nx = i + 1 < b && ck[list[i + 1].id];
@@ -826,6 +997,14 @@ function boardHTML(p) {
   };
   const rows = vis.map((c, vi) => {
     const cnt = allSubjects(c).filter(s => ck[s.id]).length;
+    if (V) {
+      const total = allSubjects(c).length, open = S.vOpen && c.id in S.vOpen ? S.vOpen[c.id] : (cnt > 0 || vis.length === 1);
+      return `<div class="crs vcrs${cnt ? " has" : ""}${open ? " open" : ""}${vi === vis.length - 1 ? " last" : ""}" style="--ac:rgb(${courseRGB(c).join(",")})">
+        <div class="chd"><button class="chbtn" data-act="course" data-c="${esc(c.id)}" title="${esc(c.name)} 과정 커리큘럼 보기"><div class="cic">${svg(c.icon)}</div></button><div><div class="cnm">${esc(c.name)}</div>${c.sub ? `<div class="csb">(${esc(c.sub)})</div>` : ""}</div>${cnt ? `<span class="cct">${cnt}과목</span>` : ""}
+          <button class="vtg" data-act="vtoggle" data-c="${esc(c.id)}" data-open="${open ? 1 : 0}" aria-expanded="${open}">${open ? "접기" : `${total}과목 보기`}<span class="chev" aria-hidden="true"></span></button></div>
+        ${open ? `<ol class="vl">${c.subjects.map(x => isSplit(x) ? vSplit(c, x) : vRow(c, x)).join("")}</ol>` : ""}
+      </div>`;
+    }
     const half = !!c.half && !(S.onlySel && p);
     const max = perRow(half), lw = Math.floor(trackW(half) / max);
     const L = Math.max(1, c.subjects.reduce((w, x) => w + (isSplit(x) ? Math.max(1, ...x.branches.map(b => b.subjects.length)) : 1), 0) - 1);
@@ -888,7 +1067,7 @@ function boardHTML(p) {
         <div class="trk">${html}</div>
       </div>`;
   }).join("");
-  return `<section class="panel">${boardHead(p)}<div class="rm">${rows || `<div class="empty">표시할 과정이 없습니다.</div>`}</div>
+  return `<section class="panel">${boardHead(p)}<div class="rm${V ? " vmode" : ""}">${rows || `<div class="empty">표시할 과정이 없습니다.</div>`}</div>
       ${ed ? `<div class="mfoot noprint"><button class="btn pri" data-act="addCourse">과정 추가</button><button class="btn" data-act="resetTpl">기본 로드맵으로 되돌리기</button></div>` : ""}</section>`;
 }
 /* 구성 편집: 과목을 끌어서 다른 자리(다른 줄·갈래·과정)로 옮김 */
@@ -956,6 +1135,44 @@ window.addEventListener("message", e => {
   }
 });
 let rsT; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (S.main && !document.querySelector(".mask")) render(); }, 150); });
+/* ───── 학생이 받는 화면 전용 ───── */
+function myClasses(p) {
+  if (!p) return [];
+  const cells = p.cells || {}, n = monthLabels(p).length, out = [];
+  for (let i = 0; i < n; i++) for (const g of S.main.sched.groups) for (const r of g.rows) {
+    const v = (cells[r.id + "|" + i] || "").trim(); if (!v) continue;
+    const { y, m } = colYM(p, i), room = (p.rooms || {})[r.id + "|" + i] || "";
+    out.push({ i, y, m, g: g.label, t: r.label, v, room });
+  }
+  return out;
+}
+function studentHero(p) {
+  const m = S.main;
+  if (!p) return `<header class="hero"><div>${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}<h1>${esc(m.title)}</h1></div></header>`;
+  const n = Object.values(checkedOf(p)).filter(Boolean).length, cls = myClasses(p);
+  const st = startYM(p), months = cls.length ? Math.max(...cls.map(c => c.i)) + 1 : 0;
+  const last = cls.length ? colYM(p, months - 1) : null;
+  return `<header class="hero shero">
+      <div class="sh-l">${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}
+        <h1><b>${esc(p.name)}</b> 님의 <span class="br"></span>수강 로드맵</h1>
+        <p class="sh-sub">${esc((m.tags || []).filter(Boolean).join(" · ") || m.title || "")}</p></div>
+      <div class="sh-stats">
+        <div><em>시작</em><b>${st.y}.${String(st.m).padStart(2, "0")}</b></div>
+        <div><em>수강 과목</em><b>${n}<small>과목</small></b></div>
+        <div><em>기간</em><b>${months ? months + "<small>개월</small>" : "-"}</b>${last ? `<span>~ ${last.y}.${String(last.m).padStart(2, "0")}</span>` : ""}</div>
+      </div>
+    </header>`;
+}
+function studentNav(p) {
+  if (!p) return "";
+  return `<nav class="snav noprint" aria-label="바로 가기">${[["sum", "내 과목"], ["board", "로드맵"], ["sched", "수업 일정"], ["acad", "학사일정"]].map(([k, l]) => `<button data-act="go" data-go="${k}">${l}</button>`).join("")}</nav>`;
+}
+function myClassesHTML(p) {
+  const cls = myClasses(p);
+  if (!cls.length) return `<div class="mycl-empty">수업 일정은 담당 멘토가 정리한 뒤 여기에 표시됩니다.</div>`;
+  const byM = []; cls.forEach(c => { let b = byM.find(x => x.i === c.i); if (!b) byM.push(b = { i: c.i, y: c.y, m: c.m, list: [] }); b.list.push(c); });
+  return `<ol class="mycl">${byM.map((b, k) => `<li><div class="mm"><b>${b.m}월</b>${k === 0 || b.m === 1 ? `<span>${b.y}</span>` : ""}</div><div class="cc">${b.list.map(c => `<div class="c"><span class="v">${esc(c.v)}</span><span class="w">${esc(c.g)} ${esc(c.t)}</span>${c.room ? `<span class="r">${esc(c.room)}</span>` : ""}</div>`).join("")}</div></li>`).join("")}</ol>`;
+}
 function sumHTML(p) {
   if (!p) return "";
   const ck = checkedOf(p);
@@ -968,7 +1185,7 @@ function sumHTML(p) {
     const items = quoteItems(p);
     qline = `<div class="grow"></div>${S.qmaster && items.miss.length ? `<span class="qsum"><span class="qwarn">견적서에서 못 찾은 과목 ${items.miss.length}개</span></span>` : ""}<button class="btn sm" data-act="qview">과정안내 보기</button>`;
   }
-  return `<section class="panel sum"><div class="ph"><h2>${esc(p.name)} 님이 수강할 과목</h2>${qline}</div>${rows ? `<div class="rows">${rows}</div>` : `<div class="empty">아직 체크한 과목이 없습니다. 위 로드맵 옆 스위치를 ‘편집’으로 켠 뒤 과목을 골라 주세요.</div>`}</section>`;
+  return `<section class="panel sum"><div class="ph"><h2>${esc(p.name)} 님이 수강할 과목</h2>${qline}</div>${rows ? `<div class="rows">${rows}</div>` : `<div class="empty">${S.pub ? "담당 멘토가 수강 과목을 정리하는 중입니다." : "아직 체크한 과목이 없습니다. 위 로드맵 옆 스위치를 ‘편집’으로 켠 뒤 과목을 골라 주세요."}</div>`}</section>`;
 }
 function startYM(p) {
   const now = new Date(), m = Number(p?.startMonth) || (now.getMonth() + 1);
@@ -1079,9 +1296,12 @@ function acadHTML(p, n) {
         <tr><th colspan="2">개강일</th><th colspan="2">종강일</th></tr>
         <tr><td>${esc(b.start || "-")}</td><td class="wd">${wd(b.start)}</td><td>${esc(b.end || "-")}</td><td class="wd">${wd(b.end)}</td></tr>
         <tr><td colspan="5" class="amemo">${esc(b.memo || "")}</td></tr></table>`;
+    const md = d => { const x = ymd(d); return x ? `<b>${x.getMonth() + 1}.${String(x.getDate()).padStart(2, "0")}<small>(${WD[x.getDay()]})</small></b>` : "<b>-</b>"; };
+    const card = b => `<li><span class="m">${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</span><span class="d"><em>개강</em>${md(b.start)}</span><i aria-hidden="true">→</i><span class="d"><em>종강</em>${md(b.end)}</span>${b.memo ? `<span class="mm">${esc(b.memo)}</span>` : ""}</li>`;
     return `<div class="acad">
       <div class="acad-t">${ed ? `<input data-f="${tk}" value="${esc(title)}" aria-label="학사일정 제목">` : `<h3>${esc(title)}</h3>`}</div>
-      <div class="acg">${list.map(tbl).join("")}</div>
+      <div class="acg${ed ? " ed" : ""}">${list.map(tbl).join("")}</div>
+      ${ed ? "" : `<ul class="acl">${list.map(card).join("")}</ul>`}
       ${ed ? `<div class="noprint" style="display:flex;gap:6px;margin-top:10px"><button class="btn sm" data-act="addBlk" data-kind="${kind}">+ ${kind === "we" ? "주말반" : "평일반"} 학사일정 추가</button>${kind === "wd" && S.tt && (S.tt.terms || []).length ? `<button class="btn sm" data-act="ttBlk" title="수강생 관리파일의 강의장 시간표에 적힌 기수별 개강·종강일을 가져옵니다">관리파일 개강일 가져오기</button>` : ""}</div>` : ""}
     </div>`;
   };
@@ -1105,13 +1325,13 @@ function schedHTML(p) {
         ${p && Store.cloud && !S.pub ? `<button class="btn noprint" data-act="sendMgmt">${p.studentId ? "관리파일에 다시 보내기" : "수강생 관리파일로 보내기"}</button>` : ""}
         ${ed ? `<span class="noprint" style="font-size:13px;color:var(--sub)">개월 수 <button class="btn sm" data-act="months" data-d="-1">−</button> <b>${labels.length}</b> <button class="btn sm" data-act="months" data-d="1">+</button></span>` : ""}
       </div>
-      <div class="sbody"><div class="tscroll"><table class="tt">
+      <div class="sbody">${S.pub ? `${myClassesHTML(p)}<button class="btn sm ttgl noprint${S.showTable ? " on" : ""}" data-act="ttToggle">${S.showTable ? "전체 시간표 접기" : "전체 시간표 보기"}</button>` : ""}<div class="tscroll${S.pub && !S.showTable ? " pubhide" : ""}"><table class="tt">
         <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr></thead>
         <tbody>${body}</tbody>
       </table></div>
       <datalist id="subs">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
       <div class="snote">${ed ? `<input data-f="schedNote" value="${esc(sc.note || "")}" placeholder="시간표 아래 안내 문구">` : esc(sc.note || "")}</div>
-      ${acadHTML(p, labels.length)}
+      ${acadHTML(p, S.pub && myClasses(p).length ? Math.max(...myClasses(p).map(c => c.i)) + 1 : labels.length)}
       ${p && !S.pub ? `<textarea class="memo" id="memo" placeholder="상담 메모 (희망 진로, 가능한 시간대 등)">${esc(p.memo || "")}</textarea>` : ""}
       </div></section>`;
 }
@@ -1152,11 +1372,37 @@ function shareLink(p) {
   try { navigator.clipboard.writeText(url).then(() => { done(); show(); }, show); } catch (e) { show(); }
 }
 
+/* 학생 목록 (직원 전용) — 여기서 학생을 추가·선택. 저장된 학생은 나중에 수강생 관리파일로 보냄 */
+function fmtDay(v) { const d = v ? new Date(v) : null; return d && !isNaN(d) ? `${d.getFullYear() % 100}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}` : ""; }
+function studentList() {
+  let q = "";
+  const rowsHTML = () => {
+    const nq = q.replace(/\s/g, "").toLowerCase();
+    const list = visiblePlans().filter(x => !nq || ((x.name || "") + (x.tag || "") + (x.ownerName || "") + (x.phone4 || "")).replace(/\s/g, "").toLowerCase().includes(nq))
+      .sort((a, b) => (new Date(b.updatedAt || b.createdAt || 0)) - (new Date(a.updatedAt || a.createdAt || 0)));
+    if (!list.length) return `<div class="sl-empty">${visiblePlans().length ? "찾는 학생이 없습니다." : "아직 등록한 학생이 없습니다. ‘+ 학생 추가’를 눌러 주세요."}</div>`;
+    const showOwner = isAdmin() && S.showAll;
+    return `<table class="sl"><thead><tr><th>이름</th><th>구분</th>${showOwner ? "<th>담당</th>" : ""}<th>선택 과목</th><th>관리파일</th><th>수정일</th></tr></thead><tbody>${list.map(x => {
+      const n = Object.values(x.checked || {}).filter(Boolean).length;
+      return `<tr data-pid="${esc(x.id)}" class="${x.id === S.cur ? "cur" : ""}" tabindex="0"><td class="nm">${esc(x.name || "(이름 없음)")}${x.id === S.cur ? `<span class="now">상담 중</span>` : ""}</td><td class="tg">${esc(x.tag || "")}</td>${showOwner ? `<td class="ow">${esc(x.ownerName || x.owner || "")}</td>` : ""}<td>${n ? n + "과목" : `<span class="dim">없음</span>`}</td><td>${x.studentId ? `<span class="ok">보냄</span>` : `<span class="dim">아직</span>`}</td><td class="dt">${fmtDay(x.updatedAt || x.createdAt)}</td></tr>`;
+    }).join("")}</tbody></table>`;
+  };
+  const box = modal({ title: "학생 목록", wide: true, body: `<div class="sl-bar"><input type="text" class="sl-q" placeholder="이름·구분·담당으로 찾기" aria-label="학생 찾기">${isAdmin() && Store.cloud ? `<label class="chk"><input type="checkbox" class="sl-all"${S.showAll ? " checked" : ""}> 다른 멘토 학생도 보기</label>` : ""}<div class="grow"></div><button class="btn pri sl-add">+ 학생 추가</button></div><div class="sl-cnt"></div><div class="sl-wrap"></div>` });
+  const draw = () => { $(".sl-wrap", box).innerHTML = rowsHTML(); $(".sl-cnt", box).textContent = `${visiblePlans().length}명`; };
+  draw();
+  $(".sl-q", box).addEventListener("input", e => { q = e.target.value; draw(); });
+  const all = $(".sl-all", box); if (all) all.addEventListener("change", () => { S.showAll = all.checked; if (S.cur && !visiblePlans().some(x => x.id === S.cur)) { S.cur = null; render(); } draw(); });
+  $(".sl-add", box).onclick = () => { box.close(); planForm(null); };
+  const pick = id => { S.cur = id; S.view = "road"; if (S.mode === "edit") S.mode = "view"; box.close(); render(); scrollTo(0, 0); };
+  $(".sl-wrap", box).addEventListener("click", e => { const tr = e.target.closest("tr[data-pid]"); if (tr) pick(tr.dataset.pid); });
+  $(".sl-wrap", box).addEventListener("keydown", e => { const tr = e.target.closest("tr[data-pid]"); if (tr && e.key === "Enter") pick(tr.dataset.pid); });
+}
+
 /* 상담 대상 */
 function planForm(p) {
   const isNew = !p;
   modal({
-    title: isNew ? "새 상담" : "상담 대상 정보",
+    title: isNew ? "학생 추가" : "학생 정보",
     body: `<label class="fld">이름<input type="text" id="f-n" value="${esc(p?.name || "")}" placeholder="예: 홍길동"></label>
       <label class="fld">휴대폰 뒷번호 4자리<input type="text" id="f-p4" value="${esc(p?.phone4 || "")}" inputmode="numeric" maxlength="4" placeholder="예: 1234"><span class="help">학생이 링크를 열 때 이 번호를 넣어야 자기 로드맵이 보입니다.</span></label>
       <label class="fld">구분용 메모 (선택)<input type="text" id="f-t" value="${esc(p?.tag || "")}" placeholder="예: 영상 취업반"><span class="help">이름이 같은 사람을 구분할 때 씁니다. 직원 목록에만 보입니다.</span></label>`,
@@ -1167,7 +1413,7 @@ function planForm(p) {
         S.plans = S.plans.filter(x => x.id !== p.id); S.cur = null; S.onlySel = false; render(); toast("삭제했어요");
       }), 0); } }]),
       { label: "취소" },
-      { label: isNew ? "만들기" : "저장", cls: "pri", fn: box => {
+      { label: isNew ? "추가" : "저장", cls: "pri", fn: box => {
         const name = $("#f-n", box).value.trim(), tag = $("#f-t", box).value.trim(), phone4 = $("#f-p4", box).value.trim();
         if (!name) { toast("이름을 입력해 주세요"); return false; }
         if (phone4 && !/^\d{4}$/.test(phone4)) { toast("휴대폰 뒷번호는 숫자 4자리로 넣어 주세요"); return false; }
@@ -1503,22 +1749,26 @@ document.addEventListener("click", async e => {
   const t = e.target.closest("[data-act]"); if (!t) return;
   const a = t.dataset.act, c = t.dataset.c ? findCourse(t.dataset.c) : null;
   if (a === "course") { const c3 = findCourse(t.dataset.c); if (c3) openCourse(c3); return; }
+  if (a === "vtoggle") { S.vOpen = S.vOpen || {}; S.vOpen[t.dataset.c] = t.dataset.open !== "1"; render(); return; }
+  if (S.pub && a === "go") { const el = { sum: ".sum", board: ".pg1 .panel:not(.sum)", sched: ".sched", acad: ".acad" }[t.dataset.go]; const x = el && document.querySelector(el); if (x) { const y = x.getBoundingClientRect().top + scrollY - (($(".top")?.offsetHeight || 56) + ($(".snav")?.offsetHeight || 0) + 10); scrollTo({ top: y, behavior: "smooth" }); } return; }
+  if (S.pub && a === "ttToggle") { S.showTable = !S.showTable; render(); return; }
   if (S.pub && !["subj", "print"].includes(a)) return;
   if (S.pub && a === "subj") { const c2 = findCourse(t.dataset.c), s2 = c2 && locate(c2, t.dataset.s)?.s; if (s2) openSubject(c2, s2); return; }
   if (a === "shareLink") { shareLink(curPlan()); return; }
   if (a === "mode" && t.dataset.mode === "edit" && !isAdmin()) { toast("구성 편집은 팀장만 할 수 있어요"); return; }
   if (a === "qview") { S.view = "quote"; render(); scrollTo(0, 0); return; }
   if (a === "backRoad") { S.view = "road"; render(); return; }
-  if (a === "toggleCheck") { S.view = "road"; S.mode = S.mode === "check" ? "view" : "check"; if (S.mode === "check" && !curPlan()) toast("상담 대상을 고르거나 ‘새 상담’을 눌러 주세요"); render(); return; }
+  if (a === "toggleCheck") { S.view = "road"; S.mode = S.mode === "check" ? "view" : "check"; if (S.mode === "check" && !curPlan()) toast("‘학생 목록’에서 학생을 고르거나 추가해 주세요"); render(); return; }
   if (a === "startEdit") { if (!isAdmin()) { toast("구성 편집은 팀장만 할 수 있어요"); return; } S.view = "road"; S.mode = "edit"; render(); return; }
   if (a === "endEdit") { S.mode = "view"; render(); return; }
   if (a === "mode") S.view = "road";
   if (a === "mode") {
     S.mode = t.dataset.mode;
-    if (S.mode === "check" && !curPlan()) toast("상담 대상을 고르거나 ‘+ 새 상담’을 눌러 주세요");
+    if (S.mode === "check" && !curPlan()) toast("‘학생 목록’에서 학생을 고르거나 추가해 주세요");
     render();
   }
   else if (a === "newPlan") planForm(null);
+  else if (a === "stuList") studentList();
   else if (a === "editPlan") planForm(curPlan());
   else if (a === "print") { flushAll(); window.print(); }
   else if (a === "logout") { flushAll(); setTimeout(() => firebase.auth().signOut().finally(() => location.reload()), 300); }
@@ -1678,11 +1928,13 @@ function gate(msg) {
   $("#top").innerHTML = `<div class="brand"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>${esc(S.main?.brand || "수강 로드맵")}</div>`;
   $("#app").className = "wrap";
   $("#app").innerHTML = `<form class="panel gate" id="gate" autocomplete="off">
+      <div class="g-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></div>
       <h2>내 수강 로드맵</h2>
-      <p>본인 확인을 위해 휴대폰 번호 <b>뒷자리 4자리</b>를 입력해 주세요.</p>
+      <p>상담 때 함께 정한 과목과 수업 일정을 볼 수 있어요.<br>본인 확인을 위해 휴대폰 번호 <b>뒷자리 4자리</b>를 입력해 주세요.</p>
       <input id="g-p4" inputmode="numeric" maxlength="4" pattern="\\d{4}" placeholder="0000" aria-label="휴대폰 뒷번호 4자리">
       <div class="err" id="g-err">${esc(msg || "")}</div>
-      <button class="btn pri" type="submit">확인</button>
+      <button class="btn pri" type="submit">내 로드맵 보기</button>
+      <p class="g-foot">번호가 맞지 않으면 담당 멘토에게 문의해 주세요.</p>
     </form>`;
   const inp = $("#g-p4"); setTimeout(() => inp.focus(), 50);
   $("#gate").addEventListener("submit", async e => {
