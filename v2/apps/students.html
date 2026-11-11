@@ -10636,9 +10636,10 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
   var ZOOM = JSON.parse(JSON.stringify(ZOOM_SEED));    // 강의장 → 비대면줌
   var NOTE = JSON.parse(JSON.stringify(NOTE_SEED));    // 과목 → 체크사항
   var MAP  = JSON.parse(JSON.stringify(MAP_SEED));     // 팔레트 과목 → 시간표 과목
+  var DAYS = {};                                       // 과목 → 문자에 넣을 수업요일 (직접 고친 값)
 
   var K_TT = 'studentMgmt_v3_timetable', K_MAP = 'studentMgmt_v3_tt_map';
-  var K_ZOOM = 'studentMgmt_v3_tt_zoom', K_NOTE = 'studentMgmt_v3_tt_note';
+  var K_ZOOM = 'studentMgmt_v3_tt_zoom', K_NOTE = 'studentMgmt_v3_tt_note', K_DAYS = 'studentMgmt_v3_tt_days';
   var ttOpen = false, ttTerm = (TT.terms[0] || {}).k || '';
   var GRID_OFF = true;   // 시간표 표(그리드)는 일단 끔 — 버튼만 남긴다
 
@@ -10652,6 +10653,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     MAP  = lget(K_MAP, MAP);
     ZOOM = lget(K_ZOOM, ZOOM);
     NOTE = lget(K_NOTE, NOTE);
+    DAYS = lget(K_DAYS, DAYS);
     var d = db(); if (!d) return;
     try{
       var a = await d.collection('config').doc('timetable').get();
@@ -10666,18 +10668,19 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       if (c.exists && c.data()){
         if (c.data().zoom) { ZOOM = c.data().zoom; lset(K_ZOOM, ZOOM); }
         if (c.data().note) { NOTE = c.data().note; lset(K_NOTE, NOTE); }
+        if (c.data().days) { DAYS = c.data().days; lset(K_DAYS, DAYS); }
       }
     }catch(e){}
     if (!TT.terms.some(function(t){ return t.k === ttTerm; })) ttTerm = (TT.terms[0] || {}).k || '';
     paint();
   }
   async function push(what){
-    lset(K_TT, TT); lset(K_MAP, MAP); lset(K_ZOOM, ZOOM); lset(K_NOTE, NOTE);
+    lset(K_TT, TT); lset(K_MAP, MAP); lset(K_ZOOM, ZOOM); lset(K_NOTE, NOTE); lset(K_DAYS, DAYS);
     var d = db(); if (!d) return false;
     try{
       if (what !== 'map')  await d.collection('config').doc('timetable').set({ data: TT, updatedAt: Date.now() });
       if (what !== 'tt')   await d.collection('config').doc('timetable_map').set({ data: MAP, updatedAt: Date.now() });
-      if (what !== 'tt')   await d.collection('config').doc('timetable_info').set({ zoom: ZOOM, note: NOTE, updatedAt: Date.now() });
+      if (what !== 'tt')   await d.collection('config').doc('timetable_info').set({ zoom: ZOOM, note: NOTE, days: DAYS, updatedAt: Date.now() });
       return true;
     }catch(e){ return false; }
   }
@@ -10692,7 +10695,12 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     if (x === '화/목') return '화목';
     if (x === '월/수/금') return '월수금';
     if (x === '화/목/토') return '화목토';
-    return x.replace(/\//g, '');
+    return x.replace(/[\/,·]/g, '');
+  }
+  // 문자에 들어갈 수업요일: 직접 고친 값 → 시간표 값
+  function daysFor(a, r){
+    var k1 = toTT(a.subject), v = DAYS[k1] || DAYS[a.subject] || (r && r.s && DAYS[r.s]);
+    return v ? v : (r ? dayText(r.w) : '');
   }
   // 격일 반을 한눈에: 월수반 / 화목반 / 매일반
   function dayKind(w){
@@ -10778,7 +10786,10 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     return { s: c.name, d: '', r: c.room || '', t1: hhmm(c.time) || t1, t2: t2, w: c.days || '', o: c.start || '', c: c.end || '', tc: c.teacher || '', ops: true };
   }
   // 운영계획표 먼저, 없으면 넣어 둔 시간표
-  function pickRow(a, term){ return opsRow(a.subject, a.time, a.month, a.year) || findRow(a.subject, a.time, term); }
+  function pickRow(a, term){
+    // 운영계획표(그룹웨어 최신 시간표)를 먼저 쓰고, 못 찾을 때만 넣어 둔 시간표
+    return opsRow(a.subject, a.time, a.month, a.year) || findRow(a.subject, a.time, term);
+  }
   // 월 이름 → 기수 키 (배정표의 '10월' 같은 값)
   function termOfMonth(month){
     var n = String(month || '').replace(/[^0-9]/g, '');
@@ -10904,6 +10915,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       var state = hit ? (cur ? '연결됨' : '이름 같음') : '시간표에 없음';
       var cls = hit ? (cur ? 'ok' : 'same') : 'no';
       var note = NOTE[name] != null ? NOTE[name] : (NOTE[s] != null ? NOTE[s] : '');
+      var dayv = DAYS[name] != null ? DAYS[name] : (DAYS[s] != null ? DAYS[s] : '');
       var lid = 'ttS' + n;
       return '<tr class="tt-lr' + (hit ? '' : ' nohit') + '">' +
         '<td><b class="tt-pal">' + esc(s) + '</b>' + (course[s] ? '<span class="tt-pc">' + esc(course[s]) + '</span>' : '') + '</td>' +
@@ -10911,6 +10923,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
           '<input class="form-control tt-mi tt-big" data-s="' + esc(s) + '" list="' + lid + '" value="' + esc(cur) + '" ' +
           'placeholder="' + (same ? esc(s) + ' (이름 같음)' : '비슷한 이름이 목록에 뜹니다') + '" autocomplete="off"></td>' +
         '<td><input class="form-control tt-ni tt-big" data-n="' + esc(name) + '" value="' + esc(note) + '" placeholder="엑셀 메모 · 비우면 - 로 나옵니다"></td>' +
+        '<td><input class="form-control tt-di" list="ttDayList" data-n="' + esc(name) + '" value="' + esc(dayv) + '" placeholder="비우면 시간표 값" style="width:110px"></td>' +
         '<td><span class="tt-st ' + cls + '">' + state + '</span></td></tr>';
     }).join('');
   }
@@ -10943,14 +10956,16 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     var head, table, tools;
     if (linkTab === 'subj'){
       head = '<p>한 줄에 과목 하나입니다. 가운데는 <b>시간표에서 쓰는 이름</b>, 오른쪽은 <b>문자에 들어갈 체크사항</b>입니다.<br>' +
+        '<b>수업요일 고정</b>은 시간표에 적힌 요일과 실제 요일이 다를 때만 적으세요. (예: 캐드 → 월~목)<br>' +
         '이름이 같으면 가운데는 비워 두세요. 예: <b>포토</b> → <b>포토샵</b> · <b>포토웍스</b> → <b>AI포토웍스</b></p>';
       tools = '<input class="tt-q" id="ttMapQ" placeholder="과목 찾기">' +
         '<label><input type="checkbox" id="ttMapOnly"> 시간표에 없는 것만</label>' +
         '<label><input type="checkbox" id="ttNoteOnly"> 체크사항 빈 것만</label>' +
         '<span class="tt-sum">과목 ' + pal.length + '개 · 못 찾음 ' + nohit + '개 · 체크사항 빈 것 ' + nonote + '개</span>';
       table = '<table class="tt-maptable tt-linktable"><thead><tr>' +
-        '<th>관리파일 과목</th><th>시간표 과목</th><th>체크사항 (엑셀 메모)</th><th>상태</th>' +
-        '</tr></thead><tbody id="ttMapBody">' + linkSubjRows() + '</tbody></table>';
+        '<th>관리파일 과목</th><th>시간표 과목</th><th>체크사항 (엑셀 메모)</th><th title="시간표와 실제 요일이 다를 때만 적으세요. 예: 월~목">수업요일 고정</th><th>상태</th>' +
+        '</tr></thead><tbody id="ttMapBody">' + linkSubjRows() + '</tbody></table>' +
+        '<datalist id="ttDayList">' + ['월~목','월~금','월/수','화/목','월/수/금','화/목/금','토','일','토/일'].map(function(x){ return '<option value="' + x + '">'; }).join('') + '</datalist>';
     } else {
       head = '<p>강의장 앞글자별 줌 번호입니다. 개강안내 문자의 <b>비대면줌</b> 칸에 그대로 들어갑니다.<br>' +
         '비대면 수업이 없는 강의장은 <b>비대면수업없음</b> 이라고 적어 두시면 됩니다.</p>';
@@ -11006,6 +11021,14 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       if (nv) NOTE[key] = nv; else delete NOTE[key];
       if (oldKey && oldKey !== key) delete NOTE[oldKey];
       ni.dataset.n = key;
+      var di = tr.querySelector('.tt-di');
+      if (di){
+        var dv = (di.value || '').trim(), dOld = di.dataset.n;
+        if (dv) DAYS[key] = dv; else delete DAYS[key];
+        if (pal !== key) delete DAYS[pal];
+        if (dOld && dOld !== key) delete DAYS[dOld];
+        di.dataset.n = key;
+      }
     });
     [].forEach.call(document.querySelectorAll('.tt-zi'), function(i){
       var v = (i.value || '').trim(), k = i.dataset.z;
@@ -11371,7 +11394,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       var when = r ? (fmtDate(r.o) + ' ~ ' + fmtDate(r.c)) : '';
       var time = r ? fmtTime(r.t1, r.t2) : String(a.time || '');
       return { subject: a.subject, ttName: toTT(a.subject), room: letter, roomFull: room, zoom: zoom, note: note,
-               when: when, time: time, month: a.month, found: !!r, teacher: (r && r.tc) ? r.tc : '', days: r ? dayText(r.w) : '' };
+               when: when, time: time, month: a.month, found: !!r, src: r ? (r.ops ? 'ops' : 'tt') : '', teacher: (r && r.tc) ? r.tc : '', days: daysFor(a, r) };
     });
     return { name: name, blocks: blocks };
   }
@@ -11435,7 +11458,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
         zoom: ZOOM[letter] || '', note: NOTE[toTT(a.subject)] || NOTE[a.subject] || '',
         when: r ? (fmtDate(r.o) + ' ~ ' + fmtDate(r.c)) : '',
         time: r ? fmtTime(r.t1, r.t2) : String(a.time || ''),
-        month: a.month, found: !!r, teacher: (r && r.tc) ? r.tc : '', days: r ? dayText(r.w) : ''
+        month: a.month, found: !!r, teacher: (r && r.tc) ? r.tc : '', days: daysFor(a, r)
       };
     });
   }
@@ -11458,6 +11481,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       var ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
       if (!ok && navigator.clipboard) navigator.clipboard.writeText(text);
       ta.remove();
+      if (isMobile() && telOf(stu)) { openSmsApp(telOf(stu), text); return; }
       try{ showToast('개강안내 문자를 복사했습니다. 보낸 뒤 체크해 주세요', 'success'); }catch(e){}
     };
     window.v9EditTpl = function(){
@@ -11476,6 +11500,21 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       modal.classList.add('show'); addX();
     };
   }
+  /* ---------- 휴대폰 문자 앱으로 보내기 ---------- */
+  function isMobile(){ return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || '')); }
+  function telOf(stu){
+    var raw = (stu && (stu.contact || stu.phone)) || ((document.getElementById('contact') || {}).value) || '';
+    return String(raw).replace(/[^0-9]/g, '');
+  }
+  function smsHref(tel, text){
+    var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || ''));
+    return 'sms:' + tel + (ios ? '&' : '?') + 'body=' + encodeURIComponent(text);
+  }
+  function openSmsApp(tel, text){
+    if (!tel){ try{ showToast('학생 연락처가 없습니다. 정보 탭에서 연락처를 넣어 주세요', 'warning'); }catch(e){} return false; }
+    location.href = smsHref(tel, text);
+    return true;
+  }
   function openSms(){
     var d = buildSms();
     if (!d.name){ try{ showToast('먼저 학생을 선택해 주세요', 'warning'); }catch(e){} return; }
@@ -11483,17 +11522,27 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       ? d.blocks.map(function(b, i){
           return '<div class="tt-sms' + (b.found ? '' : ' warn') + '">' +
             '<div class="tt-smsh"><b>' + esc(b.ttName) + '</b>' +
-            (b.found ? '' : '<span class="tt-st no">시간표에서 못 찾음</span>') +
+            (b.found ? (b.src === 'ops' ? '<span class="tt-st ok">운영계획표 기준</span>' : '<span class="tt-st same" title="운영계획표에서 이 반을 못 찾아, 관리파일에 넣어 둔 시간표로 채웠습니다. 요일·일정이 예전 값일 수 있습니다">넣어 둔 시간표 기준 · 확인 필요</span>') : '<span class="tt-st no">시간표에서 못 찾음</span>') +
+            '<button class="btn btn-outline btn-sm" data-tt="smsone" data-i="' + i + '" title="휴대폰 문자 앱이 이 내용으로 열립니다">문자 보내기</button>' +
             '<button class="btn btn-brand btn-sm" data-tt="copy" data-i="' + i + '">복사</button></div>' +
             '<textarea class="form-control tt-smsbox" id="ttSms' + i + '">' + esc(smsText(b, d.name)) + '</textarea></div>';
         }).join('')
       : '<div class="tt-empty">배정된 과목이 없습니다. 배정관리에서 과목을 넣어 주세요.</div>';
+    var sid0 = (document.getElementById('studentId') || {}).value;
+    var stu0 = (globalStudentData || []).filter(function(s){ return s.id === sid0; })[0];
+    var tel = telOf(stu0);
+    window.__ttTel = tel;
     document.getElementById('subjectManageTitle').innerText = d.name + ' 개강안내 문자';
     document.getElementById('subjectManageBody').innerHTML =
-      '<div class="tt-maphead"><p>확정된 배정으로 만들었습니다. 내용을 고쳐서 복사하셔도 됩니다.<br>' +
-      '못 찾은 과목은 <b>과목 연결</b>에서 이름을 맞춰 주시면 자동으로 채워집니다.</p></div>' + body;
+      '<div class="tt-maphead"><p>확정된 배정으로 만들었습니다. 내용을 고쳐서 보내거나 복사하셔도 됩니다.<br>' +
+      '못 찾은 과목은 <b>과목 연결</b>에서 이름을 맞춰 주시면 자동으로 채워집니다.</p>' +
+      '<p class="tt-smsto">받는 번호: <b>' + (tel ? esc(tel.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3')) : '연락처 없음') + '</b>' +
+      (isMobile() ? '' : ' · <span style="color:#888">휴대폰에서 관리파일을 열면 <b>문자 보내기</b>를 눌러 바로 보낼 수 있습니다</span>') + '</p>' +
+      (OPS_STATE === 'ok' ? '' : '<p style="color:#b45309;font-weight:600">운영계획표 시간표를 못 읽어서, 관리파일에 넣어 둔 시간표로 만들었습니다. 요일·일정이 예전 값일 수 있으니 운영계획표에 로그인한 뒤 다시 열어 주세요. ' +
+        '<a href="/hongdae/" target="_blank" rel="noopener" style="color:#e2475f">운영계획표 열기</a></p>') + '</div>' + body;
     var modal = document.getElementById('subjectManageModal');
-    modal.querySelector('.modal-actions').innerHTML = '<button class="btn btn-outline" data-tt="mapclose">닫기</button>';
+    modal.querySelector('.modal-actions').innerHTML = '<button class="btn btn-outline" data-tt="mapclose">닫기</button>' +
+      (d.blocks.length > 1 ? '<button class="btn btn-brand" data-tt="smsall" title="모든 과목 안내를 한 문자로 묶어 문자 앱을 엽니다">전체 한 번에 문자 보내기</button>' : '');
     modal.classList.add('show'); addX();
     window.__ttSms = d.blocks;
   }
@@ -11691,6 +11740,13 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
       document.getElementById('subjectManageModal').classList.remove('show');
       return;
     }
+    if (a === 'smsone' || a === 'smsall'){
+      var parts = [];
+      if (a === 'smsone'){ var t1 = document.getElementById('ttSms' + b.dataset.i); if (t1) parts.push(t1.value); }
+      else [].forEach.call(document.querySelectorAll('.tt-smsbox[id^="ttSms"]'), function(x){ parts.push(x.value); });
+      if (parts.length) openSmsApp(window.__ttTel || '', parts.join('\n\n----------\n\n'));
+      return;
+    }
     if (a === 'copy'){
       var t = document.getElementById('ttSms' + b.dataset.i); if (!t) return;
       t.select(); var ok = false;
@@ -11723,7 +11779,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     var re = document.getElementById('ttOpsRe'); if (re) re.onclick = function(e){ e.preventDefault(); el.textContent = ' · 운영계획표 확인 중…'; loadOps().then(opsStatus); };
   }
   // 바깥에서 쓸 수 있게
-  window.TTX = { opsRow: opsRow, opsState: function(){ return OPS_STATE; }, reloadOps: function(){ return loadOps().then(opsStatus); }, roomOf: roomOf, findRow: findRow, toTT: toTT, data: function(){ return TT; }, map: function(){ return MAP; } };
+  window.TTX = { smsHref: smsHref, opsRow: opsRow, opsState: function(){ return OPS_STATE; }, reloadOps: function(){ return loadOps().then(opsStatus); }, roomOf: roomOf, findRow: findRow, toTT: toTT, data: function(){ return TT; }, map: function(){ return MAP; } };
 })();
 
 </script>
