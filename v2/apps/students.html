@@ -10727,6 +10727,58 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     return hit[0] || null;
   }
   function roomOf(subject, time, termKey){ var r = findRow(subject, time, termKey); return r ? r.r : ''; }
+
+  /* ---------- 운영계획표(hongdae-ops) 시간표에서 강의장·시간·개강일 자동 ----------
+     같은 주소(t9vely3.github.io)의 운영계획표에 로그인돼 있으면 그 시간표를 읽는다.
+     못 읽으면 지금처럼 '시간표 넣기'로 넣은 표를 쓴다. */
+  var OPS = null, OPS_STATE = 'wait';
+  var OPS_CFG = { apiKey: 'AIzaSyAY0UqcUw0zgsOWvhZHK7lTB65RFB1rLPE', authDomain: 'hongdae-ops.firebaseapp.com', projectId: 'hongdae-ops',
+    storageBucket: 'hongdae-ops.firebasestorage.app', messagingSenderId: '1074230015310', appId: '1:1074230015310:web:7e22af71a7000dc819da1f' };
+  function opsDec(v){
+    if (Array.isArray(v)) return v.map(opsDec);
+    if (v && typeof v === 'object'){
+      var ks = Object.keys(v); if (ks.length === 1 && ks[0] === '__a') return opsDec(v.__a);
+      var o = {}; ks.forEach(function(k){ o[k] = opsDec(v[k]); }); return o;
+    }
+    return v;
+  }
+  async function loadOps(){
+    OPS_STATE = 'wait';
+    try{
+      if (typeof firebase === 'undefined' || !firebase.auth) { OPS_STATE = 'err'; return; }
+      var app = firebase.apps.filter(function(a){ return a.name === 'ops'; })[0] || firebase.initializeApp(OPS_CFG, 'ops');
+      var u = await new Promise(function(res){ var done = false; var off = app.auth().onAuthStateChanged(function(x){ if (done) return; done = true; try{ off(); }catch(e){} res(x); }); setTimeout(function(){ if (!done){ done = true; res(null); } }, 6000); });
+      if (!u){ OPS_STATE = 'login'; return; }
+      var FP = firebase.firestore.FieldPath.documentId();
+      var q = await app.firestore().collection('ops_calls').where(FP, '>=', '_tt_').where(FP, '<=', '_tt_\uf8ff').get();
+      OPS = [];
+      q.docs.forEach(function(d){ ((opsDec(d.data()) || {}).classes || []).forEach(function(c){ if (c && c.name) OPS.push(c); }); });
+      OPS_STATE = 'ok';
+    }catch(e){ console.warn('운영계획표 시간표', e); OPS_STATE = 'err'; }
+  }
+  function opsNm(t){ return String(t || '').replace(/\(국\)|국비|_\d+-?\(?국?\)?$/g, '').replace(/-?total$/i, '').replace(/[\s()\[\]·._\-]/g, '').toLowerCase(); }
+  function hhmm(t){ var m = String(t || '').match(/(\d{1,2}):(\d{2})/); return m ? (+m[1]) + ':' + m[2] : ''; }
+  // 배정 한 칸(과목 · 시간대 · 월 · 연도)에 맞는 운영계획표 반
+  function opsRow(subject, time, month, year){
+    if (!OPS || !OPS.length || !subject) return null;
+    var want = [subject, MAP[subject]].filter(Boolean).map(opsNm);
+    var t1 = hhmm((String(time || '').match(/(\d{1,2}:\d{2})/) || [])[1]);
+    var mm = String(month || '').replace(/[^0-9]/g, ''); if (!mm) return null;
+    var M = ('0' + mm).slice(-2);
+    var y = +year || (typeof getCurrentAssignYear === 'function' ? +getCurrentAssignYear() : new Date().getFullYear());
+    var ym = y + '-' + M, mid = ym + '-15';
+    var L = OPS.filter(function(c){ return want.indexOf(opsNm(c.name)) >= 0 && !/폐강/.test(c.st || ''); });
+    if (!L.length) return null;
+    var inMonth = function(c){ return String(c.start || '').slice(0, 7) === ym || (String(c.start || '') <= mid && mid <= String(c.end || '')); };
+    var sameT = function(c){ return !t1 || hhmm(c.time) === t1; };
+    var c = L.filter(function(c){ return inMonth(c) && sameT(c); })[0]
+         || L.filter(function(c){ return sameT(c) && String(c.start || '').slice(5, 7) === M; })[0];
+    if (!c) return null;
+    var t2 = hhmm(c.tend) || hhmm((String(time || '').match(/-\s*(\d{1,2}:\d{2})/) || [])[1]);
+    return { s: c.name, d: '', r: c.room || '', t1: hhmm(c.time) || t1, t2: t2, w: c.days || '', o: c.start || '', c: c.end || '', tc: c.teacher || '', ops: true };
+  }
+  // 운영계획표 먼저, 없으면 넣어 둔 시간표
+  function pickRow(a, term){ return opsRow(a.subject, a.time, a.month, a.year) || findRow(a.subject, a.time, term); }
   // 월 이름 → 기수 키 (배정표의 '10월' 같은 값)
   function termOfMonth(month){
     var n = String(month || '').replace(/[^0-9]/g, '');
@@ -11311,7 +11363,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     if (!list.length) list = (typeof assignedClasses !== 'undefined' ? assignedClasses : []);
     var blocks = list.map(function(a){
       var term = termOfMonth(a.month);
-      var r = findRow(a.subject, a.time, term);
+      var r = pickRow(a, term);
       var room = (r && r.r) ? r.r : (a.room || '');
       var letter = String(room).charAt(0).toUpperCase();
       var zoom = ZOOM[letter] || '';
@@ -11375,7 +11427,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     });
     return list.map(function(a){
       var term = termOfMonth(a.month);
-      var r = findRow(a.subject, a.time, term);
+      var r = pickRow(a, term);
       var room = (r && r.r) ? r.r : (a.room || '');
       var letter = String(room).charAt(0).toUpperCase();
       return {
@@ -11456,8 +11508,8 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
         var term = termOfMonth(currentEditMonth);
         assignedClasses.forEach(function(a){
           if (a.month !== currentEditMonth || a.time !== currentEditTime) return;
-          var rm = roomOf(a.subject, a.time, term);
-          if (rm) a.room = rm;
+          var hit = pickRow(a, term), rm = hit ? hit.r : '';
+          if (rm) a.room = String(rm).replace(/강의장$/, '');
         });
         renderAssignmentMatrix();
       }catch(e){}
@@ -11475,7 +11527,7 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     sec.id = 'ttSection';
     sec.innerHTML =
       '<div class="tt-bar"><b class="tt-ttl">강의장 · 개강안내 관리</b>' +
-      '<span class="tt-hint">연동 v3</span>' +
+      '<span class="tt-hint">연동 v3</span><span class="tt-hint" id="ttOpsSt"></span>' +
       '<span class="tt-acts2">' +
         '<button class="btn btn-outline btn-sm" type="button" data-tt="map">과목 · 메모 연결</button>' +
         '<button class="btn btn-outline btn-sm" type="button" data-tt="edit">시간표 편집</button>' +
@@ -11657,13 +11709,21 @@ var MAP_SEED = {"포토웍스":"AI포토웍스","디일러":"AI디일러","모�
     setTimeout(hookPwReset, 1500);
     setTimeout(hookBrief, 1500);
     pull();
+    loadOps().then(opsStatus);
     var n = 0, t = setInterval(function(){ if (hookAssign() || ++n > 40) clearInterval(t); }, 300);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
+  function opsStatus(){
+    var el = document.getElementById('ttOpsSt'); if (!el) return;
+    el.innerHTML = OPS_STATE === 'ok' ? ' · <b style="color:#16a34a">운영계획표 시간표 연동됨</b> (' + OPS.length + '반 · 강의장 자동)'
+      : OPS_STATE === 'login' ? ' · 운영계획표에 로그인하면 강의장이 자동으로 들어갑니다 <a href="/hongdae/" target="_blank" rel="noopener" style="color:#e2475f;font-weight:700">운영계획표 열기</a> <a href="#" id="ttOpsRe" style="margin-left:4px">다시 확인</a>'
+      : OPS_STATE === 'err' ? ' · 운영계획표 시간표를 읽지 못했습니다 <a href="#" id="ttOpsRe">다시 확인</a>' : ' · 운영계획표 확인 중…';
+    var re = document.getElementById('ttOpsRe'); if (re) re.onclick = function(e){ e.preventDefault(); el.textContent = ' · 운영계획표 확인 중…'; loadOps().then(opsStatus); };
+  }
   // 바깥에서 쓸 수 있게
-  window.TTX = { roomOf: roomOf, findRow: findRow, toTT: toTT, data: function(){ return TT; }, map: function(){ return MAP; } };
+  window.TTX = { opsRow: opsRow, opsState: function(){ return OPS_STATE; }, reloadOps: function(){ return loadOps().then(opsStatus); }, roomOf: roomOf, findRow: findRow, toTT: toTT, data: function(){ return TT; }, map: function(){ return MAP; } };
 })();
 
 </script>
