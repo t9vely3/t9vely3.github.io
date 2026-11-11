@@ -165,24 +165,33 @@ button.brand{border:0;background:none;padding:0;font:inherit;cursor:pointer;colo
   .pp-sub{margin:1mm 0 0;font-size:9.5pt;color:#6b6f7a}
   .pp-meta{text-align:right;font-size:11pt}.pp-meta b{font-size:15pt}.pp-meta span{display:block;font-size:8.5pt;color:#8a8e98;margin-top:1mm}
   .pp-b{flex:1;min-height:0;overflow:hidden;padding:0 1mm 1mm 0}
-  .pcrs{display:grid;grid-template-columns:38mm 1fr;gap:4mm;padding:3mm 0 3.5mm;border-bottom:.25mm solid #e3e5ea;break-inside:avoid}
-  .pch{display:flex;flex-direction:column;gap:1mm;border-left:1.4mm solid var(--ac);padding-left:3mm}
-  .pci{width:9mm;height:9mm;border-radius:50%;background:color-mix(in srgb,var(--ac) 14%,#fff);color:var(--ac);display:grid;place-items:center}
-  .pci svg{width:5.2mm;height:5.2mm;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-  .pch b{font-size:12pt;color:var(--ac);letter-spacing:-.03em}
-  .pch small{font-size:8.5pt;color:#6b6f7a}
-  .pcrs.has .pch small{color:var(--ac);font-weight:700}
-  .pseq{display:flex;flex-wrap:wrap;align-items:center;gap:1.6mm 0;align-content:flex-start}
-  .pc{display:inline-flex;align-items:baseline;gap:1mm;padding:1.2mm 2.6mm;border-radius:99px;border:.25mm solid #d9dce2;font-size:9.5pt;color:#555a65;white-space:nowrap}
-  .pc i{font-style:normal;font-size:8pt;color:#8a8e98}
-  .pc.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}.pc.on i{color:#fff;opacity:.85}
-  .par{width:3.2mm;height:.3mm;background:#c6cad2;margin:0 .6mm;position:relative}
-  .par::after{content:"";position:absolute;right:-.2mm;top:-.7mm;border-left:1.1mm solid #c6cad2;border-top:.85mm solid transparent;border-bottom:.85mm solid transparent}
-  .psp{display:inline-flex;flex-direction:column;gap:1mm;padding:1.2mm 2mm;border:.25mm dashed #c6cad2;border-radius:3mm}
-  .pbr{display:flex;align-items:center;gap:1mm;flex-wrap:wrap}.pbr em{font-style:normal;font-size:8pt;font-weight:700;color:var(--ac);min-width:12mm}
-  .psum{margin-top:5mm;display:flex;flex-wrap:wrap;align-items:center;gap:1.6mm;padding:3mm 4mm;background:#f5f6f8;border-radius:3mm;break-inside:avoid}
-  .psum b{font-size:10pt;margin-right:2mm}
-  .psum span{font-size:9.5pt;font-weight:700;color:var(--ac);background:#fff;border:.3mm solid var(--ac);border-radius:99px;padding:.8mm 2.6mm}
+  .pcrs{display:grid;grid-template-columns:36mm 1fr;gap:5mm;align-items:start;padding:4mm 4mm 4mm 0;margin-bottom:3mm;border-radius:3.5mm;background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 9%,#fff),#fff 45%);break-inside:avoid}
+  .pch{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.2mm;padding-top:1mm}
+  .pci{width:12mm;height:12mm;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;box-shadow:0 0 0 1.5mm color-mix(in srgb,var(--ac) 18%,#fff)}
+  .pci svg{width:6.4mm;height:6.4mm;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .pch b{font-size:11.5pt;font-weight:800;color:#1d2028;letter-spacing:-.03em;margin-top:1mm}
+  .pch small{font-size:8.5pt;color:#7a7e88}.pch small em{font-style:normal;font-weight:800;color:var(--ac)}
+  .ptrk{display:flex;flex-direction:column;gap:4mm;padding-top:1.5mm}
+  .pl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));position:relative}
+  .pl::before{content:"";position:absolute;left:3mm;right:3mm;top:2.6mm;height:1.6mm;border-radius:1mm;background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 30%,#fff),color-mix(in srgb,var(--ac) 70%,#fff))}
+  .ps{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 .8mm;gap:.6mm}
+  .ps i{position:relative;z-index:1;width:6.8mm;height:6.8mm;border-radius:50%;background:#fff;border:.6mm solid color-mix(in srgb,var(--ac) 45%,#fff);font-style:normal;font-size:8pt;font-weight:800;color:#fff;display:grid;place-items:center;margin-bottom:.8mm}
+  .ps b{font-size:9.2pt;font-weight:600;color:#6b6f79;line-height:1.25;word-break:keep-all}
+  .ps em{font-style:normal;font-size:7.6pt;color:#9a9ea7}
+  .ps.on i{background:var(--ac);border-color:#fff;box-shadow:0 0 0 .7mm var(--ac),0 1mm 2.5mm color-mix(in srgb,var(--ac) 45%,transparent)}
+  .ps.on b{color:#16181d;font-weight:800}
+  .ps.on em{color:var(--ac);font-weight:700}
+  .pspl{display:flex;flex-direction:column;gap:2.4mm;padding:2.4mm 0 1mm 3mm;border-left:.5mm dashed color-mix(in srgb,var(--ac) 50%,#fff);margin-left:2mm}
+  .pbr{display:grid;grid-template-columns:14mm 1fr;align-items:start;gap:2mm}
+  .pbr>span{font-size:8.5pt;font-weight:800;color:var(--ac);padding-top:1.6mm}
+  .pl.sm .ps b{font-size:8.5pt}
+  .psum{margin-top:4mm;padding:4mm 5mm;border:.3mm solid #e1e4ea;border-radius:3.5mm;break-inside:avoid}
+  .psh{display:flex;align-items:baseline;gap:3mm;margin-bottom:3mm}.psh b{font-size:11pt;font-weight:800}.psh span{font-size:9pt;color:#7a7e88}
+  .psum ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2mm 4mm}
+  .psum li{display:flex;align-items:center;gap:2mm;padding:1.6mm 2mm;border-radius:2mm;background:color-mix(in srgb,var(--ac) 8%,#fff)}
+  .psum li i{flex:none;width:5.6mm;height:5.6mm;border-radius:50%;background:var(--ac);color:#fff;font-style:normal;font-size:7.8pt;font-weight:800;display:grid;place-items:center}
+  .psum li b{font-size:9.2pt;font-weight:700;flex:1;min-width:0}
+  .psum li small{font-size:8pt;font-weight:700;color:var(--ac)}
   .pp-2col .pp-z{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:7mm;align-items:start}
   .pt{table-layout:fixed}
   .pp-2col h3,.pa h3{margin:0 0 2.5mm;font-size:11.5pt;letter-spacing:-.02em}
@@ -195,20 +204,6 @@ button.brand{border:0;background:none;padding:0;font:inherit;cursor:pointer;colo
   .pt td.pn{text-align:left;color:#555a65;font-size:8.5pt}
   .pt-a th{background:#dfe8f5;border-color:#9fb0c8}.pt-a td{border-color:#9fb0c8}
   .pp-empty{color:#8a8e98;font-size:10pt;padding:6mm 0}
-  .ptrk{display:flex;flex-direction:column;gap:3.4mm;padding-top:1mm}
-  .pl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));position:relative}
-  .pl::before{content:"";position:absolute;left:0;right:0;top:1.6mm;height:1.1mm;border-radius:1mm;background:color-mix(in srgb,var(--ac) 40%,#fff)}
-  .ps{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 .8mm}
-  .ps i{position:relative;z-index:1;width:4.2mm;height:4.2mm;border-radius:50%;background:#fff;border:.7mm solid color-mix(in srgb,var(--ac) 70%,#fff);margin-bottom:1.3mm}
-  .ps b{font-size:9.5pt;font-weight:600;color:#3d4048;line-height:1.25;word-break:keep-all}
-  .ps em{font-style:normal;font-size:8pt;color:#7b7f89}
-  .ps.on i{background:var(--ac);border-color:var(--ac);box-shadow:0 0 0 .8mm color-mix(in srgb,var(--ac) 22%,#fff)}
-  .ps.on b{color:#fff;background:var(--ac);border-radius:99px;padding:.5mm 1.6mm;font-weight:800}
-  .ps.on em{color:var(--ac);font-weight:700}
-  .pspl{display:flex;flex-direction:column;gap:2mm;padding:2mm 0 1mm 2mm;border-left:.5mm dashed color-mix(in srgb,var(--ac) 50%,#fff)}
-  .pbr{display:grid;grid-template-columns:14mm 1fr;align-items:start;gap:2mm}
-  .pbr>span{font-size:8.5pt;font-weight:800;color:var(--ac);padding-top:1mm}
-  .pl.sm .ps b{font-size:8.5pt}
   .psec+.psec{margin-top:5mm}
   .psec h3{display:flex;align-items:center;gap:2mm;margin:0 0 2.2mm;font-size:11pt;font-weight:800;letter-spacing:-.02em}
   .psec h3 i{width:1.2mm;height:4mm;border-radius:1mm;background:#e2475f}
@@ -225,12 +220,15 @@ button.brand{border:0;background:none;padding:0;font:inherit;cursor:pointer;colo
   .pcl{height:100%;min-height:7mm;border-radius:1.6mm;background:color-mix(in srgb,var(--ac) 14%,#fff);border-left:1mm solid var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.6mm .8mm}
   .pcl b{font-size:8.6pt;font-weight:800;color:color-mix(in srgb,var(--ac) 78%,#000);line-height:1.2;word-break:keep-all}
   .pcl small{font-size:6.8pt;font-weight:700;color:#4a4e58}
-  .pacal{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:8.6pt;border:.35mm solid #b9c7dc;border-radius:2.5mm;overflow:hidden}
-  .pacal th,.pacal td{border-right:.25mm solid #dbe3ef;border-bottom:.25mm solid #dbe3ef;padding:1.4mm .8mm;text-align:center}
+  .pacal{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;border:.25mm solid #dfe3ea;border-radius:2.5mm;overflow:hidden}
+  .pacal th,.pacal td{border-right:.2mm solid #eceff4;border-bottom:.2mm solid #eceff4;padding:1.8mm .6mm;text-align:center;vertical-align:middle}
   .pacal tr>*:last-child{border-right:0}.pacal tbody tr:last-child>*{border-bottom:0}
-  .pacal thead th{background:#e8eef8;color:#1f2d4a;font-weight:800;font-size:9.5pt;border-bottom:.35mm solid #b9c7dc}
-  .pacal th.pk{width:15mm;background:#f4f7fc;color:#3b4660;font-size:8.3pt;font-weight:700}
-  .pacal td b{font-weight:800;color:#1d2a45;margin-right:.8mm}.pacal td span{font-size:7.5pt;color:#6b7690}
+  .pacal thead th{background:#f6f7fa;color:#1d2028;font-weight:800;font-size:9pt;border-bottom:.25mm solid #dfe3ea;padding:1.6mm .6mm}
+  .pacal th.pk{width:13mm;background:#fbfbfd;color:#8a8f99;font-size:7.8pt;font-weight:700}
+  .pacal td .pd{font-family:Outfit,SUIT,sans-serif;font-size:10.5pt;color:#1d2028;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .pacal td .pd b{font-weight:500}.pacal td .pd i{font-style:normal;color:#b3b8c2;margin:0 .3mm}
+  .pacal td .pw{display:inline-grid;place-items:center;width:4.2mm;height:4.2mm;margin-left:1.2mm;border-radius:50%;background:#f0f2f6;color:#6b707a;font-size:6.6pt;font-weight:700;vertical-align:1px}
+  .pacal tbody tr:first-child td .pd{color:#e2475f}
   .pacal td.pmemo{font-size:7pt;color:#5a6378}
   .pp-img .pib{display:flex;align-items:center;justify-content:center}
   .pp-img .pib img{max-width:100%;max-height:100%;object-fit:contain}
@@ -267,6 +265,28 @@ body{background:#f6f6f9;background-image:radial-gradient(1100px 620px at 0% 0%,#
 .panel.board .sta.on .nt{color:color-mix(in srgb,var(--ac) 65%,#555)}
 .sta .badge{display:none!important}
 .vsta .ck{display:none!important}
+/* ── 화면 로드맵: 인쇄본과 같은 굵은 줄 + 큰 점 ── */
+@media screen{
+  .panel.board .rm{row-gap:12px;padding-top:14px}
+  .panel.board .crs,.panel.board .crs.has{border-top:0!important;border-radius:20px!important;padding:20px 20px 18px 6px;background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 9%,#fff) 0%,rgba(255,255,255,.92) 42%,rgba(255,255,255,.75) 100%)!important;box-shadow:0 0 0 1px rgba(20,24,40,.05),0 10px 24px -22px rgba(20,24,40,.5)!important}
+  .panel.board .crs.has{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--ac) 30%,#fff),0 14px 30px -22px var(--ac)!important}
+  .panel.board .cic,.panel.board .crs.has .cic{width:54px;height:54px;background:var(--ac);color:#fff;border:0;box-shadow:0 0 0 6px color-mix(in srgb,var(--ac) 15%,#fff)}
+  .panel.board .crs.has .cic{box-shadow:0 0 0 6px color-mix(in srgb,var(--ac) 22%,#fff),0 10px 20px -10px var(--ac)}
+  .panel.board .cic svg{width:26px;height:26px;stroke-width:1.7}
+  .panel.board .cnm,.panel.board .crs.has .cnm{color:#1d2028;font-size:15.5px;font-weight:800;margin-top:4px}
+  .panel.board .cct{color:var(--ac);font-weight:800;font-size:12px}
+  .panel.board .trow .bar{height:7px;top:0;opacity:1;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 28%,#fff),color-mix(in srgb,var(--ac) 68%,#fff))!important}
+  .panel.board .sta{margin-top:8px;padding:6px 4px 4px;border-radius:10px;background:none!important;box-shadow:none!important}
+  .panel.board .sta::before{left:calc(50% - 8px);top:-22.5px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 0 2.5px color-mix(in srgb,var(--ac) 50%,#fff)}
+  .panel.board .sta .nm{color:#6b6f79;font-weight:600}
+  .panel.board .sta .lv{color:#9a9ea7}
+  .panel.board .sta:hover{background:color-mix(in srgb,var(--ac) 7%,transparent)!important}
+  .panel.board .sta:hover .nm{color:#1d2028}
+  .panel.board .sta.on::before{width:20px;height:20px;left:calc(50% - 10px);top:-24.5px;background:var(--ac);box-shadow:0 0 0 3px #fff,0 0 0 5.5px var(--ac),0 4px 10px color-mix(in srgb,var(--ac) 45%,transparent)}
+  .panel.board .sta.on .nm{color:#16181d;font-weight:800}
+  .panel.board .sta.on .lv{color:var(--ac);font-weight:800}
+  .panel.board .sta.on .nt{color:color-mix(in srgb,var(--ac) 70%,#555)}
+}
 @media screen and (max-width:1100px){.hero.hv2 h1{font-size:38px}}
 @media screen and (max-width:640px){.hero.hv2 h1{font-size:28px}}
 .panel.board .sta.on.jl,.panel.board .sta.on.jr{border-radius:12px}
@@ -466,10 +486,13 @@ body{background:#f6f6f9;background-image:radial-gradient(1100px 620px at 0% 0%,#
 .opsn a{color:var(--ac);font-weight:600;margin-left:4px}
 .acg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 26px}
 table.at{border-collapse:collapse;width:100%;font-size:12.5px;table-layout:fixed}
-.at th,.at td{border:1px solid #b9c4d4;height:25px;text-align:center;padding:0 4px}
-.at th{background:#dce8f6;font-weight:700;color:#1f2a44}
+.at th,.at td{border:1px solid #e3e7ee;height:30px;text-align:center;padding:0 4px}
+.at th{background:#f5f7fb;font-weight:700;color:#1f2a44}
+.at td.dt{font-family:Outfit,SUIT,sans-serif;font-size:15px;color:#1d2028;font-variant-numeric:tabular-nums}
+.at td.dt b{font-weight:500}.at td.dt i{font-style:normal;color:#b3b8c2;margin:0 1px}
+.at td.wd span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#f0f2f6;color:#5b606b;font-size:11.5px;font-weight:700}
 .at th.am{width:22%;font-size:13px}
-.at td.wd{width:12%;font-weight:700}
+.at td.wd{width:12%}
 .at td.amemo{text-align:left;color:var(--sub);font-size:12px;position:relative;padding:0 8px}
 .at input{width:100%;border:0;background:transparent;text-align:center;font:inherit;color:inherit;font-weight:inherit}
 .at input[type=date]{font-size:12px}
@@ -1205,8 +1228,12 @@ function pHead(p, title, sub) {
 function pRoadPage(p) {
   const ck = p ? checkedOf(p) : {}, any = Object.values(ck).some(Boolean);
   const cs = S.main.courses.filter(c => !any || allSubjects(c).some(s => ck[s.id]));
-  const PER = 9;
-  const st = s => `<li class="ps${ck[s.id] ? " on" : ""}"><i></i><b>${esc(s.name)}</b>${s.level ? `<em>${esc(s.level)}</em>` : ""}</li>`;
+  const PER = cs.length <= 2 ? 7 : 9;
+  /* 시간표에 넣은 달 찾기 */
+  const nm = x => String(x || "").replace(/\s|\(.*?\)/g, "").toLowerCase();
+  const monthOf = s => { if (!p) return ""; const a = nm(s.name); for (const k of Object.keys(p.cells || {})) { const v = nm(p.cells[k]); if (v && a && (v === a || v.startsWith(a))) { const i = +k.split("|")[1]; if (!isNaN(i)) return colYM(p, i).m + "월"; } } return ""; };
+  let no = 0;
+  const st = s => { const on = !!ck[s.id]; if (on) no++; return `<li class="ps${on ? " on" : ""}"><i>${on ? no : ""}</i><b>${esc(s.name)}</b>${s.level ? `<em>${esc(s.level)}</em>` : ""}</li>`; };
   const line = (list, cls = "") => { const out = []; for (let k = 0; k < list.length; k += PER) out.push(`<ol class="pl${cls}" style="--n:${PER}">${list.slice(k, k + PER).map(st).join("")}</ol>`); return out.join(""); };
   const body = cs.map(c => {
     const all = allSubjects(c), k = all.filter(s => ck[s.id]).length;
@@ -1214,11 +1241,12 @@ function pRoadPage(p) {
     const flush = () => { if (buf.length) { html += line(buf); buf = []; } };
     c.subjects.forEach(x => { if (isSplit(x)) { flush(); html += `<div class="pspl">${x.branches.map(b => `<div class="pbr"><span>${esc(b.label || "갈래")}</span>${line(b.subjects, " sm")}</div>`).join("")}</div>`; } else buf.push(x); });
     flush();
-    return `<section class="pcrs${k ? " has" : ""}" style="--ac:rgb(${courseRGB(c).join(",")})"><div class="pch"><span class="pci">${svg(c.icon)}</span><b>${esc(c.name)}</b><small>${k ? `${k} / ${all.length}과목 선택` : `${all.length}과목`}</small></div><div class="ptrk">${html}</div></section>`;
+    return `<section class="pcrs${k ? " has" : ""}" style="--ac:rgb(${courseRGB(c).join(",")})"><div class="pch"><span class="pci">${svg(c.icon)}</span><b>${esc(c.name)}</b><small>${k ? `<em>${k}</em> / ${all.length}과목` : `${all.length}과목`}</small></div><div class="ptrk">${html}</div></section>`;
   }).join("");
   const picked = p ? S.main.courses.flatMap(c => allSubjects(c).filter(s => ck[s.id]).map(s => ({ c, s }))) : [];
-  const sum = picked.length ? `<div class="psum"><b>수강할 과목 ${picked.length}개</b>${picked.map(({ c, s }) => `<span style="--ac:rgb(${courseRGB(c).join(",")})">${esc(subjLabel(s))}</span>`).join("")}</div>` : "";
-  return `<section class="pp pp-road">${pHead(p, p ? "수강 로드맵" : esc(S.main.title || "커리큘럼 로드맵"), any ? "색으로 칠해진 과목이 수강할 과목입니다" : "")}<div class="pp-b">${body}${sum}</div></section>`;
+  const st0 = p ? startYM(p) : null;
+  const sum = picked.length ? `<div class="psum"><div class="psh"><b>나의 수강 순서</b><span>${st0 ? `${st0.y}년 ${st0.m}월 시작 · ` : ""}${picked.length}과목</span></div><ol>${picked.map(({ c, s }, k) => { const m = monthOf(s); return `<li style="--ac:rgb(${courseRGB(c).join(",")})"><i>${k + 1}</i><b>${esc(subjLabel(s))}</b>${m ? `<small>${m}</small>` : ""}</li>`; }).join("")}</ol></div>` : "";
+  return `<section class="pp pp-road">${pHead(p, p ? "수강 로드맵" : esc(S.main.title || "커리큘럼 로드맵"), any ? "번호가 붙은 과목이 수강할 과목이며, 번호는 듣는 순서입니다" : "")}<div class="pp-b">${body}${sum}</div></section>`;
 }
 function subjColor(v) {
   const n = String(v || "").replace(/\s/g, "");
@@ -1240,8 +1268,8 @@ function pSchedPage(p) {
     if (!list.length) return "";
     const title = S.main.sched[kind === "we" ? "acadTitleWE" : "acadTitle"] || (kind === "we" ? "수강생 학사일정 (주말반)" : "수강생 학사일정 (평일반)");
     return `<div class="psec"><h3><i></i>${esc(title)}</h3><table class="pacal"><thead><tr><th class="pk"></th>${list.map(b => `<th>${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</th>`).join("")}</tr></thead><tbody>
-      <tr><th class="pk">개강일</th>${list.map(b => `<td><b>${md(b.start)}</b><span>${wd(b.start)}</span></td>`).join("")}</tr>
-      <tr><th class="pk">종강일</th>${list.map(b => `<td><b>${md(b.end)}</b><span>${wd(b.end)}</span></td>`).join("")}</tr>
+      <tr><th class="pk">개강</th>${list.map(b => `<td><span class="pd">${fmtMD(b.start)}</span><span class="pw">${wd(b.start)}</span></td>`).join("")}</tr>
+      <tr><th class="pk">종강</th>${list.map(b => `<td><span class="pd">${fmtMD(b.end)}</span><span class="pw">${wd(b.end)}</span></td>`).join("")}</tr>
       ${list.some(b => b.memo) ? `<tr><th class="pk">비고</th>${list.map(b => `<td class="pmemo">${esc(b.memo || "")}</td>`).join("")}</tr>` : ""}</tbody></table></div>`;
   };
   return `<section class="pp pp-sched">${pHead(p, "수업 일정표", "시간표와 전체 학사일정입니다. 일정이 바뀌면 개강 전에 다시 안내드립니다")}<div class="pp-b">${timetable}${acadT("wd")}${acadT("we")}</div></section>`;
@@ -1265,7 +1293,7 @@ function buildPrintDoc(opt = PRINT_OPT) {
     const inner = document.createElement("div"); inner.className = "pp-z";
     while (b.firstChild) inner.appendChild(b.firstChild); b.appendChild(inner);
     const H = b.clientHeight, W = b.clientWidth;
-    let z = b.closest('.pp-road') ? 1.8 : 1.5;
+    let z = 1;   /* 키우지 않고, 넘칠 때만 줄임 */
     for (let k = 0; k < 30; k++) {
       inner.style.zoom = z.toFixed(3);
       const r = inner.getBoundingClientRect();
@@ -1702,6 +1730,7 @@ function acadKinds(p) {
   const k = []; if (keys.some(x => wdRows.has(x))) k.push("wd"); if (keys.some(x => weRows.has(x))) k.push("we");
   return k.length ? k : ["wd"];
 }
+function fmtMD(d) { const x = ymd(d); return x ? `<b>${x.getMonth() + 1}.${String(x.getDate()).padStart(2, "0")}</b>` : "-"; }
 function acadHTML(p, n) {
   const sc = S.main.sched, ed = S.mode === "edit" && !S.pub && isAdmin();
   const kinds = ed ? ["wd", "we"] : acadKinds(p);
@@ -1718,7 +1747,7 @@ function acadHTML(p, n) {
         <tr><td colspan="5" class="amemo"><input data-blk="${esc(b.id)}" data-bf="memo" value="${esc(b.memo || "")}" placeholder="메모 (비워 두면 출력 시 빈칸)"><button class="x noprint" data-act="delBlk" data-id="${esc(b.id)}" aria-label="삭제">×</button></td></tr></table>`
       : `<table class="at"><tr><th class="am" rowspan="3">${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</th><th colspan="4">${esc(b.head || "강의")}</th></tr>
         <tr><th colspan="2">개강일</th><th colspan="2">종강일</th></tr>
-        <tr><td>${esc(b.start || "-")}</td><td class="wd">${wd(b.start)}</td><td>${esc(b.end || "-")}</td><td class="wd">${wd(b.end)}</td></tr>
+        <tr><td class="dt">${fmtMD(b.start)}</td><td class="wd"><span>${wd(b.start)}</span></td><td class="dt">${fmtMD(b.end)}</td><td class="wd"><span>${wd(b.end)}</span></td></tr>
         <tr><td colspan="5" class="amemo">${esc(b.memo || "")}</td></tr></table>`;
     const md = d => { const x = ymd(d); return x ? `<b>${x.getMonth() + 1}.${String(x.getDate()).padStart(2, "0")}<small>(${WD[x.getDay()]})</small></b>` : "<b>-</b>"; };
     const card = b => `<li><span class="m">${esc(b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월")}</span><span class="d"><em>개강</em>${md(b.start)}</span><i aria-hidden="true">→</i><span class="d"><em>종강</em>${md(b.end)}</span>${b.memo ? `<span class="mm">${esc(b.memo)}</span>` : ""}</li>`;
