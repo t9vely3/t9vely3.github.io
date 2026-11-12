@@ -1266,6 +1266,10 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .sugbox{position:fixed;z-index:58;display:none;background:#fff;border:1px solid #e3e5ea;border-radius:10px;box-shadow:0 12px 28px -12px rgba(20,24,40,.35);padding:4px;max-height:260px;overflow:auto;font-size:13.5px}
 .sugbox .si{padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;color:#1d2028}
 .sugbox .si.on,.sugbox .si:hover{background:color-mix(in srgb,var(--ac) 12%,#fff);color:color-mix(in srgb,var(--ac) 80%,#111);font-weight:600}
+
+/* 이미지 끌어다 놓기 */
+.modal.imgdrop{position:relative;outline:3px dashed var(--ac);outline-offset:-10px}
+.modal.imgdrop::after{content:"여기에 놓으면 커리큘럼 이미지로 올라갑니다";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--ac) 9%,#fff);color:color-mix(in srgb,var(--ac) 85%,#111);font-size:17px;font-weight:800;border-radius:inherit;pointer-events:none;z-index:5}
 </style>
 </head>
 <body>
@@ -2784,7 +2788,7 @@ async function drawViewer() {
   if (!viewer || !viewer.box.isConnected) return;
   const el = $("#v-body", viewer.box), ids = S.imgidx[viewer.key] || [];
   if (!ids.length && S.pub) { el.innerHTML = `<div class="drop"><b>이 ${viewer.s ? "과목" : "과정"}의 커리큘럼은 준비 중입니다</b>담당 멘토에게 문의해 주세요.</div>`; return; }
-  if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>${isAdmin() ? "아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요." : "팀장이 이미지를 올리면 여기에 보입니다."}${viewer.s ? "<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다." : ""}</div>`; return; }
+  if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>${isAdmin() ? "이미지 파일을 여기로 끌어다 놓거나, 아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요." : "팀장이 이미지를 올리면 여기에 보입니다."}${viewer.s ? "<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다." : ""}</div>`; return; }
   const docs = await Promise.all(ids.map(id => loadImg(id).catch(() => null)));
   if (!viewer || !viewer.box.isConnected) return;
   el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" alt="${esc(viewer.s ? subjLabel(viewer.s) : viewer.label)} 커리큘럼 ${i + 1}">
@@ -2818,8 +2822,28 @@ async function compress(file) {
   }
   throw new Error("이미지가 너무 큽니다");
 }
-$("#file").addEventListener("change", async e => {
-  const files = [...e.target.files]; if (!files.length || !viewer) return;
+$("#file").addEventListener("change", e => uploadImgs([...e.target.files]));
+/* 이미지 창에 파일을 끌어다 놓거나(Ctrl+V 붙여넣기도) 바로 올리기 */
+const canUpImg = () => viewer && viewer.box.isConnected && !S.pub && isAdmin();
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes("Files");
+let dragDepth = 0;
+function dropMark(on) { const b = viewer && viewer.box && (viewer.box.querySelector(".modal") || viewer.box); if (b) b.classList.toggle("imgdrop", on); }
+addEventListener("dragenter", e => { if (!hasFiles(e) || !canUpImg()) return; e.preventDefault(); dragDepth++; dropMark(true); });
+addEventListener("dragover", e => { if (!hasFiles(e) || !canUpImg()) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+addEventListener("dragleave", e => { if (!hasFiles(e) || !canUpImg()) return; if (--dragDepth <= 0) { dragDepth = 0; dropMark(false); } });
+addEventListener("drop", e => {
+  if (!hasFiles(e) || !canUpImg()) return; e.preventDefault(); dragDepth = 0; dropMark(false);
+  const files = [...e.dataTransfer.files].filter(f => /^image\//.test(f.type));
+  if (!files.length) { toast("이미지 파일만 올릴 수 있어요"); return; }
+  uploadImgs(files);
+});
+addEventListener("paste", e => {
+  if (!canUpImg()) return;
+  const files = [...(e.clipboardData?.files || [])].filter(f => /^image\//.test(f.type));
+  if (files.length) { e.preventDefault(); uploadImgs(files); }
+});
+async function uploadImgs(files) {
+  if (!files.length || !viewer) return;
   const v = viewer; let ok = 0;
   toast(`이미지 ${files.length}장을 올리는 중입니다…`);
   const ids = (S.imgidx[v.key] || []).slice();
@@ -2833,7 +2857,7 @@ $("#file").addEventListener("change", async e => {
   try { await saveIdx(v.key, ids); } catch (err) { console.error(err); toast("저장하지 못했어요. 인터넷·로그인을 확인해 주세요"); return; }
   toast(ok === files.length ? `${ok}장을 올렸어요` : `${ok}장 올림, ${files.length - ok}장은 실패했어요`);
   render(); drawViewer();
-});
+}
 
 /* ============================================================ 동작 */
 function courseAllBtn(c, p) {
