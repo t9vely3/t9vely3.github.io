@@ -945,7 +945,13 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .icons label:has(input:checked){border-color:var(--ink);background:var(--hair)}
 .imgs{display:flex;flex-direction:column;gap:14px}
 .imgb{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafbfc}
-.imgb img{display:block;width:100%;height:auto}
+.imgb img{display:block;width:100%;height:auto;margin:0 auto;cursor:zoom-in}
+.imgb .isz{position:absolute;left:10px;bottom:10px;font-size:11.5px;font-weight:600;color:#555963;background:rgba(255,255,255,.94);border-radius:7px;padding:3px 8px;box-shadow:0 0 0 1px #e6e8ee}
+.imgb .isz.low{color:#c2334a;box-shadow:0 0 0 1px #f3c7cf}
+#zoom{position:fixed;inset:0;z-index:80;background:rgba(14,16,22,.88);overflow:auto;cursor:zoom-out;display:flex;align-items:flex-start;justify-content:center;padding:24px}
+#zoom img{display:block;max-width:none;height:auto;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#zoom.fit img{max-width:100%;cursor:zoom-in}
+#zoom .zt{position:fixed;top:14px;right:18px;color:#fff;font-size:13px;font-weight:600;background:rgba(0,0,0,.45);border-radius:8px;padding:6px 10px;pointer-events:none}
 .imgb .ib{position:absolute;top:10px;right:10px;display:flex;gap:4px;background:rgba(255,255,255,.95);border-radius:9px;padding:3px}
 .drop{border:1px dashed #c3c8d0;border-radius:12px;padding:40px 16px;text-align:center;color:var(--sub)}
 .drop b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:6px}
@@ -2811,7 +2817,7 @@ async function drawViewer() {
   if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>${isAdmin() ? "이미지 파일을 여기로 끌어다 놓거나, 아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요." : "팀장이 이미지를 올리면 여기에 보입니다."}${viewer.s ? "<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다." : ""}</div>`; return; }
   const docs = await Promise.all(ids.map(id => loadImg(id).catch(() => null)));
   if (!viewer || !viewer.box.isConnected) return;
-  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" alt="${esc(viewer.s ? subjLabel(viewer.s) : viewer.label)} 커리큘럼 ${i + 1}">
+  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" data-zoom="1" title="누르면 원본 크기로 크게 봅니다"${docs[i].w ? ` style="max-width:${docs[i].w}px"` : ""} alt="${esc(viewer.s ? subjLabel(viewer.s) : viewer.label)} 커리큘럼 ${i + 1}">${!S.pub && isAdmin() && docs[i].w ? `<span class="isz${docs[i].w < 1500 ? " low" : ""}">저장 크기 ${docs[i].w} × ${docs[i].h}${docs[i].w < 1500 ? " · 작아서 흐릴 수 있어요. 원본을 다시 올려 주세요" : ""}</span>` : ""}
       <div class="ib noprint"${S.pub || !isAdmin() ? ' style="display:none"' : ""}><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">↑</button><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="1" ${i === ids.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button><button class="btn sm danger" data-act="imgDel" data-id="${id}">삭제</button></div></div>` : `<div class="empty">이미지 한 장을 불러오지 못했습니다.</div>`).join("")}</div>`;
 }
 async function saveIdx(key, ids) {
@@ -2846,6 +2852,16 @@ async function compress(file) {
   }
   throw new Error("이미지가 너무 큽니다");
 }
+/* 이미지를 누르면 원본 크기로 크게 보기 (한 번 더 누르면 화면 맞춤 ↔ 원본, ESC·바깥 누르면 닫기) */
+document.addEventListener("click", e => {
+  const im = e.target.closest && e.target.closest("img[data-zoom]"); if (!im) return;
+  const z = document.createElement("div"); z.id = "zoom";
+  z.innerHTML = `<img src="${im.src}" alt=""><span class="zt">원본 크기 · 이미지를 누르면 화면에 맞춤 · ESC로 닫기</span>`;
+  const close = () => { z.remove(); document.removeEventListener("keydown", key, true); };
+  const key = ev => { if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); close(); } };
+  z.addEventListener("click", ev => { if (ev.target.tagName === "IMG") z.classList.toggle("fit"); else close(); });
+  document.addEventListener("keydown", key, true); document.body.appendChild(z);
+});
 $("#file").addEventListener("change", e => uploadImgs([...e.target.files]));
 /* 이미지 창에 파일을 끌어다 놓거나(Ctrl+V 붙여넣기도) 바로 올리기 */
 const canUpImg = () => viewer && viewer.box.isConnected && !S.pub && isAdmin();
