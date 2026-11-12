@@ -356,7 +356,7 @@ button.brand{border:0;background:none;padding:0;font:inherit;cursor:pointer;colo
   #printDoc .pad p+p::before{content:"";position:absolute;left:.6mm;top:58%;width:4mm;height:.3mm;background:linear-gradient(90deg,#e2475f,#c3c7cf)}
   #printDoc .pak{grid-template-rows:auto}
   #printDoc .pmo:empty{display:none}
-  #printDoc .atl .gp::before{top:3.4mm;border-top-width:.3mm}
+  #printDoc .atl .gp{flex:0 0 4mm}#printDoc .atl .gp::before{top:3.4mm;border-top-width:.3mm}
   #printDoc .atl .br{height:7.4mm;border-radius:1.8mm;margin:0 .4mm}
   #printDoc .atl .br::before{height:.6mm}
   #printDoc .atl .br b{font-size:10pt}#printDoc .atl .br span{font-size:6.2pt}
@@ -1039,14 +1039,19 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .snav button{flex:1;height:38px;border:1px solid var(--line);background:#fff;border-radius:999px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
 .snav button:hover{border-color:var(--ac);color:var(--ac)}
 .mycl{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:10px}
-.mycl li{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff}
-.mycl .mm b{display:block;font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--ac)}
-.mycl .mm span{font-size:11.5px;color:var(--sub)}
-.mycl .cc{display:grid;gap:8px}
-.mycl .c{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
-.mycl .v{font-size:15.5px;font-weight:700;letter-spacing:-.02em}
-.mycl .w{grid-column:1;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums}
-.mycl .r{grid-row:1/3;grid-column:2;align-self:center;font-size:12px;font-weight:700;color:var(--ac);background:var(--ac-bg);border-radius:999px;padding:4px 10px}
+.mycl>.mc{padding:14px 18px 8px;border:1px solid #eceef2;border-radius:16px;background:#fff;box-shadow:0 8px 22px -20px rgba(30,30,60,.4)}
+.mc-h{display:flex;align-items:baseline;gap:6px;padding-bottom:8px;border-bottom:1px solid #f0f1f4}
+.mc-h b{font-family:Outfit,SUIT,sans-serif;font-size:21px;font-weight:700;letter-spacing:-.02em;color:var(--ac)}
+.mc-h span{font-size:12px;font-weight:600;color:#9a9ea7}
+.mc-h em{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:#9a9ea7}
+.mc-l{list-style:none;margin:0;padding:0}
+.mc-r{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:1px 10px;padding:10px 0 10px 14px;border-top:1px solid #f4f5f7}
+.mc-r:first-child{border-top:0}
+.mc-r::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:4px;background:var(--sc,var(--ac))}
+.mc-n{font-size:15.5px;font-weight:700;letter-spacing:-.02em;color:#1d2028;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-t{grid-column:1;font-size:12.5px;color:#7a7e88;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc-t i{display:inline-block;width:3px;height:3px;border-radius:50%;background:#c3c6cd;vertical-align:middle;margin:0 6px}
+.mc-room{grid-row:1/3;grid-column:2;font-size:12px;font-weight:700;color:var(--ac);background:var(--ac-bg);border-radius:999px;padding:4px 10px;white-space:nowrap}
 .mycl-empty{padding:26px 14px;text-align:center;color:var(--sub);font-size:13.5px;border:1px dashed var(--line);border-radius:12px;margin-bottom:12px}
 .ttgl{margin:0 0 12px}
 .tscroll.pubhide{display:none}
@@ -1061,7 +1066,7 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
   .sh-stats>div{padding:12px 12px}.sh-stats b{font-size:19px}
   .snav{margin:0 -12px 4px;padding:8px 12px;overflow-x:auto}.snav button{flex:1 0 auto;height:36px;padding:0 12px;font-size:13px}
   .gate{margin:28px auto 0;padding:28px 20px}
-  .mycl li{grid-template-columns:52px 1fr;padding:12px 14px}
+  .mycl>.mc{padding:12px 14px 6px}
 }
 @media print{.mycl,.ttgl,.mycl-empty{display:none!important}.tscroll.pubhide{display:block!important}.shero{display:grid}.sh-stats b{font-size:18px}}
 /* ── 학사일정 카드형(휴대폰) ── */
@@ -1220,9 +1225,9 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 
 /* ── 학사일정 타임라인 ── */
 .atl{display:flex;align-items:flex-start;gap:0;width:100%}
-.atl .gp{min-width:4px;align-self:stretch;position:relative}
+.atl .gp{flex:0 0 18px;align-self:stretch;position:relative}
 .atl .gp::before{content:"";position:absolute;left:2px;right:2px;top:19px;border-top:1.5px dotted #cfd3da}
-.atl .sg{min-width:0;display:flex;flex-direction:column;--c:color-mix(in srgb,#e2475f calc(100% - var(--k)),#7b55dc)}
+.atl .sg{flex:1 1 0;min-width:0;display:flex;flex-direction:column;--c:color-mix(in srgb,#e2475f calc(100% - var(--k)),#7b55dc)}
 .atl .br{position:relative;height:40px;margin:0 2px;border-radius:10px;background:color-mix(in srgb,var(--c) 12%,#fff);display:flex;align-items:center;justify-content:center;gap:6px;overflow:hidden}
 .atl .br::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
 .atl .br b{font-family:Outfit,SUIT,sans-serif;font-size:17px;font-weight:600;color:color-mix(in srgb,var(--c) 80%,#111);letter-spacing:-.02em;white-space:nowrap}
@@ -1256,6 +1261,11 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
   .panel.board .sta:hover .nm{background:color-mix(in srgb,var(--ac) 10%,transparent)!important}
   .panel.board .sta.on .nm{background:var(--crayc) center/100% 100% no-repeat!important;padding:3px 10px}
 }
+
+/* 과목 추천 목록 */
+.sugbox{position:fixed;z-index:58;display:none;background:#fff;border:1px solid #e3e5ea;border-radius:10px;box-shadow:0 12px 28px -12px rgba(20,24,40,.35);padding:4px;max-height:260px;overflow:auto;font-size:13.5px}
+.sugbox .si{padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;color:#1d2028}
+.sugbox .si.on,.sugbox .si:hover{background:color-mix(in srgb,var(--ac) 12%,#fff);color:color-mix(in srgb,var(--ac) 80%,#111);font-weight:600}
 </style>
 </head>
 <body>
@@ -2205,7 +2215,7 @@ function myClassesHTML(p) {
   const cls = myClasses(p);
   if (!cls.length) return `<div class="mycl-empty">수업 일정은 담당 멘토가 정리한 뒤 여기에 표시됩니다.</div>`;
   const byM = []; cls.forEach(c => { let b = byM.find(x => x.i === c.i); if (!b) byM.push(b = { i: c.i, y: c.y, m: c.m, list: [] }); b.list.push(c); });
-  return `<ol class="mycl">${byM.map((b, k) => `<li><div class="mm"><b>${b.m}월</b>${k === 0 || b.m === 1 ? `<span>${b.y}</span>` : ""}</div><div class="cc">${b.list.map(c => `<div class="c"><span class="v">${esc(c.v)}</span><span class="w">${esc(c.g)} ${esc(c.t)}</span>${c.room ? `<span class="r">${esc(c.room)}</span>` : ""}</div>`).join("")}</div></li>`).join("")}</ol>`;
+  return `<ol class="mycl">${byM.map((b, k) => `<li class="mc"><div class="mc-h"><b>${b.m}월</b>${k === 0 || b.m === 1 ? `<span>${b.y}</span>` : ""}<em>${b.list.length}과목</em></div><ul class="mc-l">${b.list.map(c => `<li class="mc-r" style="--sc:${subjColor(c.v)}"><span class="mc-n">${esc(c.v)}</span><span class="mc-t">${esc(c.g)}<i></i>${esc(c.t)}</span>${c.room ? `<span class="mc-room">${esc(c.room)}</span>` : ""}</li>`).join("")}</ul></li>`).join("")}</ol>`;
 }
 function sumHTML(p) {
   if (!p) return "";
@@ -2322,9 +2332,8 @@ function acadTimeline(list) {
   const n = L.length; let prev = null, out = "";
   L.forEach((b, i) => {
     const s0 = day(b.start), e0 = day(b.end), gap = prev == null ? 0 : Math.max(0, s0 - prev - 1);
-    if (gap > 0) out += `<i class="gp" style="flex:${gap} 1 0"></i>`;
     const lab = b.label || ((ymd(b.start)?.getMonth() ?? -1) + 1) + "월";
-    out += `<div class="sg" style="flex:${e0 - s0 + 1} 1 0;--k:${n > 1 ? Math.round(i / (n - 1) * 100) : 0}%"><div class="br"><b>${esc(lab)}</b><span>${esc(b.head || "강의")}</span></div><div class="dd"><span class="ds">${md(b.start)}</span><span class="de"><i>~</i>${md(b.end)}</span></div>${b.memo ? `<div class="mo">${esc(b.memo)}</div>` : ""}</div>`;
+    out += `<div class="sg" style="--k:${n > 1 ? Math.round(i / (n - 1) * 100) : 0}%"><div class="br"><b>${esc(lab)}</b><span>${esc(b.head || "강의")}</span></div><div class="dd"><span class="ds">${md(b.start)}</span><span class="de"><i>~</i>${md(b.end)}</span></div>${b.memo ? `<div class="mo">${esc(b.memo)}</div>` : ""}</div>`;
     prev = e0;
   });
   return `<div class="atl">${out}</div>`;
@@ -2361,9 +2370,9 @@ function acadHTML(p, n) {
 /* 한 칸에 과목 2개까지: 두 번째 과목은 "줄id|달|2" 칸에 저장 */
 function cellTD(r, i, labels, p, cells) {
   const k = r.id + "|" + i, v1 = cells[k] || "", v2 = cells[k + "|2"] || "", can = p && !S.pub;
-  const slot = (v, sfx, n) => `<div class="slot${String(v).trim() ? " f" : ""}"${String(v).trim() ? ` style="--sc:${subjColor(String(v).trim())}"` : ""}><input list="subs" data-cell="${esc(k + sfx)}" data-tl="${esc(r.label)}" value="${esc(v)}" ${can ? "" : "disabled"} aria-label="${esc(r.label)} ${labels[i]} ${n}번째 과목"${n === 2 ? ' placeholder="과목 2"' : ""}>${riHTML(String(v).trim(), r.label, p, i, sfx)}</div>`;
+  const slot = (v, sfx, n) => `<div class="slot${String(v).trim() ? " f" : ""}"${String(v).trim() ? ` style="--sc:${subjColor(String(v).trim())}"` : ""}><input autocomplete="off" data-cell="${esc(k + sfx)}" data-tl="${esc(r.label)}" value="${esc(v)}" ${can ? "" : "disabled"} aria-label="${esc(r.label)} ${labels[i]} ${n}번째 과목"${n === 2 ? ' placeholder="과목 2"' : ""}>${riHTML(String(v).trim(), r.label, p, i, sfx)}</div>`;
   const two = String(v2).trim() || (can && S.two && S.two[k]);
-  return `<td class="${String(v1).trim() || String(v2).trim() ? "f" : ""}${two ? " two" : ""}">${slot(v1, "", 1)}${two ? slot(v2, "|2", 2) : ""}${can && !two ? `<button class="add2 noprint" data-act="addTwo" data-k="${esc(k)}" title="같은 시간에 과목 하나 더" aria-label="같은 시간에 과목 하나 더">+</button>` : ""}</td>`;
+  return `<td class="${String(v1).trim() || String(v2).trim() ? "f" : ""}${two ? " two" : ""}">${slot(v1, "", 1)}${two ? slot(v2, "|2", 2) : ""}</td>`;
 }
 function schedHTML(p) {
   const sc = S.main.sched, ed = S.mode === "edit", labels = monthLabels(p), cells = (p && p.cells) || {};
@@ -2373,7 +2382,10 @@ function schedHTML(p) {
       <th class="t">${ed ? `<input data-row="${esc(r.id)}" value="${esc(r.label)}" aria-label="시간"><button class="x" data-act="delRow" data-g="${esc(g.id)}" data-r="${esc(r.id)}" aria-label="이 줄 삭제">×</button>` : esc(r.label)}</th>
       ${labels.map((_, i) => cellTD(r, i, labels, p, cells)).join("")}
     </tr>`).join("") + (ed ? `<tr class="noprint"><th class="g"></th><th class="t"><button class="btn sm" data-act="addRow" data-g="${esc(g.id)}">+ ${esc(g.label)} 시간 줄</button></th><td colspan="${labels.length}"></td></tr>` : "")).join("");
-  const sugg = [...new Set((p ? S.main.courses.flatMap(c => allSubjects(c).filter(s => checkedOf(p)[s.id])) : []).flatMap(s => { const q = quoteAuto(s); return q.length ? q : quoteGroups(s).map(g => g.label); }))];
+  const nameOf = s => { const q = quoteAuto(s); return q.length ? q : quoteGroups(s).map(g => g.label); };
+  const mine = [...new Set((p ? S.main.courses.flatMap(c => allSubjects(c).filter(s => checkedOf(p)[s.id])) : []).flatMap(nameOf))];
+  const rest = [...new Set(S.main.courses.flatMap(c => allSubjects(c)).flatMap(s => [...nameOf(s), s.name]))].filter(x => x && !mine.includes(x));
+  const sugg = [...mine, ...rest];
   return `<section class="panel sched">
       <div class="ph">
         <h2>${p ? esc(p.name) + " 님 " : ""}${S.pub ? "수업 일정" : "시간표"}</h2>
@@ -2387,7 +2399,7 @@ function schedHTML(p) {
         <thead><tr><th colspan="2">시간</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr></thead>
         <tbody>${body}</tbody>
       </table></div>
-      <datalist id="subs">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
+      <datalist id="subs" hidden>${sugg.map((x, i) => `<option value="${esc(x)}"${i < mine.length ? ' data-my="1"' : ""}>`).join("")}</datalist>
       <div class="snote">${ed ? `<input data-f="schedNote" value="${esc(sc.note || "")}" placeholder="시간표 아래 안내 문구">` : esc(sc.note || "")}</div>
       ${acadHTML(p, S.pub && myClasses(p).length ? Math.max(...myClasses(p).map(c => c.i)) + 1 : labels.length)}
       ${p && !S.pub ? `<textarea class="memo" id="memo" placeholder="상담 메모 (희망 진로, 가능한 시간대 등)">${esc(p.memo || "")}</textarea>` : ""}
@@ -2417,6 +2429,7 @@ function modal({ title, body, actions = [], wide }) {
     if (!top() || e.defaultPrevented) return;
     if (e.key !== "Escape" && e.key !== "Enter" && e.keyCode !== 229) return;
     if (e.isComposing || e.keyCode === 229) { wait = e.key === "Escape" || e.code === "Escape" ? "Escape" : (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") ? "Enter" : ""; return; }
+    wait = "";
     if (act(e.key, e)) { e.preventDefault(); e.stopPropagation(); }
   };
   const onUp = e => {
@@ -2946,39 +2959,100 @@ document.addEventListener("change", e => {
   addEventListener("dragstart", () => { drag = true; sh.classList.remove("on"); }, true);
   addEventListener("dragend", () => { drag = false; }, true); addEventListener("drop", () => { drag = false; }, true);
   addEventListener("scroll", () => {
-    if (drag || document.querySelector("#layer .mask")) return;
+    if (drag || S.view === "quote" || document.querySelector("#layer .mask")) return;
     if (!tm) sh.classList.add("on"); else clearTimeout(tm);
     tm = setTimeout(() => { tm = 0; sh.classList.remove("on"); }, 160);
   }, { passive: true });
 })();
-/* 화면 입력칸 키보드: 엔터 = 입력 끝(시간표 칸은 아래 칸으로), ESC = 고치기 전으로 되돌리기 */
+/* 화면 입력칸 키보드
+   - 시간표 칸: 엔터·↓ 아래 칸, ↑ 위 칸, ←→ 옆 달(글자 맨 앞/끝에서), Shift+엔터 같은 시간에 과목 하나 더, ESC 되돌리기
+   - 과목을 치면 비슷한 과목이 아래에 뜸(↑↓로 고르고 엔터)
+   - 그 밖의 입력칸: 엔터 = 입력 끝, ESC = 고치기 전으로 */
 const PAGE_KEY = { el: null, v: "" };
 document.addEventListener("focusin", e => { const t = e.target; if (t.matches && t.matches("input,textarea") && !t.closest(".mask")) { PAGE_KEY.el = t; PAGE_KEY.v = t.value; } });
+const SUG = { box: null, el: null, items: [], k: -1 };
+function sugList() { return [...document.querySelectorAll("#subs option")].map(o => ({ v: o.value, my: !!o.dataset.my })); }
+function sugHide() { if (SUG.box) SUG.box.style.display = "none"; SUG.el = null; SUG.items = []; SUG.k = -1; }
+function sugShow(t) {
+  const q = nrm(t.value); if (!q) { sugHide(); return; }
+  const hit = sugList().filter(x => nrm(x.v).includes(q));
+  const rank = x => (x.my ? 0 : 2) + (nrm(x.v).startsWith(q) ? 0 : 1);
+  hit.sort((a, b) => rank(a) - rank(b) || a.v.length - b.v.length);
+  const items = [...new Set(hit.map(x => x.v))].slice(0, 8);
+  if (!items.length || (items.length === 1 && nrm(items[0]) === q)) { sugHide(); return; }
+  if (!SUG.box) {
+    SUG.box = document.createElement("div"); SUG.box.className = "sugbox noprint"; SUG.box.setAttribute("role", "listbox"); document.body.appendChild(SUG.box);
+    SUG.box.addEventListener("mousedown", e => { const b = e.target.closest("[data-i]"); e.preventDefault(); if (b) sugPick(Number(b.dataset.i)); });
+  }
+  SUG.el = t; SUG.items = items; SUG.k = 0; sugDraw();
+  const r = t.getBoundingClientRect(); Object.assign(SUG.box.style, { display: "block", left: Math.max(4, Math.min(r.left, innerWidth - 220)) + "px", top: (r.bottom + 4) + "px", minWidth: Math.max(160, r.width) + "px" });
+}
+function sugDraw() { SUG.box.innerHTML = SUG.items.map((x, i) => `<div class="si${i === SUG.k ? " on" : ""}" role="option" data-i="${i}">${esc(x)}</div>`).join(""); }
+function sugPick(i) {
+  const t = SUG.el, v = SUG.items[i]; if (!t || v == null) return;
+  t.value = v; t.dispatchEvent(new Event("input", { bubbles: true })); t.dispatchEvent(new Event("change", { bubbles: true })); sugHide();
+}
+const sugOpen = t => SUG.box && SUG.box.style.display === "block" && SUG.el === t;
+addEventListener("scroll", () => { if (SUG.el) sugHide(); }, { passive: true });
+document.addEventListener("focusout", e => { if (e.target === SUG.el) setTimeout(() => { if (document.activeElement !== SUG.el) sugHide(); }, 0); });
+document.addEventListener("input", e => { const t = e.target; if (t.dataset && t.dataset.cell && !t.disabled) sugShow(t); });
+function cellAt(rid, i, two) { return document.querySelector(`input[data-cell="${CSS.escape(rid + "|" + i + (two ? "|2" : ""))}"]`); }
+function cellMove(t, dir) {
+  const [rid, ci, two] = t.dataset.cell.split("|"), i = Number(ci), tbl = t.closest("table");
+  const rows = [...new Set([...tbl.querySelectorAll("input[data-cell]")].map(x => x.dataset.cell.split("|")[0]))];
+  const r = rows.indexOf(rid); let to = null;
+  if (dir === "down") to = (!two && cellAt(rid, i, true)) || (rows[r + 1] && cellAt(rows[r + 1], i));
+  else if (dir === "up") to = two ? cellAt(rid, i) : rows[r - 1] && (cellAt(rows[r - 1], i, true) || cellAt(rows[r - 1], i));
+  else if (dir === "left") to = cellAt(rid, i - 1, !!two) || cellAt(rid, i - 1);
+  else if (dir === "right") to = cellAt(rid, i + 1, !!two) || cellAt(rid, i + 1);
+  if (!to) return false;
+  if (t.value !== PAGE_KEY.v) t.dispatchEvent(new Event("change", { bubbles: true }));
+  to.focus(); to.select && to.select(); return true;
+}
+function addSecond(t) {
+  const [rid, ci, two] = t.dataset.cell.split("|"); if (two) return false;
+  const k = rid + "|" + ci, ex = cellAt(rid, ci, true);
+  if (ex) { ex.focus(); return true; }
+  if (!t.value.trim()) return false;
+  t.dispatchEvent(new Event("change", { bubbles: true }));
+  S.two = S.two || {}; S.two[k] = true; render();
+  setTimeout(() => cellAt(rid, ci, true)?.focus(), 30); return true;
+}
 function pageKey(key, t, e) {
   if (!t || !t.matches || !t.matches("input,textarea") || t.closest(".mask")) return;
   if (["checkbox", "radio", "file", "button"].includes(t.type)) return;
+  const cell = !!(t.dataset && t.dataset.cell);
+  if (cell && sugOpen(t)) {
+    if (key === "ArrowDown") { SUG.k = (SUG.k + 1) % SUG.items.length; sugDraw(); return true; }
+    if (key === "ArrowUp") { SUG.k = (SUG.k - 1 + SUG.items.length) % SUG.items.length; sugDraw(); return true; }
+    if (key === "Enter" || key === "Tab") { if (SUG.k >= 0) { sugPick(SUG.k); return key === "Enter"; } }
+    if (key === "Escape") { sugHide(); return true; }
+  }
   if (key === "Escape") {
-    if (PAGE_KEY.el === t && t.value !== PAGE_KEY.v) { t.value = PAGE_KEY.v; t.dispatchEvent(new Event("input", { bubbles: true })); }
+    if (PAGE_KEY.el === t && t.value !== PAGE_KEY.v) { t.value = PAGE_KEY.v; t.dispatchEvent(new Event("input", { bubbles: true })); sugHide(); }
     t.blur(); return true;
+  }
+  if (cell) {
+    if (key === "Enter" && e.shiftKey) return addSecond(t) || true;
+    if (key === "Enter" || key === "ArrowDown") { if (!cellMove(t, "down")) { t.dispatchEvent(new Event("change", { bubbles: true })); if (key === "Enter") t.blur(); } return true; }
+    if (key === "ArrowUp") { cellMove(t, "up"); return true; }
+    const len = t.value.length, a = t.selectionStart, z = t.selectionEnd, all = a === 0 && z === len;
+    if (key === "ArrowLeft" && (all || (a === 0 && z === 0))) return cellMove(t, "left");
+    if (key === "ArrowRight" && (all || (a === len && z === len))) return cellMove(t, "right");
+    return;
   }
   if (key !== "Enter") return;
   if (t.tagName === "TEXTAREA" && !(e.ctrlKey || e.metaKey)) return;
-  if (t.dataset.cell) {
-    const all = [...document.querySelectorAll("input[data-cell]")];
-    const [rid, ci] = t.dataset.cell.split("|"), tbl = t.closest("table");
-    let next = all.find(x => { const [r2, i2, two] = x.dataset.cell.split("|"); return !two && i2 === ci && r2 !== rid && x.closest("table") === tbl && (t.compareDocumentPosition(x) & Node.DOCUMENT_POSITION_FOLLOWING); });
-    if (!next) next = all[all.indexOf(t) + 1];
-    t.dispatchEvent(new Event("change", { bubbles: true }));
-    if (next) { next.focus(); next.select && next.select(); } else t.blur();
-    return true;
-  }
   t.blur(); return true;
 }
+/* 한글 입력 중 엔터: 브라우저에 따라 신호가 두 번 오거나(맥) 키를 뗄 때만 옴(윈도) → 한 번만 처리 */
 let PAGE_WAIT = "";
+const KEYS = ["Enter", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab"];
 document.addEventListener("keydown", e => {
   if (document.querySelector("#layer .mask") || e.defaultPrevented) return;
-  if (e.isComposing || e.keyCode === 229) { PAGE_WAIT = e.code === "Escape" ? "Escape" : (e.code === "Enter" || e.code === "NumpadEnter") ? "Enter" : ""; return; }
-  if ((e.key === "Enter" || e.key === "Escape") && pageKey(e.key, e.target, e)) e.preventDefault();
+  if (e.isComposing || e.keyCode === 229) { const c = e.code === "NumpadEnter" ? "Enter" : e.code; PAGE_WAIT = KEYS.includes(c) && c !== "Tab" ? c : ""; return; }
+  PAGE_WAIT = "";
+  if (KEYS.includes(e.key) && pageKey(e.key, e.target, e)) e.preventDefault();
 });
 document.addEventListener("keyup", e => {
   if (!PAGE_WAIT) return; const k = PAGE_WAIT; PAGE_WAIT = "";
