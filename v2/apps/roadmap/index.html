@@ -2749,9 +2749,29 @@ async function sendToMgmt(p) {
 }
 
 const imgCache = {};
+/* 큰 이미지는 여러 조각(img_ID_p0, p1 …)으로 나눠 저장 → 불러올 때 다시 이어 붙임 */
+const IMG_PART = 900000;
 async function loadImg(id) {
   if (imgCache[id]) return imgCache[id];
-  const d = await Store.get("img_" + id); if (d) imgCache[id] = d; return d;
+  const d = await Store.get("img_" + id); if (!d) return d;
+  if (d.parts && !d.data) {
+    const ps = await Promise.all(Array.from({ length: d.parts }, (_, i) => Store.get("img_" + id + "_p" + i)));
+    if (ps.some(x => !x || typeof x.d !== "string")) throw new Error("이미지 조각이 빠졌습니다");
+    d.data = ps.map(x => x.d).join("");
+  }
+  imgCache[id] = d; return d;
+}
+async function saveImg(id, doc) {
+  const { data, ...meta } = doc;
+  if (data.length <= IMG_PART) { await Store.set("img_" + id, doc); return; }
+  const n = Math.ceil(data.length / IMG_PART);
+  for (let i = 0; i < n; i++) await Store.set("img_" + id + "_p" + i, { rmType: "img", part: i, of: id, d: data.slice(i * IMG_PART, (i + 1) * IMG_PART) });
+  await Store.set("img_" + id, { ...meta, parts: n });
+}
+async function delImg(id) {
+  let n = 0; try { const d = await Store.get("img_" + id); n = (d && d.parts) || 0; } catch (e) {}
+  await Store.del("img_" + id);
+  for (let i = 0; i < n; i++) { try { await Store.del("img_" + id + "_p" + i); } catch (e) {} }
 }
 let viewer = null;
 /* 학과(과정) 커리큘럼: 과정 아이콘을 누르면 그 과정 전체 커리큘럼 이미지 */
@@ -2806,19 +2826,23 @@ function readImage(file) {
     im.src = url;
   });
 }
-/* 한 장이 저장 한도(약 1MB)를 넘지 않도록 크기·화질을 단계적으로 낮춤 */
+/* 커리큘럼 이미지 저장 화질
+   - 가로 최대 2600px(세로로 긴 이미지도 가로가 줄지 않게), 화소 최대 약 3000만
+   - 선명한 WebP(안 되면 JPEG) 92% 화질, 한 장 6MB 안으로 */
 async function compress(file) {
-  const im = await readImage(file);
-  let scale = Math.min(1, 2000 / Math.max(im.naturalWidth, im.naturalHeight));
-  for (let round = 0; round < 7; round++) {
-    const w = Math.max(1, Math.round(im.naturalWidth * scale)), h = Math.max(1, Math.round(im.naturalHeight * scale));
+  const im = await readImage(file), W = im.naturalWidth, H = im.naturalHeight;
+  let scale = Math.min(1, 2600 / W, 16000 / H, Math.sqrt(30e6 / (W * H)));
+  const webp = document.createElement("canvas").toDataURL("image/webp").startsWith("data:image/webp");
+  const type = webp ? "image/webp" : "image/jpeg";
+  for (let round = 0; round < 6; round++) {
+    const w = Math.max(1, Math.round(W * scale)), h = Math.max(1, Math.round(H * scale));
     const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
-    for (const q of [0.86, 0.76, 0.66]) {
-      const data = cv.toDataURL("image/jpeg", q);
-      if (data.length < 900000) return { data, w, h };
+    const g = cv.getContext("2d"); g.imageSmoothingQuality = "high"; g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
+    for (const q of [0.92, 0.86, 0.8]) {
+      const data = cv.toDataURL(type, q);
+      if (data.length < 6e6) return { data, w, h };
     }
-    scale *= 0.82;
+    scale *= 0.85;
   }
   throw new Error("이미지가 너무 큽니다");
 }
@@ -2851,7 +2875,7 @@ async function uploadImgs(files) {
     try {
       const c = await compress(f), id = uid("i");
       const doc = { rmType: "img", id, key: v.key, ...c, createdAt: Date.now() };
-      await Store.set("img_" + id, doc); imgCache[id] = doc; ids.push(id); ok++;
+      await saveImg(id, doc); imgCache[id] = doc; ids.push(id); ok++;
     } catch (err) { console.error(err); }
   }
   try { await saveIdx(v.key, ids); } catch (err) { console.error(err); toast("저장하지 못했어요. 인터넷·로그인을 확인해 주세요"); return; }
@@ -2951,7 +2975,7 @@ document.addEventListener("click", async e => {
   else if (a === "delRow") { const g = S.main.sched.groups.find(x => x.id === t.dataset.g); if (g.rows.length <= 1) { toast("시간 줄은 하나 이상 있어야 해요"); return; } g.rows = g.rows.filter(r => r.id !== t.dataset.r); saveMain(true); render(); }
   else if (a === "imgDel" && viewer) {
     const id = t.dataset.id, v = viewer;
-    try { await saveIdx(v.key, (S.imgidx[v.key] || []).filter(x => x !== id)); await Store.del("img_" + id); delete imgCache[id]; } catch (err) { console.error(err); toast("삭제하지 못했어요"); }
+    try { await saveIdx(v.key, (S.imgidx[v.key] || []).filter(x => x !== id)); await delImg(id); delete imgCache[id]; } catch (err) { console.error(err); toast("삭제하지 못했어요"); }
     render(); drawViewer();
   }
   else if (a === "imgMove" && viewer) {
