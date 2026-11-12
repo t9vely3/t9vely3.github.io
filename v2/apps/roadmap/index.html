@@ -1259,7 +1259,7 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
   .panel.board .crs.has .sta .nm::before,.panel.board .crs.has .sta .nm::after{background-image:var(--wvh)}
   .panel.board .sta.on .nm::before,.panel.board .sta.on .nm::after{background-image:var(--wvs)}
   .panel.board .sta:hover .nm{background:color-mix(in srgb,var(--ac) 10%,transparent)!important}
-  .panel.board .sta.on .nm{background:var(--crayc) center/100% 100% no-repeat!important;padding:3px 10px}
+  .panel.board .sta.on .nm{background:var(--crayc) center/100% 100% no-repeat!important;padding:11px 24px;margin:-8px -12px}
 }
 
 /* 과목 추천 목록 */
@@ -1910,7 +1910,7 @@ function crayFor(rgb) {
   if (!CRAY_BASE) return "none";
   const k = rgb.join(","); if (CRAY_CACHE[k]) return CRAY_CACHE[k];
   try { const c = document.createElement("canvas"); c.width = CRAY_BASE.width; c.height = CRAY_BASE.height; const g = c.getContext("2d");
-    g.drawImage(CRAY_BASE, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = `rgba(${k},.42)`; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(CRAY_BASE, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = `rgba(${k},.52)`; g.fillRect(0, 0, c.width, c.height);
     return (CRAY_CACHE[k] = `url('${c.toDataURL("image/png")}')`); } catch (e) { return "none"; }
 }
 function waveVars(rgb) {
