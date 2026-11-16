@@ -1291,6 +1291,9 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .vnav .vn span{display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 .vnav .vn[disabled]{opacity:.4;cursor:default}
 @media (max-width:700px){.vnav em{display:none}.vnav .vn span{max-width:64px}}
+
+/* 이미지 전체 선명하게 진행 표시 */
+.enhbar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:400;background:#1d2028;color:#fff;font-size:14px;font-weight:600;padding:12px 18px;border-radius:12px;box-shadow:0 14px 34px -14px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
@@ -2000,6 +2003,7 @@ function heroHTML(p) {
         ${[0, 1].map(i => `<input data-f="tag${i}" value="${esc(m.tags?.[i] || "")}" aria-label="문구 ${i + 1}" placeholder="짧은 문구" style="width:150px">`).join("")}
         <input data-f="brand" value="${esc(m.brand || "")}" aria-label="학원 이름" placeholder="학원 이름" style="width:240px">
         <input data-f="admins" value="${esc((m.admins || []).join(", "))}" aria-label="팀장 이메일" placeholder="팀장(관리자) 이메일 — 쉼표로 여러 명" style="width:300px" title="여기 적힌 사람만 구성 편집과 전체 멘토 보기를 할 수 있습니다. 비워 두면 모두 가능합니다.">
+        <button class="btn sm" data-act="enhAll" title="이미 올린 커리큘럼 이미지 중 작은 것을 모두 크게 키우고 또렷하게 다시 저장합니다">이미지 전체 선명하게</button>
         <span class="themes">색 ${Object.keys(THEMES).map(k => `<button data-act="theme" data-t="${k}" class="${(THEMES[m.theme] ? m.theme : "rose") === k ? "on" : ""}" style="background:rgb(${THEMES[k][1].join(",")})" title="${THEMES[k][0]}" aria-label="${THEMES[k][0]}"></button>`).join("")}</span>
       </div>` : `<div class="hl">${m.brand ? `<p class="school">${esc(m.brand)}</p>` : ""}<h1>${esc(m.title)}</h1><p class="tags">${(m.tags || []).filter(Boolean).map(t => `<span>${esc(t)}</span>`).join("<i></i>")}</p>${heroLegend(p)}</div>`;
   if (S.pub) return studentHero(p);
@@ -2782,12 +2786,16 @@ async function loadImg(id) {
   }
   imgCache[id] = d; return d;
 }
-async function saveImg(id, doc) {
-  const { data, ...meta } = doc;
-  if (data.length <= IMG_PART) { await Store.set("img_" + id, doc); return; }
-  const n = Math.ceil(data.length / IMG_PART);
-  for (let i = 0; i < n; i++) await Store.set("img_" + id + "_p" + i, { rmType: "img", part: i, of: id, d: data.slice(i * IMG_PART, (i + 1) * IMG_PART) });
-  await Store.set("img_" + id, { ...meta, parts: n });
+async function saveImg(id, doc, oldParts = 0) {
+  const { data, parts: _p, ...meta } = doc;
+  let n = 0;
+  if (data.length <= IMG_PART) await Store.set("img_" + id, { ...meta, data });
+  else {
+    n = Math.ceil(data.length / IMG_PART);
+    for (let i = 0; i < n; i++) await Store.set("img_" + id + "_p" + i, { rmType: "img", part: i, of: id, d: data.slice(i * IMG_PART, (i + 1) * IMG_PART) });
+    await Store.set("img_" + id, { ...meta, parts: n });
+  }
+  for (let i = n; i < oldParts; i++) { try { await Store.del("img_" + id + "_p" + i); } catch (e) {} }
 }
 async function delImg(id) {
   let n = 0; try { const d = await Store.get("img_" + id); n = (d && d.parts) || 0; } catch (e) {}
@@ -2822,6 +2830,25 @@ document.addEventListener("keydown", e => {
   const t = e.target; if (t && t.matches && t.matches("input,textarea,select,[contenteditable]")) return;
   e.preventDefault(); goSubject(e.key === "ArrowLeft" ? -1 : 1);
 });
+/* 이미 올린 커리큘럼 이미지 전체를 한 번에 선명하게 (작은 것만, 한 번 처리한 건 건너뜀) */
+async function enhanceAll() {
+  const ids = [...new Set(Object.values(S.imgidx || {}).flat())];
+  let done = 0, skip = 0, fail = 0;
+  const bar = document.createElement("div"); bar.className = "enhbar"; document.body.appendChild(bar);
+  for (let i = 0; i < ids.length; i++) {
+    bar.textContent = `커리큘럼 이미지 선명하게 바꾸는 중… ${i + 1} / ${ids.length}  (창을 닫지 마세요)`;
+    try {
+      const d = await loadImg(ids[i]);
+      if (!d || !d.data || d.enh || (d.w || 0) >= ENH_W) { skip++; continue; }
+      const im = new Image(); im.src = d.data; await im.decode();
+      const nd = { ...d, ...(await enhanceImg(im)) };
+      await saveImg(ids[i], nd, d.parts || 0); imgCache[ids[i]] = nd; done++;
+    } catch (e) { console.error(e); fail++; }
+  }
+  bar.remove();
+  modal({ title: "선명하게 바꾸기 끝", body: `<div style="font-size:14.5px;line-height:1.7">${done}장을 선명하게 바꿨어요.<br>${skip}장은 이미 크거나 처리된 이미지라 그대로 두었어요.${fail ? `<br><b style="color:#c2334a">${fail}장은 실패했어요. 한 번 더 눌러 주세요.</b>` : ""}</div>`, actions: [{ label: "확인", cls: "pri" }] });
+  if (viewer && viewer.box.isConnected) drawViewer();
+}
 async function openSubject(c, s) {
   const key = subjKey(s, c), p = curPlan();
   const box = modal({
@@ -2850,7 +2877,7 @@ async function drawViewer() {
   if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>${isAdmin() ? "이미지 파일을 여기로 끌어다 놓거나, 아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요." : "팀장이 이미지를 올리면 여기에 보입니다."}${viewer.s ? "<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다." : ""}</div>`; return; }
   const docs = await Promise.all(ids.map(id => loadImg(id).catch(() => null)));
   if (!viewer || !viewer.box.isConnected) return;
-  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" data-zoom="1" title="누르면 원본 크기로 크게 봅니다"${docs[i].w ? ` style="max-width:${docs[i].w}px"` : ""} alt="${esc(viewer.s ? subjLabel(viewer.s) : viewer.label)} 커리큘럼 ${i + 1}">${!S.pub && isAdmin() && docs[i].w ? `<span class="isz${docs[i].w < 1500 ? " low" : ""}">저장 크기 ${docs[i].w} × ${docs[i].h}${docs[i].w < 1500 ? " · 작아서 흐릴 수 있어요. 원본을 다시 올려 주세요" : ""}</span>` : ""}
+  el.innerHTML = `<div class="imgs">${ids.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" data-zoom="1" title="누르면 원본 크기로 크게 봅니다"${docs[i].w ? ` style="max-width:${docs[i].w}px"` : ""} alt="${esc(viewer.s ? subjLabel(viewer.s) : viewer.label)} 커리큘럼 ${i + 1}">${!S.pub && isAdmin() && docs[i].w ? `<span class="isz${docs[i].w < 1500 ? " low" : ""}">저장 크기 ${docs[i].w} × ${docs[i].h}${docs[i].enh ? " · 선명하게 처리됨" : docs[i].w < 1500 ? " · 작아서 흐릴 수 있어요" : ""}</span>` : ""}
       <div class="ib noprint"${S.pub || !isAdmin() ? ' style="display:none"' : ""}><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">↑</button><button class="btn sm" data-act="imgMove" data-id="${id}" data-d="1" ${i === ids.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button><button class="btn sm danger" data-act="imgDel" data-id="${id}">삭제</button></div></div>` : `<div class="empty">이미지 한 장을 불러오지 못했습니다.</div>`).join("")}</div>`;
 }
 async function saveIdx(key, ids) {
@@ -2869,8 +2896,30 @@ function readImage(file) {
    1) 원본이 가로 4000px·7MB 이하면 다시 압축하지 않고 원본 파일 그대로 저장 (화질 손실 0)
    2) 그보다 크면 가로 3200px까지 줄이고, 무손실 → 95% → 92% … 순서로 8MB 안에 맞춤 */
 const fileURL = file => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("파일을 읽지 못했습니다")); r.readAsDataURL(file); });
+/* 작은 이미지 선명하게: 가로 2400px보다 작으면 2배까지 부드럽게 키우고 테두리를 또렷하게 다듬음 */
+const ENH_W = 2400;
+function enhanceCanvas(im, W, H) {
+  const k = W >= ENH_W ? 1 : Math.min(2, 3000 / W), w = Math.round(W * k), h = Math.round(H * k);
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+  const g = cv.getContext("2d", { willReadFrequently: true }); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+  g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
+  const id = g.getImageData(0, 0, w, h), d = id.data, src = new Uint8ClampedArray(d), a = 0.55, row = w * 4;
+  for (let y = 1; y < h - 1; y++) for (let x = 1, i = y * row + 4; x < w - 1; x++, i += 4)
+    for (let c = 0; c < 3; c++) { const v = src[i + c]; d[i + c] = v + a * (4 * v - src[i + c - 4] - src[i + c + 4] - src[i + c - row] - src[i + c + row]); }
+  g.putImageData(id, 0, 0); return cv;
+}
+function encodeBest(cv) {
+  const webp = document.createElement("canvas").toDataURL("image/webp").startsWith("data:image/webp");
+  for (const q of [0.95, 0.92, 0.88]) { const d = cv.toDataURL(webp ? "image/webp" : "image/jpeg", q); if (d.length < 8e6) return d; }
+  return cv.toDataURL("image/jpeg", 0.85);
+}
+async function enhanceImg(im) {
+  const W = im.naturalWidth, H = im.naturalHeight, cv = enhanceCanvas(im, W, H);
+  return { data: encodeBest(cv), w: cv.width, h: cv.height, enh: true };
+}
 async function compress(file) {
   const im = await readImage(file), W = im.naturalWidth, H = im.naturalHeight;
+  if (W < ENH_W && W * H <= 12e6) return enhanceImg(im);
   if (/^image\/(png|jpeg|webp)$/.test(file.type) && W <= 4000 && H <= 20000 && file.size <= 7e6) {
     const data = await fileURL(file); if (data.length < 9.5e6) return { data, w: W, h: H, orig: true };
   }
@@ -3019,6 +3068,10 @@ document.addEventListener("click", async e => {
     saveMain(true); render(); toast("개강·종강일을 가져왔어요");
   });
   else if (a === "sendMgmt") sendToMgmt(curPlan());
+  else if (a === "enhAll") {
+    if (!Store.cloud) { toast("로그인한 상태에서만 할 수 있어요"); return; }
+    confirmBox("이미 올린 커리큘럼 이미지 중 작은 이미지를 모두 2배로 키우고 또렷하게 다듬어 다시 저장합니다. 이미지 수에 따라 몇 분 걸릴 수 있어요. 진행할까요?", "선명하게 바꾸기", () => { setTimeout(enhanceAll, 50); });
+  }
   else if (a === "theme") { S.main.theme = t.dataset.t; saveMain(true); render(); }
   else if (a === "resetTpl") confirmBox("과정·과목 구성을 처음 기본 로드맵으로 되돌릴까요? 지금까지 고친 과정·과목 구성이 사라집니다. (올린 이미지와 상담 내용은 그대로 남습니다)", "되돌리기", () => { const t0 = buildTemplate(); S.main.courses = t0.courses; S.main.stages = t0.stages; saveMain(true); render(); });
   else if (a === "editCourse" && c) courseForm(c);
