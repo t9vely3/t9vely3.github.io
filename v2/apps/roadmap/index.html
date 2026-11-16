@@ -1283,6 +1283,14 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .modal.viewer .imgb img{width:100%}
 .mask:has(.modal.viewer){padding:12px}
 @media (max-width:700px){.modal.wide.viewer{width:100vw;height:100vh;max-width:none;border-radius:0}.mask:has(.modal.viewer){padding:0}}
+
+/* 커리큘럼 창 이전·다음 과목 */
+.vnav{display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:6px}
+.vnav em{font-style:normal;font-size:12px;font-weight:600;color:#9a9ea7;min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.vnav .vn{max-width:180px;white-space:nowrap}
+.vnav .vn span{display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.vnav .vn[disabled]{opacity:.4;cursor:default}
+@media (max-width:700px){.vnav em{display:none}.vnav .vn span{max-width:64px}}
 </style>
 </head>
 <body>
@@ -2803,6 +2811,17 @@ async function openCourse(c) {
   viewer = { key, c, label, box };
   await drawViewer();
 }
+function goSubject(dir) {
+  if (!viewer || !viewer.s || !viewer.box.isConnected) return;
+  const list = allSubjects(viewer.c), n = list[list.findIndex(x => x.id === viewer.s.id) + dir]; if (!n) return;
+  const c = viewer.c; viewer.box.close(); openSubject(c, n);
+}
+document.addEventListener("keydown", e => {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  if (!viewer || !viewer.s || !viewer.box.isConnected || $("#layer").lastElementChild !== viewer.box || $("#zoom")) return;
+  const t = e.target; if (t && t.matches && t.matches("input,textarea,select,[contenteditable]")) return;
+  e.preventDefault(); goSubject(e.key === "ArrowLeft" ? -1 : 1);
+});
 async function openSubject(c, s) {
   const key = subjKey(s, c), p = curPlan();
   const box = modal({
@@ -2816,6 +2835,11 @@ async function openSubject(c, s) {
     ]
   });
   box.querySelector(".modal").classList.add("viewer");
+  /* 이전·다음 과목으로 바로 넘어가기 (버튼, 키보드 ← →) */
+  const list = allSubjects(c), at = list.findIndex(x => x.id === s.id), prev = list[at - 1], next = list[at + 1];
+  const nb = (x, dir) => x ? `<button class="btn sm vn" data-dir="${dir}" title="${dir < 0 ? "이전" : "다음"} 과목 (키보드 ${dir < 0 ? "←" : "→"})">${dir < 0 ? "‹ " : ""}<span>${esc(x.name)}</span>${dir > 0 ? " ›" : ""}</button>` : `<button class="btn sm vn" disabled>${dir < 0 ? "‹ 처음" : "마지막 ›"}</button>`;
+  box.querySelector(".mh h3").insertAdjacentHTML("afterend", `<div class="vnav">${nb(prev, -1)}<em>${at + 1} / ${list.length}</em>${nb(next, 1)}</div>`);
+  box.querySelectorAll(".vnav [data-dir]").forEach(bt => bt.addEventListener("click", () => goSubject(Number(bt.dataset.dir))));
   viewer = { key, c, s, box };
   await drawViewer();
 }
@@ -2842,20 +2866,24 @@ function readImage(file) {
   });
 }
 /* 커리큘럼 이미지 저장 화질
-   - 가로 최대 2600px(세로로 긴 이미지도 가로가 줄지 않게), 화소 최대 약 3000만
-   - 선명한 WebP(안 되면 JPEG) 92% 화질, 한 장 6MB 안으로 */
+   1) 원본이 가로 4000px·7MB 이하면 다시 압축하지 않고 원본 파일 그대로 저장 (화질 손실 0)
+   2) 그보다 크면 가로 3200px까지 줄이고, 무손실 → 95% → 92% … 순서로 8MB 안에 맞춤 */
+const fileURL = file => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("파일을 읽지 못했습니다")); r.readAsDataURL(file); });
 async function compress(file) {
   const im = await readImage(file), W = im.naturalWidth, H = im.naturalHeight;
-  let scale = Math.min(1, 2600 / W, 16000 / H, Math.sqrt(30e6 / (W * H)));
+  if (/^image\/(png|jpeg|webp)$/.test(file.type) && W <= 4000 && H <= 20000 && file.size <= 7e6) {
+    const data = await fileURL(file); if (data.length < 9.5e6) return { data, w: W, h: H, orig: true };
+  }
+  let scale = Math.min(1, 3200 / W, 20000 / H, Math.sqrt(40e6 / (W * H)));
   const webp = document.createElement("canvas").toDataURL("image/webp").startsWith("data:image/webp");
   const type = webp ? "image/webp" : "image/jpeg";
   for (let round = 0; round < 6; round++) {
     const w = Math.max(1, Math.round(W * scale)), h = Math.max(1, Math.round(H * scale));
     const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
     const g = cv.getContext("2d"); g.imageSmoothingQuality = "high"; g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
-    for (const q of [0.92, 0.86, 0.8]) {
+    for (const q of (webp ? [1, 0.95, 0.92, 0.88] : [0.95, 0.92, 0.88])) {
       const data = cv.toDataURL(type, q);
-      if (data.length < 6e6) return { data, w, h };
+      if (data.length < 8e6) return { data, w, h };
     }
     scale *= 0.85;
   }
