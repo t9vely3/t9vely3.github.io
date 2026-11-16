@@ -934,8 +934,8 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .mb{padding:18px 22px;overflow:auto}
 .mf{padding:12px 22px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--hair)}
 .fld{display:block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:var(--sub)}
-.fld input[type=text],.fld input[type=email],.fld input[type=password],.fld select{display:block;width:100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-weight:500;background:#fff;font-size:14px;color:var(--ink)}
-.fld input:focus,.fld select:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
+.fld input[type=text],.fld input[type=email],.fld input[type=password],.fld select,.fld textarea{display:block;width:100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-weight:500;background:#fff;font-size:14px;color:var(--ink)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
 .fld .help{display:block;font-weight:400;color:var(--faint);font-size:12px;margin-top:5px}
 .chk{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:12px}
 .icons{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -1294,6 +1294,39 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 
 /* 이미지 전체 선명하게 진행 표시 */
 .enhbar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:400;background:#1d2028;color:#fff;font-size:14px;font-weight:600;padding:12px 18px;border-radius:12px;box-shadow:0 14px 34px -14px rgba(0,0,0,.6)}
+
+/* 포트폴리오 게시판 */
+.pfb-top{display:flex;align-items:baseline;gap:12px;margin:2px 2px 14px}
+.pfb-top b{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.pfb-top span{font-size:12.5px;color:#8a8e98}
+.pfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+.pfc{display:flex;flex-direction:column;text-align:left;padding:0;border:1px solid #e9ebf0;border-radius:14px;background:#fff;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;font:inherit;color:inherit}
+.pfc:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px rgba(20,24,40,.45)}
+.pfc:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.pft{display:block;aspect-ratio:4/3;background:#f2f3f6 center/cover no-repeat}
+.pft:not(.ok){background-image:linear-gradient(110deg,#f1f2f5 30%,#f8f9fb 50%,#f1f2f5 70%)}
+.pfi{display:flex;flex-direction:column;gap:3px;padding:11px 14px 13px}
+.pfi b{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfi em{font-style:normal;font-size:12.5px;color:#8a8e98}
+.pfd-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin:0 0 14px}
+.pfd-t{flex:1;min-width:200px}
+.pfd-t h4{margin:2px 0 0;font-size:19px;font-weight:800;letter-spacing:-.03em}
+.pfd-t p{margin:6px 0 0;font-size:14px;color:#5d616b;white-space:pre-wrap;line-height:1.6}
+.pfd-a{display:flex;gap:6px;flex-wrap:wrap}
+.imgb .pfmain{position:absolute;left:10px;top:10px;font-size:11.5px;font-weight:700;color:#fff;background:var(--ac);border-radius:7px;padding:3px 8px}
+.pfdrop{border:2px dashed #cfd3da;border-radius:12px;padding:18px 14px;text-align:center;color:#6b6f79;cursor:pointer;display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.pfdrop b{font-size:14px;color:#2a2d35}
+.pfdrop span{font-size:12.5px}
+.pfdrop.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 7%,#fff)}
+.pfq{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
+.pfq:empty{display:none}
+.pfqi{position:relative;width:84px;height:64px;border-radius:8px;overflow:hidden;border:1px solid #e3e5ea}
+.pfqi.main{outline:2px solid var(--ac)}
+.pfqi img{width:100%;height:100%;object-fit:cover;display:block}
+.pfqi i{position:absolute;left:4px;bottom:4px;font-style:normal;font-size:10.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);border-radius:5px;padding:1px 5px}
+.pfqi button{position:absolute;right:3px;top:3px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:20px;cursor:pointer;padding:0}
+@media (max-width:700px){.pfgrid{grid-template-columns:repeat(2,1fr);gap:10px}.pfi{padding:8px 10px 10px}.pfi b{font-size:13.5px}}
+.fld textarea{resize:vertical;font-family:inherit;line-height:1.55}
 </style>
 </head>
 <body>
@@ -1528,7 +1561,7 @@ const Store = {
 };
 
 /* ============================================================ 상태 */
-const S = { main: null, plans: [], cur: null, mode: "view", onlySel: false, user: null, imgidx: {}, warn: "", canLogin: false };
+const S = { main: null, plans: [], cur: null, mode: "view", onlySel: false, user: null, imgidx: {}, posts: {}, warn: "", canLogin: false };
 const curPlan = () => S.plans.find(p => p.id === S.cur) || null;
 const myEmail = () => String(S.user?.email || "").toLowerCase();
 /* 팀장 목록이 비어 있으면 모두 팀장으로 봄 (처음 설정용). 구성 편집 화면에서 팀장 이메일을 넣으면 그때부터 나뉨 */
@@ -2040,11 +2073,11 @@ function boardHTML(p) {
   const vis = cs.filter(c => !(S.onlySel && p && !ed && !allSubjects(c).some(s => ck[s.id])));
   const V = window.innerWidth <= 640 && !ed && !S.forceH;   /* 휴대폰: 세로로 내려가는 로드맵 */
   const vName = s => `${s.icon ? `<span class="si">${svg(s.icon)}</span>` : ""}${esc(s.name)}`;
-  const vRow = (c, s) => { const on = !!ck[s.id], ic = (S.imgidx[subjKey(s, c)] || []).length;
+  const vRow = (c, s) => { const on = !!ck[s.id], ic = subjCount(subjKey(s, c));
     return `<li class="vs${on ? " on" : ""}"><button class="vsta" data-act="subj" data-c="${esc(c.id)}" data-s="${esc(s.id)}"><span class="dot" aria-hidden="true"></span><span class="tx"><span class="nm">${vName(s)}${s.level ? `<span class="lv">${esc(s.level)}</span>` : ""}</span>${s.note ? `<span class="nt">${esc(s.note)}</span>` : ""}</span>${ic ? `<i class="ic" title="커리큘럼 이미지"></i>` : ""}${on ? `<span class="ck" aria-label="수강"></span>` : ""}</button></li>`; };
   const vSplit = (c, x) => `<li class="vsp"><span class="dot" aria-hidden="true"></span><div class="vbr">${x.branches.map(b => `<div class="br"><span class="bt">${esc(b.label || "갈래")}</span><div class="bch">${b.subjects.map(s => `<button class="vchip${ck[s.id] ? " on" : ""}" data-act="subj" data-c="${esc(c.id)}" data-s="${esc(s.id)}">${vName(s)}${s.level ? ` <small>${esc(s.level)}</small>` : ""}</button>`).join("")}</div></div>`).join("")}</div></li>`;
   const station = (c, s, list, i, a, b) => {
-    const on = !!ck[s.id], ic = (S.imgidx[subjKey(s, c)] || []).length;
+    const on = !!ck[s.id], ic = subjCount(subjKey(s, c));
     const pv = i > a && ck[list[i - 1].id], nx = i + 1 < b && ck[list[i + 1].id];
     return `<button class="sta${on ? " on" : ""}${on && pv ? " jl" : ""}${on && nx ? " jr" : ""}"${ed ? ` draggable="true"` : ""} data-act="subj" data-c="${esc(c.id)}" data-s="${esc(s.id)}" title="${esc(subjLabel(s) + (ic ? " · 커리큘럼 이미지 " + ic + "장" : ""))}">${on && !nx ? `<span class="badge"></span>` : ""}${ic ? `<i class="ic"></i>` : ""}<span class="nm">${s.icon ? `<span class="si">${svg(s.icon)}</span>` : ""}${esc(s.name)}</span>${s.level ? `<span class="lv">${esc(s.level)}</span>` : ""}${s.note ? `<span class="nt">${esc(s.note)}</span>` : ""}</button>`;
   };
@@ -2198,7 +2231,7 @@ window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(()
 function printSubjects(p) {
   if (!p) return [];
   const ck = checkedOf(p), out = [];
-  S.main.courses.forEach(c => allSubjects(c).forEach(s => { if (ck[s.id]) { const ids = S.imgidx[subjKey(s, c)] || []; if (ids.length) out.push({ c, s, ids }); } }));
+  S.main.courses.forEach(c => allSubjects(c).forEach(s => { if (ck[s.id]) { const ids = mainIdsOf(subjKey(s, c)); if (ids.length) out.push({ c, s, ids }); } }));
   return out;
 }
 function printImgsHTML(p) {
@@ -2838,7 +2871,7 @@ document.addEventListener("keydown", e => {
 });
 /* 이미 올린 커리큘럼 이미지 전체를 한 번에 선명하게 (작은 것만, 한 번 처리한 건 건너뜀) */
 async function enhanceAll() {
-  const ids = [...new Set(Object.values(S.imgidx || {}).flat())];
+  const ids = [...new Set([...Object.values(S.imgidx || {}).flat(), ...Object.values(S.posts || {}).flat().flatMap(p => p.imgs || [])])];
   let done = 0, skip = 0, fail = 0;
   const bar = document.createElement("div"); bar.className = "enhbar"; document.body.appendChild(bar);
   for (let i = 0; i < ids.length; i++) {
@@ -2855,6 +2888,158 @@ async function enhanceAll() {
   modal({ title: "선명하게 바꾸기 끝", body: `<div style="font-size:14.5px;line-height:1.7">${done}장을 선명하게 바꿨어요.<br>${skip}장은 이미 크거나 처리된 이미지라 그대로 두었어요.${fail ? `<br><b style="color:#c2334a">${fail}장은 실패했어요. 한 번 더 눌러 주세요.</b>` : ""}</div>`, actions: [{ label: "확인", cls: "pri" }] });
   if (viewer && viewer.box.isConnected) drawViewer();
 }
+
+/* ───── 포트폴리오 게시판: 작품마다 글 하나(제목·설명·이미지 여러 장), 목록에는 대표 이미지 썸네일 ─────
+   저장: imgidx 문서의 posts[과목키] = [{ id, title, desc, imgs:[이미지ID], th:썸네일ID, at }] */
+const isBoard = v => !!(v && v.s && SEP_IMG(v.s.name));
+const postsOf = key => (S.posts && S.posts[key]) || [];
+const boardPosts = key => postsOf(key).length ? postsOf(key) : (S.imgidx[key] || []).map((id, i) => ({ id: "L" + id, title: `작품 ${i + 1}`, desc: "", imgs: [id], legacy: true }));
+const subjCount = key => postsOf(key).length || (S.imgidx[key] || []).length;
+const mainIdsOf = key => postsOf(key).length ? postsOf(key).map(p => p.imgs[0]).filter(Boolean) : (S.imgidx[key] || []);
+async function savePosts(key, list) {
+  S.posts[key] = list;
+  await Store.set("imgidx", { rmType: "imgidx", posts: { [key]: list } }, true);
+}
+function makeThumb(im) {
+  const W = im.naturalWidth, H = im.naturalHeight, tw = 720, th = 540, r = Math.max(tw / W, th / H), w = W * r, h = H * r;
+  const cv = document.createElement("canvas"); cv.width = tw; cv.height = th;
+  const g = cv.getContext("2d"); g.imageSmoothingQuality = "high"; g.fillStyle = "#fff"; g.fillRect(0, 0, tw, th);
+  g.drawImage(im, (tw - w) / 2, h > th * 1.35 ? 0 : (th - h) / 2, w, h); /* 세로로 긴 이미지는 윗부분을 보여 줌 */
+  const webp = document.createElement("canvas").toDataURL("image/webp").startsWith("data:image/webp");
+  return cv.toDataURL(webp ? "image/webp" : "image/jpeg", 0.86);
+}
+async function setThumb(post) {
+  if (!post.imgs.length) { post.th = ""; return; }
+  const d = await loadImg(post.imgs[0]), im = new Image(); im.src = d.data; await im.decode();
+  const tid = "t" + post.id, doc = { rmType: "img", id: tid, data: makeThumb(im), w: 720, h: 540, thumb: true };
+  await saveImg(tid, doc); imgCache[tid] = doc; post.th = tid;
+}
+async function upFiles(files, key, bar) {
+  const ids = [];
+  for (let i = 0; i < files.length; i++) {
+    if (bar) bar.textContent = `이미지 올리는 중… ${i + 1} / ${files.length}`;
+    try { const c = await compress(files[i]), id = uid("i"), doc = { rmType: "img", id, key, ...c, createdAt: Date.now() }; await saveImg(id, doc); imgCache[id] = doc; ids.push(id); }
+    catch (e) { console.error(e); }
+  }
+  return ids;
+}
+async function migrateLegacy(key) {
+  const old = S.imgidx[key] || []; if (!old.length || postsOf(key).length) return;
+  const list = old.map((id, i) => ({ id: uid("p"), title: `작품 ${i + 1}`, desc: "", imgs: [id], at: Date.now() }));
+  for (const p of list) { try { await setThumb(p); } catch (e) { console.error(e); } }
+  await savePosts(key, list); await saveIdx(key, []);
+}
+function progressBar() { const b = document.createElement("div"); b.className = "enhbar"; document.body.appendChild(b); return b; }
+/* 목록에 끌어다 놓기 → 새 작품 글쓰기 창, 작품 안에서 끌어다 놓기 → 그 작품에 이미지 추가 */
+async function boardFiles(files) {
+  const v = viewer; if (!v) return;
+  const post = v.post && postsOf(v.key).find(p => p.id === v.post);
+  if (!post) { postForm(v.key, files); return; }
+  const bar = progressBar(), ids = await upFiles(files, v.key, bar); bar.remove();
+  if (!ids.length) { toast("이미지를 올리지 못했어요"); return; }
+  const list = postsOf(v.key).map(p => p.id === post.id ? { ...p, imgs: [...p.imgs, ...ids] } : p), np = list.find(p => p.id === post.id);
+  try { if (!np.th) await setThumb(np); await savePosts(v.key, list); toast(`${ids.length}장을 추가했어요`); } catch (e) { console.error(e); toast("저장하지 못했어요"); }
+  render(); drawViewer();
+}
+function postForm(key, files = [], post = null) {
+  let pend = files.filter(f => /^image\//.test(f.type));
+  const box = modal({
+    title: post ? "작품 제목·설명 수정" : "새 작품 올리기",
+    body: `<label class="fld">작품 제목<input type="text" id="pf-t" value="${esc(post?.title || "")}" placeholder="예: 브랜드 리뉴얼 포트폴리오"></label>
+      <label class="fld">설명 (선택)<textarea id="pf-d" rows="3" placeholder="작업 내용, 사용 프로그램 등">${esc(post?.desc || "")}</textarea></label>
+      ${post ? "" : `<div class="pfdrop" id="pf-drop" tabindex="0" role="button"><b>이미지를 여기로 끌어다 놓거나, 눌러서 고르세요</b><span>여러 장 가능 · 첫 번째 이미지가 목록에 보이는 대표 썸네일이 됩니다</span><div class="pfq" id="pf-q"></div></div><input type="file" id="pf-f" accept="image/*" multiple hidden>`}`,
+    actions: [{ label: "취소" }, { label: post ? "저장" : "올리기", cls: "pri", fn: () => { save(); return false; } }]
+  });
+  const drawQ = () => { const q = $("#pf-q", box); if (!q) return; q.innerHTML = pend.map((f, i) => `<span class="pfqi${i === 0 ? " main" : ""}"><img src="${URL.createObjectURL(f)}" alt=""><i>${i === 0 ? "대표" : i + 1}</i><button type="button" data-x="${i}" aria-label="빼기">×</button></span>`).join(""); };
+  if (!post) {
+    const dz = $("#pf-drop", box), fi = $("#pf-f", box);
+    dz.addEventListener("click", e => { if (e.target.closest("[data-x]")) { pend.splice(Number(e.target.closest("[data-x]").dataset.x), 1); drawQ(); return; } fi.value = ""; fi.click(); });
+    dz.addEventListener("keydown", e => { if (e.key === " ") { e.preventDefault(); fi.click(); } });
+    fi.addEventListener("change", () => { pend.push(...[...fi.files].filter(f => /^image\//.test(f.type))); drawQ(); });
+    ["dragenter", "dragover"].forEach(n => box.addEventListener(n, e => { if ([...(e.dataTransfer?.types || [])].includes("Files")) { e.preventDefault(); e.stopPropagation(); dz.classList.add("on"); } }));
+    box.addEventListener("dragleave", e => { if (!box.contains(e.relatedTarget)) dz.classList.remove("on"); });
+    box.addEventListener("drop", e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove("on"); pend.push(...[...(e.dataTransfer?.files || [])].filter(f => /^image\//.test(f.type))); drawQ(); });
+    box.addEventListener("paste", e => { const fs = [...(e.clipboardData?.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) { e.preventDefault(); e.stopPropagation(); pend.push(...fs); drawQ(); } });
+    drawQ();
+  }
+  setTimeout(() => $("#pf-t", box)?.focus(), 30);
+  let busy = false;
+  async function save() {
+    if (busy) return;
+    const title = $("#pf-t", box).value.trim(), desc = $("#pf-d", box).value.trim();
+    if (!title) { toast("작품 제목을 적어 주세요"); $("#pf-t", box).focus(); return; }
+    if (!post && !pend.length) { toast("이미지를 한 장 이상 넣어 주세요"); return; }
+    busy = true;
+    try {
+      if (post) {
+        await savePosts(key, postsOf(key).map(p => p.id === post.id ? { ...p, title, desc } : p));
+      } else {
+        const bar = progressBar(), ids = await upFiles(pend, key, bar); bar.remove();
+        if (!ids.length) throw new Error("이미지를 올리지 못했습니다");
+        const np = { id: uid("p"), title, desc, imgs: ids, at: Date.now() };
+        await setThumb(np);
+        await savePosts(key, [np, ...postsOf(key)]);
+        toast("작품을 올렸어요");
+      }
+      box.close(); render(); drawViewer();
+    } catch (e) { console.error(e); toast("저장하지 못했어요. 인터넷·로그인을 확인해 주세요"); busy = false; }
+  }
+}
+async function drawBoard() {
+  const v = viewer, el = $("#v-body", v.box), admin = !S.pub && isAdmin();
+  if (admin && Store.cloud && !postsOf(v.key).length && (S.imgidx[v.key] || []).length) {
+    el.innerHTML = `<div class="empty">기존 이미지를 작품 게시판으로 옮기는 중입니다…</div>`;
+    try { await migrateLegacy(v.key); render(); } catch (e) { console.error(e); }
+    if (!v.box.isConnected) return;
+  }
+  const list = boardPosts(v.key), post = v.post && list.find(p => p.id === v.post);
+  if (!post) {
+    v.post = null;
+    if (!list.length) { el.innerHTML = `<div class="drop"><b>${admin ? "아직 올린 작품이 없습니다" : "작품은 준비 중입니다"}</b>${admin ? "아래 ‘새 작품 올리기’를 누르거나, 이미지 파일을 여기로 끌어다 놓으면 작품 글이 만들어집니다." : "담당 멘토에게 문의해 주세요."}</div>`; return; }
+    el.innerHTML = `<div class="pfb-top"><b>작품 ${list.length}개</b>${admin ? `<span>이미지를 여기로 끌어다 놓으면 새 작품으로 올라갑니다</span>` : ""}</div>
+      <div class="pfgrid">${list.map(p => `<button type="button" class="pfc" data-post="${esc(p.id)}"><span class="pft" data-th="${esc(p.th || p.imgs[0] || "")}"></span><span class="pfi"><b>${esc(p.title || "제목 없음")}</b><em>이미지 ${p.imgs.length}장${p.at ? ` · ${fmtDay(p.at)}` : ""}</em></span></button>`).join("")}</div>`;
+    el.querySelectorAll(".pft[data-th]").forEach(async sp => { const id = sp.dataset.th; if (!id) return; try { const d = await loadImg(id); if (d && sp.isConnected) { sp.style.backgroundImage = `url('${d.data}')`; sp.classList.add("ok"); } } catch (e) {} });
+    el.querySelectorAll(".pfc").forEach(b => b.addEventListener("click", () => { v.post = b.dataset.post; drawViewer(); v.box.querySelector(".mb")?.scrollTo(0, 0); }));
+    return;
+  }
+  const edit = admin && !post.legacy, i0 = list.indexOf(post);
+  el.innerHTML = `<div class="pfd-top"><button type="button" class="btn sm" data-pf="back">‹ 목록</button>
+      <div class="pfd-t"><h4>${esc(post.title || "제목 없음")}</h4>${post.desc ? `<p>${esc(post.desc)}</p>` : ""}</div>
+      <div class="pfd-a">${i0 > 0 ? `<button type="button" class="btn sm" data-pf="prev" title="이전 작품">‹ 이전 작품</button>` : ""}${i0 < list.length - 1 ? `<button type="button" class="btn sm" data-pf="next" title="다음 작품">다음 작품 ›</button>` : ""}${edit ? `<button type="button" class="btn sm" data-pf="edit">제목·설명 수정</button><button type="button" class="btn sm" data-pf="add">이미지 추가</button><button type="button" class="btn sm danger" data-pf="del">작품 삭제</button>` : ""}</div></div>
+    <div class="imgs" id="pf-imgs"><div class="empty">불러오는 중입니다…</div></div>`;
+  const go = id => { v.post = id; drawViewer(); v.box.querySelector(".mb")?.scrollTo(0, 0); };
+  el.querySelector('[data-pf="back"]').addEventListener("click", () => go(null));
+  el.querySelector('[data-pf="prev"]')?.addEventListener("click", () => go(list[i0 - 1].id));
+  el.querySelector('[data-pf="next"]')?.addEventListener("click", () => go(list[i0 + 1].id));
+  el.querySelector('[data-pf="edit"]')?.addEventListener("click", () => postForm(v.key, [], post));
+  el.querySelector('[data-pf="add"]')?.addEventListener("click", () => { $("#file").value = ""; $("#file").click(); });
+  el.querySelector('[data-pf="del"]')?.addEventListener("click", () => confirmBox(`‘${post.title || "제목 없음"}’ 작품과 이미지 ${post.imgs.length}장을 지울까요? 되돌릴 수 없어요.`, "작품 삭제", async () => {
+    try { await savePosts(v.key, postsOf(v.key).filter(p => p.id !== post.id)); for (const id of [...post.imgs, post.th].filter(Boolean)) { try { await delImg(id); delete imgCache[id]; } catch (e) {} } toast("작품을 지웠어요"); }
+    catch (e) { console.error(e); toast("삭제하지 못했어요"); }
+    v.post = null; render(); drawViewer();
+  }));
+  const docs = await Promise.all(post.imgs.map(id => loadImg(id).catch(() => null)));
+  if (!v.box.isConnected || v.post !== post.id) return;
+  const box = $("#pf-imgs", el);
+  if (!post.imgs.length) { box.innerHTML = `<div class="drop"><b>이미지가 없습니다</b>${edit ? "‘이미지 추가’를 누르거나 이미지를 끌어다 놓아 주세요." : ""}</div>`; return; }
+  box.innerHTML = post.imgs.map((id, i) => docs[i] ? `<div class="imgb"><img src="${docs[i].data}" data-zoom="1" title="누르면 원본 크기로 크게 봅니다"${docs[i].w ? ` style="max-width:${docs[i].w}px"` : ""} alt="${esc(post.title)} ${i + 1}">${i === 0 ? `<span class="pfmain">대표 이미지</span>` : ""}
+    ${edit ? `<div class="ib noprint"><button class="btn sm" data-pfi="main" data-i="${i}" ${i === 0 ? "disabled" : ""}>대표로</button><button class="btn sm" data-pfi="move" data-i="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">↑</button><button class="btn sm" data-pfi="move" data-i="${i}" data-d="1" ${i === post.imgs.length - 1 ? "disabled" : ""} aria-label="아래로">↓</button><button class="btn sm danger" data-pfi="del" data-i="${i}">삭제</button></div>` : ""}</div>` : "").join("");
+  box.querySelectorAll("[data-pfi]").forEach(b => b.addEventListener("click", async () => {
+    const i = Number(b.dataset.i), imgs = post.imgs.slice(), act = b.dataset.pfi;
+    if (act === "main") imgs.unshift(imgs.splice(i, 1)[0]);
+    else if (act === "move") { const d = Number(b.dataset.d); imgs.splice(i + d, 0, imgs.splice(i, 1)[0]); }
+    else if (act === "del") imgs.splice(i, 1);
+    const np = { ...post, imgs }, firstChanged = imgs[0] !== post.imgs[0];
+    b.disabled = true;
+    try {
+      if (firstChanged) await setThumb(np);
+      await savePosts(v.key, postsOf(v.key).map(p => p.id === post.id ? np : p));
+      if (act === "del") { try { await delImg(post.imgs[i]); delete imgCache[post.imgs[i]]; } catch (e) {} }
+      if (act === "main") toast("대표 이미지를 바꿨어요");
+    } catch (e) { console.error(e); toast("저장하지 못했어요"); }
+    render(); drawViewer();
+  }));
+}
 async function openSubject(c, s) {
   const key = subjKey(s, c), p = curPlan();
   const box = modal({
@@ -2862,7 +3047,9 @@ async function openSubject(c, s) {
     title: `${esc(s.name)}<span class="lvl">${esc([s.level, s.note].filter(Boolean).join(" · "))}</span>`,
     body: `<div id="v-body"><div class="empty">불러오는 중입니다…</div></div>`,
     actions: [
-      ...(S.pub || !isAdmin() ? [] : [{ label: "이미지 올리기", fn: () => { viewer = { key, c, s, box }; $("#file").value = ""; $("#file").click(); return false; } }]),
+      ...(S.pub || !isAdmin() ? [] : SEP_IMG(s.name)
+        ? [{ label: "새 작품 올리기", cls: "pri", fn: () => { postForm(key); return false; } }]
+        : [{ label: "이미지 올리기", fn: () => { viewer = { key, c, s, box }; $("#file").value = ""; $("#file").click(); return false; } }]),
       ...(p && !S.pub ? [{ label: checkedOf(p)[s.id] ? "수강 체크 풀기" : `${p.name} 님 수강 과목으로 체크`, cls: checkedOf(p)[s.id] ? "" : "pri", fn: () => { toggleCheck(s.id); } }] : []),
       { label: "닫기" }
     ]
@@ -2878,6 +3065,7 @@ async function openSubject(c, s) {
 }
 async function drawViewer() {
   if (!viewer || !viewer.box.isConnected) return;
+  if (isBoard(viewer)) return drawBoard();
   const el = $("#v-body", viewer.box), ids = S.imgidx[viewer.key] || [];
   if (!ids.length && S.pub) { el.innerHTML = `<div class="drop"><b>이 ${viewer.s ? "과목" : "과정"}의 커리큘럼은 준비 중입니다</b>담당 멘토에게 문의해 주세요.</div>`; return; }
   if (!ids.length) { el.innerHTML = `<div class="drop"><b>아직 올린 커리큘럼 이미지가 없습니다</b>${isAdmin() ? "이미지 파일을 여기로 끌어다 놓거나, 아래 ‘이미지 올리기’를 눌러 한 장 또는 여러 장을 올려 주세요." : "팀장이 이미지를 올리면 여기에 보입니다."}${viewer.s ? "<br>같은 이름의 과목은 다른 과정에서도 같은 이미지를 함께 씁니다." : ""}</div>`; return; }
@@ -2956,7 +3144,7 @@ document.addEventListener("click", e => {
 });
 $("#file").addEventListener("change", e => uploadImgs([...e.target.files]));
 /* 이미지 창에 파일을 끌어다 놓거나(Ctrl+V 붙여넣기도) 바로 올리기 */
-const canUpImg = () => viewer && viewer.box.isConnected && !S.pub && isAdmin();
+const canUpImg = () => viewer && viewer.box.isConnected && $("#layer").lastElementChild === viewer.box && !S.pub && isAdmin();
 const hasFiles = e => [...(e.dataTransfer?.types || [])].includes("Files");
 let dragDepth = 0;
 function dropMark(on) { const b = viewer && viewer.box && (viewer.box.querySelector(".modal") || viewer.box); if (b) b.classList.toggle("imgdrop", on); }
@@ -2976,6 +3164,7 @@ addEventListener("paste", e => {
 });
 async function uploadImgs(files) {
   if (!files.length || !viewer) return;
+  if (isBoard(viewer)) return boardFiles(files);
   const v = viewer; let ok = 0;
   toast(`이미지 ${files.length}장을 올리는 중입니다…`);
   const ids = (S.imgidx[v.key] || []).slice();
@@ -3254,7 +3443,7 @@ async function loadAll() {
   if (main.themeVer !== 4) { main.theme = "rose"; main.themeVer = 4; }
   if (!main.pfRenamed) { main.courses.forEach(c => allSubjects(c).forEach(x => { if (x.name === "수강생포폴") { x.name = "포트폴리오"; x.qskip = true; if (x.icon === "folder") x.icon = ""; } })); main.pfRenamed = true; if (!S.warn && Store.cloud) { try { await Store.set("main", main); } catch (e) { console.error(e); } } }
   if (!Array.isArray(main.stages) || !main.stages.length) main.stages = clone(DEFAULT_STAGES);
-  fixCourseIcons(main); S.main = main; S.imgidx = (idx && idx.map) || {};
+  fixCourseIcons(main); S.main = main; S.imgidx = (idx && idx.map) || {}; S.posts = (idx && idx.posts) || {};
   if (Store.cloud && Store.db) {
     try { const a = await Store.db.collection("config").doc("timetable").get(); if (a.exists && a.data().data) S.tt = a.data().data; } catch (e) { console.warn("강의장 시간표", e); }
     try { const b = await Store.db.collection("config").doc("timetable_map").get(); if (b.exists && b.data().data) S.ttmap = b.data().data; } catch (e) {}
@@ -3303,7 +3492,7 @@ async function loadPublic(p4, msg) {
   if (!plan) { try { localStorage.removeItem("rmv:" + LINK_ID); } catch (e) {} return gate(saved && !msg ? "" : "번호가 맞지 않거나 링크가 바뀌었습니다. 다시 확인해 주세요."); }
   try { localStorage.setItem("rmv:" + LINK_ID, p4); } catch (e) {}
   let idx = null; try { idx = await Store.get("imgidx"); } catch (e) {}
-  S.imgidx = (idx && idx.map) || {}; S.plans = [plan]; S.cur = plan.id;
+  S.imgidx = (idx && idx.map) || {}; S.posts = (idx && idx.posts) || {}; S.plans = [plan]; S.cur = plan.id;
   S.onlySel = Object.values(plan.checked || {}).some(Boolean);
   try { const a = await Store.db.collection("config").doc("timetable").get(); if (a.exists && a.data().data) S.tt = a.data().data; } catch (e) {}
   try { const b = await Store.db.collection("config").doc("timetable_map").get(); if (b.exists && b.data().data) S.ttmap = b.data().data; } catch (e) {}
