@@ -2187,7 +2187,13 @@ window.addEventListener("message", e => {
     box.innerHTML = miss.length ? `견적서 과목표에서 찾지 못한 과목 <b>${miss.length}개</b>: ${miss.map(esc).join(", ")}<br>‘구성 편집’에서 그 과목을 눌러 ‘견적서 과목’을 골라 주거나, 견적서에서 직접 담아 주세요.` : "";
   }
 });
-let rsT; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (S.main && !document.querySelector(".mask")) render(); }, 150); });
+/* 화면 폭이 바뀔 때만 다시 그림. 휴대폰·태블릿에서 키보드가 올라오면 높이만 바뀌므로 다시 그리지 않음(그러면 입력칸이 사라져 키보드가 내려감) */
+let rsT, rsW = innerWidth;
+window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => {
+  if (Math.abs(innerWidth - rsW) < 2) return;
+  const a = document.activeElement; if (a && a.matches && a.matches("input,textarea,select,[contenteditable]")) return;
+  rsW = innerWidth; if (S.main && !document.querySelector(".mask")) render();
+}, 150); });
 /* ───── 인쇄: 수강 과목 커리큘럼 이미지 페이지 ───── */
 function printSubjects(p) {
   if (!p) return [];
@@ -3112,8 +3118,9 @@ document.addEventListener("change", e => {
   let drag = false;
   addEventListener("dragstart", () => { drag = true; sh.classList.remove("on"); }, true);
   addEventListener("dragend", () => { drag = false; }, true); addEventListener("drop", () => { drag = false; }, true);
+  const touchOnly = matchMedia("(hover: none)").matches;
   addEventListener("scroll", () => {
-    if (drag || S.view === "quote" || document.querySelector("#layer .mask")) return;
+    if (touchOnly || drag || S.view === "quote" || document.querySelector("#layer .mask")) return;
     if (!tm) sh.classList.add("on"); else clearTimeout(tm);
     tm = setTimeout(() => { tm = 0; sh.classList.remove("on"); }, 160);
   }, { passive: true });
