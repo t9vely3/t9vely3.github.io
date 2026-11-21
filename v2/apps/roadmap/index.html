@@ -1327,6 +1327,73 @@ table.tt{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;fo
 .pfqi button{position:absolute;right:3px;top:3px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:20px;cursor:pointer;padding:0}
 @media (max-width:700px){.pfgrid{grid-template-columns:repeat(2,1fr);gap:10px}.pfi{padding:8px 10px 10px}.pfi b{font-size:13.5px}}
 .fld textarea{resize:vertical;font-family:inherit;line-height:1.55}
+
+/* 학생 목록 페이지 */
+.stpage{padding:22px 24px 26px}
+.stp-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.stp-h h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.03em}
+.stp-h .cnt{font-size:13px;font-weight:600;color:var(--sub)}
+.stp-h .sl-q{flex:0 1 260px;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 12px;font:inherit;font-size:13.5px}
+.mchips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
+.mchip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;font-weight:600;color:#3b3f48;cursor:pointer}
+.mchip em{font-style:normal;margin-left:6px;font-size:12px;color:#9a9ea7}
+.mchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.mchip.on em{color:rgba(255,255,255,.8)}
+.stg{margin-bottom:22px}
+.stg h3{display:flex;align-items:baseline;gap:8px;margin:0 0 8px;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.stg h3 em{font-style:normal;font-size:12.5px;font-weight:600;color:var(--sub)}
+.stpage .sl-wrap{max-height:none;overflow-x:auto}
+.stpage table.sl{table-layout:fixed;min-width:760px}
+.stpage .sl th:nth-child(1){width:20%}.stpage .sl th:nth-child(2){width:14%}.stpage .sl th:nth-child(3){width:16%}
+.stpage .sl td{overflow:hidden;text-overflow:ellipsis}
+.sl td.mt{font-weight:600;color:#3b3f48}
+.sl-empty{padding:40px 16px;text-align:center;color:var(--sub);border:1px dashed var(--line);border-radius:12px}
+/* 홈 첫 화면: 상담 시작 입력 */
+.startf{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:flex-end;background:#fff;border:1px solid #eceef2;border-radius:14px;padding:12px 14px;box-shadow:0 10px 26px -20px rgba(30,30,60,.45)}
+.startf .sf-d{display:flex;flex-direction:column;gap:3px;padding-right:6px;margin-right:2px;border-right:1px solid #eef0f3}
+.startf .sf-d span,.startf .sf-f span{font-size:11.5px;font-weight:600;color:var(--sub)}
+.startf .sf-d b{font-size:15px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:36px}
+.startf .sf-f{display:flex;flex-direction:column;gap:3px}
+.startf input{width:150px;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 11px;font:inherit;font-size:14px;background:#fff}
+.startf input:focus{outline:2px solid var(--ac-soft);border-color:var(--ac)}
+.startf .btn.pri{height:38px;padding:0 18px}
+@media (max-width:700px){.startf{justify-content:stretch}.startf .sf-d{border:0;flex-direction:row;align-items:baseline;gap:8px;width:100%}.startf .sf-d b{line-height:1.4}.startf .sf-f{flex:1 1 40%}.startf input{width:100%}.startf .btn.pri{width:100%}.stp-h .sl-q{flex:1 1 100%}}
+
+/* 글씨 키우기 (화면 로드맵) */
+.panel.board .sta .nm{font-size:13.5px}
+.panel.board .sta .lv{font-size:11.5px}
+.panel.board .sta .nt{font-size:11px}
+.panel.board .cnm{font-size:15px}
+/* 약간 굵게 */
+.panel.board .sta .nm{font-weight:700;color:#3a3d45}
+.panel.board .sta .lv,.panel.board .sta .nt{font-weight:600;color:#8a8e97}
+.panel.board .sta.on .nm{font-weight:800}
+.panel.board .sta.on .lv,.panel.board .sta.on .nt{font-weight:700}
+.panel.board .cnm{font-weight:800}
+@media (max-width:700px){.panel.board .sta .nm{font-size:12.5px}.panel.board .sta .lv,.panel.board .sta .nt{font-size:10.5px}}
+/* 글씨 키우기 (인쇄) */
+#printDoc .pp-road .qs b{font-size:9.4pt!important;line-height:1.18}
+#printDoc .pp-road .qs em{font-size:7.4pt!important}
+#printDoc .pp-road .qh b{font-size:9.4pt!important}
+#printDoc .pp-road .qs b{font-weight:750!important;color:#26282e!important}
+#printDoc .pp-road .qc.dim .qs b{color:#5d616b}
+#printDoc .pp-road .qs em{font-weight:600;color:#8d919a}
+#printDoc .pp-road .qrun .qs b{font-weight:800!important}
+#printDoc .pcl b{font-weight:800}
+#printDoc .pcal th.ptm{font-weight:700}
+#printDoc .atl .dd{font-weight:700}
+#printDoc .pcal{font-size:9pt}
+#printDoc .pcal thead th{font-size:9.8pt}
+#printDoc .pcal .pmh small{font-size:7.2pt}
+#printDoc .pcal .pcorner,#printDoc .pcal th.pg{font-size:9pt}
+#printDoc .pcal th.ptm{font-size:8.4pt}
+#printDoc .pcl b,#printDoc .pcal td.two .pcl b{font-size:8.8pt}
+#printDoc .pcl small,#printDoc .pcal td.two .pcl small{font-size:7pt}
+#printDoc .psec h3{font-size:10.5pt}
+#printDoc .atl .br b{font-size:11.5pt}
+#printDoc .atl .br span{font-size:7.2pt}
+#printDoc .atl .dd{font-size:8.8pt}
+#printDoc .atl .dd em{font-size:6.8pt}
 </style>
 </head>
 <body>
@@ -1626,6 +1693,7 @@ function render() {
   const app = $("#app");
   document.documentElement.style.setProperty("--ac", "rgb(" + themeRGB().join(",") + ")");
   app.className = "wrap mode-" + S.mode + (p && Object.values(checkedOf(p)).some(Boolean) ? " dim" : "") + (S.onlySel ? " only-print-sel" : "");
+  if (S.view === "students" && !S.pub) { app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + studentsPage(); const q = $("#stuQ"); return; }
   app.innerHTML = (S.warn ? `<div class="banner noprint">${esc(S.warn)}</div>` : "") + (S.view === "quote" && !S.pub ? heroHTML(p) : "") + (S.view === "quote" && !S.pub
     ? (p ? "" : `<section class="panel"><div class="empty">과정안내서를 보려면 ‘학생 목록’에서 학생을 고르거나 추가해 주세요.</div></section>`)
     : S.pub ? `<div class="pg pg1">${heroHTML(p)}${studentNav(p)}${sumHTML(p)}${boardHTML(p)}</div>${printImgsHTML(p)}<div class="pg pg2">${p ? `<div class="pghead ponly2">${esc(S.main?.brand || "")}<b>${esc(p.name)} 님 수업 일정</b></div>` : ""}${schedHTML(p)}</div>`
@@ -1651,8 +1719,8 @@ function renderTop() {
     <button class="brand" data-act="goHome" title="처음 화면으로"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 17.5h5.5c3.2 0 3.2-10 6.5-10h3"/><circle cx="20" cy="7.5" r="2.6"/></svg></span>수강 설계</button>
     <div class="grow"></div>
     <div class="tbg">
-    <button class="btn tb${!curPlan() && S.view !== "quote" && S.mode !== "edit" ? " on" : ""}" data-act="goHome" title="학생 선택 없이 처음 화면으로">${tbIcon("home")}<span>홈</span></button>
-    <button class="btn tb" data-act="stuList">${tbIcon("users")}<span>학생 목록</span></button>
+    <button class="btn tb${!curPlan() && S.view === "road" && S.mode !== "edit" ? " on" : ""}" data-act="goHome" title="새 상담을 시작하는 처음 화면">${tbIcon("home")}<span>홈</span></button>
+    <button class="btn tb${S.view === "students" ? " on" : ""}" data-act="stuList">${tbIcon("users")}<span>학생 목록</span></button>
     <button class="btn tb${S.view === "quote" ? " on" : ""}" data-act="${S.view === "quote" ? "backRoad" : "qview"}">${tbIcon(S.view === "quote" ? "back" : "doc")}<span>${S.view === "quote" ? "로드맵으로" : "과정안내"}</span></button>
     ${isAdmin() ? `<button class="btn tb${S.view !== "quote" && S.mode === "edit" ? " on" : ""}" data-act="${S.view !== "quote" && S.mode === "edit" ? "endEdit" : "startEdit"}">${tbIcon(S.view !== "quote" && S.mode === "edit" ? "done" : "edit")}<span>${S.view !== "quote" && S.mode === "edit" ? "편집 끝내기" : "구성 편집"}</span></button>` : ""}
     <button class="btn tb" data-act="print">${tbIcon("print")}<span>인쇄</span></button>
@@ -2043,9 +2111,9 @@ function heroHTML(p) {
   return `<header class="hero${S.mode === "edit" ? "" : " hv"}">${S.mode === "edit" ? "" : heroDeco()}${left}
       <div class="picker">
         <span class="ponly">${p ? esc(p.name) + " 님 수강 설계" : ""}</span>
-        ${p ? `<div class="curst noprint"><span class="cl">지금 상담 중</span><b>${esc(p.name)}</b>${p.tag ? `<em>${esc(p.tag)}</em>` : ""}<span class="cn">${n}과목 선택</span></div><button class="btn" data-act="editPlan">정보</button><button class="btn" data-act="shareLink" title="학생에게 보낼 로드맵 링크를 복사합니다">학생 링크</button>`
-          : `<div class="curst none noprint"><span class="cl">상담할 학생을 학생 목록에서 고르거나 추가해 주세요</span></div>`}
-        <button class="btn pri" data-act="stuList">학생 목록</button>
+        ${p ? `<div class="curst noprint"><span class="cl">지금 상담 중</span><b>${esc(p.name)}</b>${p.mentor ? `<em>멘토 ${esc(p.mentor)}</em>` : ""}${p.tag ? `<em>${esc(p.tag)}</em>` : ""}<span class="cn">${n}과목 선택</span></div><button class="btn" data-act="editPlan">정보</button><button class="btn" data-act="shareLink" title="학생에게 보낼 로드맵 링크를 복사합니다">학생 링크</button>`
+          : S.mode === "edit" ? "" : startForm()}
+        ${p ? `<button class="btn pri" data-act="stuList">학생 목록</button>` : ""}
       </div>
     </header>`;
 }
@@ -2538,30 +2606,62 @@ function shareLink(p) {
 
 /* 학생 목록 (직원 전용) — 여기서 학생을 추가·선택. 저장된 학생은 나중에 수강생 관리파일로 보냄 */
 function fmtDay(v) { const d = v ? new Date(v) : null; return d && !isNaN(d) ? `${d.getFullYear() % 100}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}` : ""; }
-function studentList() {
-  let q = "";
-  const rowsHTML = () => {
-    const nq = q.replace(/\s/g, "").toLowerCase();
-    const list = visiblePlans().filter(x => !nq || ((x.name || "") + (x.tag || "") + (x.ownerName || "") + (x.phone4 || "")).replace(/\s/g, "").toLowerCase().includes(nq))
-      .sort((a, b) => (new Date(b.updatedAt || b.createdAt || 0)) - (new Date(a.updatedAt || a.createdAt || 0)));
-    if (!list.length) return `<div class="sl-empty">${visiblePlans().length ? "찾는 학생이 없습니다." : "아직 등록한 학생이 없습니다. ‘+ 학생 추가’를 눌러 주세요."}</div>`;
-    const showOwner = isAdmin() && S.showAll;
-    return `<table class="sl"><thead><tr><th>이름</th><th>구분</th>${showOwner ? "<th>담당</th>" : ""}<th>선택 과목</th><th>관리파일</th><th>수정일</th></tr></thead><tbody>${list.map(x => {
-      const n = Object.values(x.checked || {}).filter(Boolean).length;
-      return `<tr data-pid="${esc(x.id)}" class="${x.id === S.cur ? "cur" : ""}" tabindex="0"><td class="nm">${esc(x.name || "(이름 없음)")}${x.id === S.cur ? `<span class="now">상담 중</span>` : ""}</td><td class="tg">${esc(x.tag || "")}</td>${showOwner ? `<td class="ow">${esc(x.ownerName || x.owner || "")}</td>` : ""}<td>${n ? n + "과목" : `<span class="dim">없음</span>`}</td><td>${x.studentId ? `<span class="ok">보냄</span>` : `<span class="dim">아직</span>`}</td><td class="dt">${fmtDay(x.updatedAt || x.createdAt)}</td></tr>`;
-    }).join("")}</tbody></table>`;
-  };
-  const box = modal({ title: "학생 목록", wide: true, body: `<div class="sl-bar"><input type="text" class="sl-q" placeholder="이름·구분·담당으로 찾기" aria-label="학생 찾기">${isAdmin() && Store.cloud ? `<label class="chk"><input type="checkbox" class="sl-all"${S.showAll ? " checked" : ""}> 다른 멘토 학생도 보기</label>` : ""}<div class="grow"></div><button class="btn pri sl-add">+ 학생 추가</button></div><div class="sl-cnt"></div><div class="sl-wrap"></div>` });
-  const draw = () => { $(".sl-wrap", box).innerHTML = rowsHTML(); $(".sl-cnt", box).textContent = `${visiblePlans().length}명`; };
-  draw();
-  $(".sl-q", box).addEventListener("input", e => { q = e.target.value; draw(); });
-  const all = $(".sl-all", box); if (all) all.addEventListener("change", () => { S.showAll = all.checked; if (S.cur && !visiblePlans().some(x => x.id === S.cur)) { S.cur = null; render(); } draw(); });
-  $(".sl-add", box).onclick = () => { box.close(); planForm(null); };
-  const pick = id => { S.cur = id; S.view = "road"; if (S.mode === "edit") S.mode = "view"; box.close(); render(); scrollTo(0, 0); };
-  $(".sl-wrap", box).addEventListener("click", e => { const tr = e.target.closest("tr[data-pid]"); if (tr) pick(tr.dataset.pid); });
-  $(".sl-wrap", box).addEventListener("keydown", e => { const tr = e.target.closest("tr[data-pid]"); if (tr && e.key === "Enter") pick(tr.dataset.pid); });
-  $(".sl-q", box).addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) { const tr = $(".sl-wrap tr[data-pid]", box); if (tr) { e.preventDefault(); pick(tr.dataset.pid); } } });
+/* 학생 목록 페이지 (멘토별로 나눠 보기) */
+const mentorOf = x => (x.mentor || "").trim() || "멘토 미지정";
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${"일월화수목금토"[d.getDay()]})`; };
+const lastMentor = () => { try { return localStorage.getItem("rm:mentor") || ""; } catch (e) { return ""; } };
+function studentList() { S.view = "students"; if (S.mode === "edit") S.mode = "view"; renderTop(); render(); scrollTo(0, 0); }
+function pickPlan(id) { S.cur = id; S.view = "road"; if (S.mode === "edit") S.mode = "view"; renderTop(); render(); scrollTo(0, 0); }
+function studentsPage() {
+  const all = visiblePlans(), nq = (S.stuQ || "").replace(/\s/g, "").toLowerCase();
+  const counts = {}; all.forEach(x => { const m = mentorOf(x); counts[m] = (counts[m] || 0) + 1; });
+  const mentors = Object.keys(counts).sort((a, b) => (a === "멘토 미지정") - (b === "멘토 미지정") || a.localeCompare(b, "ko"));
+  if (S.mentorF && !counts[S.mentorF]) S.mentorF = "";
+  const list = all.filter(x => (!S.mentorF || mentorOf(x) === S.mentorF) && (!nq || ((x.name || "") + (x.tag || "") + (x.mentor || "") + (x.ownerName || "") + (x.phone4 || "")).replace(/\s/g, "").toLowerCase().includes(nq)))
+    .sort((a, b) => (new Date(b.updatedAt || b.createdAt || 0)) - (new Date(a.updatedAt || a.createdAt || 0)));
+  const showOwner = isAdmin() && S.showAll;
+  const table = rows => `<div class="sl-wrap"><table class="sl"><thead><tr><th>이름</th><th>멘토</th><th>구분</th>${showOwner ? "<th>등록한 사람</th>" : ""}<th>선택 과목</th><th>관리파일</th><th>상담일</th><th>수정일</th></tr></thead><tbody>${rows.map(x => {
+    const n = Object.values(x.checked || {}).filter(Boolean).length;
+    return `<tr data-pid="${esc(x.id)}" class="${x.id === S.cur ? "cur" : ""}" tabindex="0"><td class="nm">${esc(x.name || "(이름 없음)")}${x.id === S.cur ? `<span class="now">상담 중</span>` : ""}</td><td class="mt">${esc(mentorOf(x))}</td><td class="tg">${esc(x.tag || "")}</td>${showOwner ? `<td class="ow">${esc(x.ownerName || x.owner || "")}</td>` : ""}<td>${n ? n + "과목" : `<span class="dim">없음</span>`}</td><td>${x.studentId ? `<span class="ok">보냄</span>` : `<span class="dim">아직</span>`}</td><td class="dt">${fmtDay(x.createdAt)}</td><td class="dt">${fmtDay(x.updatedAt || x.createdAt)}</td></tr>`;
+  }).join("")}</tbody></table></div>`;
+  let body;
+  if (!all.length) body = `<div class="sl-empty">아직 등록한 학생이 없습니다. ‘홈’에서 학생명과 멘토명을 넣고 상담을 시작해 주세요.</div>`;
+  else if (!list.length) body = `<div class="sl-empty">찾는 학생이 없습니다.</div>`;
+  else if (S.mentorF || nq) body = table(list);
+  else body = mentors.map(m => { const rows = list.filter(x => mentorOf(x) === m); return rows.length ? `<div class="stg"><h3>${esc(m)}<em>${rows.length}명</em></h3>${table(rows)}</div>` : ""; }).join("");
+  return `<section class="panel stpage">
+    <div class="stp-h"><h2>학생 목록</h2><span class="cnt">${all.length}명</span><div class="grow"></div>
+      <input type="text" class="sl-q" id="stuQ" value="${esc(S.stuQ || "")}" placeholder="이름·멘토·구분으로 찾기" aria-label="학생 찾기">
+      ${isAdmin() && Store.cloud ? `<label class="chk"><input type="checkbox" id="stuAll"${S.showAll ? " checked" : ""}> 다른 사람이 등록한 학생도 보기</label>` : ""}
+      <button class="btn pri" data-act="goHome">+ 새 상담</button></div>
+    ${mentors.length ? `<div class="mchips" role="tablist" aria-label="멘토별 보기"><button class="mchip${!S.mentorF ? " on" : ""}" data-act="mentorF" data-m="">전체<em>${all.length}</em></button>${mentors.map(m => `<button class="mchip${S.mentorF === m ? " on" : ""}" data-act="mentorF" data-m="${esc(m)}">${esc(m)}<em>${counts[m]}</em></button>`).join("")}</div>` : ""}
+    <div id="stuBody">${body}</div>
+  </section>`;
 }
+/* 홈 첫 화면: 오늘 날짜 · 학생명 · 멘토명 넣고 바로 상담 시작 */
+function startForm() {
+  return `<form class="startf noprint" id="startForm" autocomplete="off">
+    <div class="sf-d"><span>상담일</span><b>${todayStr()}</b></div>
+    <label class="sf-f"><span>학생명</span><input type="text" id="st-n" placeholder="예: 홍길동"></label>
+    <label class="sf-f"><span>멘토명</span><input type="text" id="st-m" value="${esc(lastMentor())}" placeholder="예: 김태욱" list="mentorList"></label>
+    <datalist id="mentorList">${[...new Set(S.plans.map(x => (x.mentor || "").trim()).filter(Boolean))].map(m => `<option value="${esc(m)}">`).join("")}</datalist>
+    <button class="btn pri" type="submit">상담 시작</button>
+  </form>`;
+}
+function startNew() {
+  const n = $("#st-n"), m = $("#st-m"); if (!n) return;
+  const name = n.value.trim(), mentor = m.value.trim();
+  if (!name) { toast("학생명을 입력해 주세요"); n.focus(); return; }
+  if (!mentor) { toast("멘토명을 입력해 주세요"); m.focus(); return; }
+  try { localStorage.setItem("rm:mentor", mentor); } catch (e) {}
+  const np = { rmType: "plan", id: secureId(), name, mentor, tag: "", phone4: "", ownerName: S.user?.displayName || S.user?.email || "", memo: "", checked: {}, cells: {}, startMonth: new Date().getMonth() + 1, owner: S.user?.email || "", createdAt: Date.now(), updatedAt: Date.now() };
+  S.plans.unshift(np); S.cur = np.id; S.view = "road"; S.mode = "check"; savePlan(np, true); renderTop(); render(); scrollTo(0, 0); toast("수강할 과목을 눌러 체크하세요");
+}
+document.addEventListener("submit", e => { if (e.target.id === "startForm") { e.preventDefault(); startNew(); } });
+document.addEventListener("input", e => { if (e.target.id === "stuQ") { S.stuQ = e.target.value; const b = $("#stuBody"); if (b) { const tmp = document.createElement("div"); tmp.innerHTML = studentsPage(); b.innerHTML = tmp.querySelector("#stuBody").innerHTML; } } });
+document.addEventListener("change", e => { if (e.target.id === "stuAll") { S.showAll = e.target.checked; if (S.cur && !visiblePlans().some(x => x.id === S.cur)) S.cur = null; render(); } });
+document.addEventListener("click", e => { if (S.view !== "students") return; const tr = e.target.closest && e.target.closest(".stpage tr[data-pid]"); if (tr) pickPlan(tr.dataset.pid); });
+document.addEventListener("keydown", e => { if (S.view !== "students" || e.key !== "Enter") return; const tr = e.target.closest && e.target.closest(".stpage tr[data-pid]"); if (tr) { e.preventDefault(); pickPlan(tr.dataset.pid); } else if (e.target.id === "stuQ" && !e.isComposing && e.keyCode !== 229) { const r = $(".stpage tr[data-pid]"); if (r) { e.preventDefault(); pickPlan(r.dataset.pid); } } }, true);
 
 /* 상담 대상 */
 function planForm(p) {
@@ -2569,6 +2669,7 @@ function planForm(p) {
   modal({
     title: isNew ? "학생 추가" : "학생 정보",
     body: `<label class="fld">이름<input type="text" id="f-n" value="${esc(p?.name || "")}" placeholder="예: 홍길동"></label>
+      <label class="fld">멘토명<input type="text" id="f-m" value="${esc(p ? (p.mentor || "") : lastMentor())}" placeholder="예: 김태욱"></label>
       <label class="fld">휴대폰 뒷번호 4자리<input type="text" id="f-p4" value="${esc(p?.phone4 || "")}" inputmode="numeric" maxlength="4" placeholder="예: 1234"><span class="help">학생이 링크를 열 때 이 번호를 넣어야 자기 로드맵이 보입니다.</span></label>
       <label class="fld">구분용 메모 (선택)<input type="text" id="f-t" value="${esc(p?.tag || "")}" placeholder="예: 영상 취업반"><span class="help">이름이 같은 사람을 구분할 때 씁니다. 직원 목록에만 보입니다.</span></label>`,
     actions: [
@@ -2579,13 +2680,13 @@ function planForm(p) {
       }), 0); } }]),
       { label: "취소" },
       { label: isNew ? "추가" : "저장", cls: "pri", fn: box => {
-        const name = $("#f-n", box).value.trim(), tag = $("#f-t", box).value.trim(), phone4 = $("#f-p4", box).value.trim();
+        const name = $("#f-n", box).value.trim(), tag = $("#f-t", box).value.trim(), phone4 = $("#f-p4", box).value.trim(), mentor = $("#f-m", box).value.trim();
         if (!name) { toast("이름을 입력해 주세요"); return false; }
         if (phone4 && !/^\d{4}$/.test(phone4)) { toast("휴대폰 뒷번호는 숫자 4자리로 넣어 주세요"); return false; }
         if (isNew) {
-          const np = { rmType: "plan", id: secureId(), name, tag, phone4, ownerName: S.user?.displayName || S.user?.email || "", memo: "", checked: {}, cells: {}, startMonth: new Date().getMonth() + 1, owner: S.user?.email || "", createdAt: Date.now(), updatedAt: Date.now() };
+          const np = { rmType: "plan", id: secureId(), name, mentor, tag, phone4, ownerName: S.user?.displayName || S.user?.email || "", memo: "", checked: {}, cells: {}, startMonth: new Date().getMonth() + 1, owner: S.user?.email || "", createdAt: Date.now(), updatedAt: Date.now() };
           S.plans.unshift(np); S.cur = np.id; S.mode = "check"; savePlan(np, true); render(); toast("수강할 과목을 눌러 체크하세요");
-        } else { p.name = name; p.tag = tag; p.phone4 = phone4; savePlan(p, true); render(); }
+        } else { p.name = name; p.mentor = mentor; p.tag = tag; p.phone4 = phone4; savePlan(p, true); render(); }
       } }
     ]
   });
@@ -3230,6 +3331,7 @@ document.addEventListener("click", async e => {
   }
   else if (a === "newPlan") planForm(null);
   else if (a === "stuList") studentList();
+  else if (a === "mentorF") { S.mentorF = t.dataset.m || ""; render(); }
   else if (a === "editPlan") planForm(curPlan());
   else if (a === "print") printDialog();
   else if (a === "logout") { flushAll(); setTimeout(() => firebase.auth().signOut().finally(() => location.reload()), 300); }
@@ -3392,6 +3494,8 @@ function pageKey(key, t, e) {
     return;
   }
   if (key !== "Enter") return;
+  if (t.closest("#startForm")) { if (t.id === "st-n" && !$("#st-m").value.trim()) $("#st-m").focus(); else startNew(); return true; }
+  if (t.id === "stuQ") return;
   if (t.tagName === "TEXTAREA" && !(e.ctrlKey || e.metaKey)) return;
   t.blur(); return true;
 }
